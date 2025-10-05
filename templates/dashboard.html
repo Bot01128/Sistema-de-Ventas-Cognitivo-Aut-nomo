@@ -1,170 +1,87 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ get_locale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoNeura AI - Dashboard</title>
+    <title>{{ _('AutoNeura AI - Dashboard') }}</title>
     <style>
-        /* Estilos básicos para la maqueta */
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5; 
-            height: 100%; 
-            overflow: hidden; /* Evita el scroll en el cuerpo principal */
-        }
-        .container { 
-            display: flex; 
-            height: 100%; 
-        }
-        .left-panel { 
-            flex: 1; 
-            background-color: #e9ebee; 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column;
-            border-right: 1px solid #ddd;
-        }
-        .right-panel { 
-            flex: 2; 
-            background-color: #ffffff; 
-            padding: 40px; 
-            overflow-y: auto; /* Permite el scroll solo en este panel si el contenido es largo */
-        }
-        h1, h2 { 
-            color: #1c1e21; 
-            margin-top: 0;
-        }
-        .chat-window { 
-            flex-grow: 1; 
-            border: 1px solid #ccc; 
-            border-radius: 8px;
-            background: white; 
-            margin-top: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .chat-messages { 
-            flex-grow: 1; 
-            padding: 10px; 
-            overflow-y: auto; 
-        }
-        .chat-messages p {
-            margin: 0 0 10px 0;
-            padding: 8px 12px;
-            border-radius: 18px;
-            max-width: 80%;
-            word-wrap: break-word;
-        }
-        .chat-messages p.user {
-            background-color: #0084ff;
-            color: white;
-            align-self: flex-end;
-            margin-left: auto;
-        }
-        .chat-messages p.assistant {
-            background-color: #f0f0f0;
-            color: #333;
-            align-self: flex-start;
-        }
-        .chat-input { 
-            display: flex; 
-            border-top: 1px solid #ccc; 
-        }
-        .chat-input input { 
-            flex-grow: 1; 
-            border: none; 
-            padding: 12px;
-            font-size: 16px;
-            outline: none;
-        }
-        .chat-input button { 
-            border: none; 
-            background: #0084ff; 
-            color: white; 
-            padding: 10px 15px; 
-            cursor: pointer; 
-            font-size: 16px;
-        }
-        .chat-input button:hover {
-            background: #0073e6;
-        }
-        .form-section { 
-            margin-bottom: 30px; 
-        }
-        .form-section label { 
-            display: block; 
-            margin-bottom: 8px; 
-            font-weight: 600; 
-            color: #606770;
-        }
-        .form-section input[type="text"], 
-        .form-section input[type="number"] { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-radius: 6px; 
-            box-sizing: border-box; /* Asegura que el padding no afecte el ancho */
-            font-size: 16px;
-        }
-        .checkbox-group label {
-            font-weight: normal;
-        }
+        body, html { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; height: 100%; }
+        .container { display: flex; height: 100%; flex-direction: column; }
+        .header { background: #fff; padding: 10px 20px; border-bottom: 1px solid #ddd; display: none; } /* Oculto en PC, visible en móvil */
+        .main-content { display: flex; height: 100%; flex-grow: 1; }
+        .left-panel, .right-panel { padding: 20px; }
+        .left-panel { flex: 1; background-color: #e9ebee; display: flex; flex-direction: column; }
+        .right-panel { flex: 2; background-color: #ffffff; overflow-y: auto; }
+        h1, h2 { color: #1c1e21; margin-top: 0; }
+        .chat-window { flex-grow: 1; border: 1px solid #ccc; border-radius: 8px; background: white; margin-top: 20px; display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .chat-messages { flex-grow: 1; padding: 10px; overflow-y: auto; }
+        .chat-input { display: flex; border-top: 1px solid #ccc; }
+        .chat-input input { flex-grow: 1; border: none; padding: 12px; font-size: 16px; outline: none; }
+        .chat-input button { border: none; background: #0084ff; color: white; padding: 10px 15px; cursor: pointer; }
+        .form-section { margin-bottom: 30px; }
+        .form-section label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .form-section input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
 
+        /* --- ESTILOS RESPONSIVOS --- */
+        @media (max-width: 768px) {
+            .header { display: flex; justify-content: space-between; align-items: center; }
+            .main-content { flex-direction: column; }
+            .left-panel, .right-panel { display: none; } /* Ocultamos ambos paneles */
+            .panel-visible { display: flex; flex-grow: 1; } /* Solo mostramos el panel activo */
+            .container { height: auto; min-height: 100%;}
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- === PANEL IZQUIERDO (ASISTENTE IA) === -->
-        <div class="left-panel">
-            <h2>Asistente AutoNeura</h2>
-            <div class="chat-window">
-                <div class="chat-messages">
-                    <p class="assistant">¡Hola! Soy tu asistente de configuración. Pídeme lo que necesites, por ejemplo: "Inicia una nueva campaña para encontrar restaurantes en Miami".</p>
-                </div>
-                <div class="chat-input">
-                    <input type="text" placeholder="Escribe tu petición...">
-                    <button>Enviar</button>
-                </div>
-            </div>
+        <div class="header">
+            <button id="toggle-chat">{{ _('Asistente') }}</button>
+            <button id="toggle-form">{{ _('Formulario') }}</button>
         </div>
 
-        <!-- === PANEL DERECHO (FORMULARIO) === -->
-        <div class="right-panel">
-            <h1>Panel de Control</h1>
-            <h2>Crear Nueva Campaña</h2>
-
-            <div class="form-section">
-                <label for="campaign-name">Paso 1: Dale un Nombre a tu Campaña</label>
-                <input type="text" id="campaign-name" placeholder="Ej: Búsqueda de Spas en Medellín">
-            </div>
-
-            <div class="form-section checkbox-group">
-                <label>Paso 2: Elige tus Canales de Búsqueda</label>
-                <div>
-                    <input type="checkbox" id="google-maps" checked disabled>
-                    <label for="google-maps">Google Maps (Activado)</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="instagram" disabled>
-                    <label for="instagram">Instagram (Próximamente)</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="tiktok" disabled>
-                    <label for="tiktok">TikTok (Próximamente)</label>
+        <div class="main-content">
+            <div class="left-panel panel-visible">
+                <h2>{{ _('Asistente AutoNeura') }}</h2>
+                <div class="chat-window">
+                    <div class="chat-messages">
+                        <p>{{ _('¡Hola! Soy tu asistente. Pídeme lo que necesites.') }}</p>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" placeholder="{{ _('Escribe tu petición...') }}">
+                        <button>{{ _('Enviar') }}</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-section">
-                <label>Paso 3: Define tus Criterios de Búsqueda</label>
-                <label for="business-type" style="margin-top:10px;">¿Qué tipo de negocio buscas?</label>
-                <input type="text" id="business-type" placeholder="Ej: Spas de lujo">
-                <label for="location" style="margin-top: 15px;">¿En qué ciudad y país?</label>
-                <input type="text" id="location" placeholder="Ej: Medellín, Colombia">
+            <div class="right-panel">
+                <h1>{{ _('Panel de Control') }}</h1>
+                <h2>{{ _('Crear Nueva Campaña') }}</h2>
+                <div class="form-section">
+                    <label for="campaign-name">{{ _('Paso 1: Dale un Nombre a tu Campaña') }}</label>
+                    <input type="text" id="campaign-name" placeholder="{{ _('Ej: Búsqueda de Spas en Medellín') }}">
+                </div>
+                <!-- Más secciones del formulario aquí -->
             </div>
         </div>
     </div>
+    
+    <script>
+        // Lógica simple para cambiar de panel en vista móvil
+        const toggleChat = document.getElementById('toggle-chat');
+        const toggleForm = document.getElementById('toggle-form');
+        const leftPanel = document.querySelector('.left-panel');
+        const rightPanel = document.querySelector('.right-panel');
+
+        if (toggleChat && toggleForm) {
+            toggleChat.addEventListener('click', () => {
+                leftPanel.classList.add('panel-visible');
+                rightPanel.classList.remove('panel-visible');
+            });
+            toggleForm.addEventListener('click', () => {
+                rightPanel.classList.add('panel-visible');
+                leftPanel.classList.remove('panel-visible');
+            });
+        }
+    </script>
 </body>
 </html>
