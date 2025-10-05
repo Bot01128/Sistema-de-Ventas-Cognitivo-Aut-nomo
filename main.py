@@ -10,7 +10,7 @@ babel = Babel(app)
 @babel.localeselector
 def get_locale():
     # Detecta el mejor idioma basado en las preferencias del navegador del usuario
-    return request.accept_languages.best_match(['es', 'en'])
+    return request.accept_languages.best_match(['en', 'es'])
 
 # --- Rutas de la Aplicación ---
 @app.route('/')
