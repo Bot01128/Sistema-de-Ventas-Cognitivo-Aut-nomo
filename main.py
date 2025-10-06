@@ -4,12 +4,16 @@ import os
 
 app = Flask(__name__)
 
-# --- Configuración de Babel para Internacionalización (Sintaxis Nueva) ---
+# --- Configuración de Babel para Internacionalización ---
 def get_locale():
     # Detecta el mejor idioma basado en las preferencias del navegador
     return request.accept_languages.best_match(['en', 'es'])
 
 babel = Babel(app, locale_selector=get_locale)
+
+# --- ESTA ES LA LÍNEA QUE FALTABA ---
+# Hacemos que la función get_locale esté disponible en todas las plantillas.
+app.jinja_env.globals.update(get_locale=get_locale)
 
 # --- Rutas de la Aplicación ---
 @app.route('/')
