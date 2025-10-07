@@ -2,3 +2,5 @@ python-dotenv==1.0.1
 gunicorn==22.0.0
 Flask-Babel==3.1.0
 Flask==2.3.3
+langchain==0.2.1
+langchain-google-genai==1.0.5
