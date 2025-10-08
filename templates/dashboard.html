@@ -5,83 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ _('AutoNeura AI - Dashboard') }}</title>
     <style>
-        body, html { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; height: 100%; }
-        .container { display: flex; height: 100%; flex-direction: column; }
-        .header { background: #fff; padding: 10px 20px; border-bottom: 1px solid #ddd; display: none; } /* Oculto en PC, visible en móvil */
-        .main-content { display: flex; height: 100%; flex-grow: 1; }
-        .left-panel, .right-panel { padding: 20px; }
-        .left-panel { flex: 1; background-color: #e9ebee; display: flex; flex-direction: column; }
-        .right-panel { flex: 2; background-color: #ffffff; overflow-y: auto; }
+        /* Aquí van todos los estilos que ya teníamos */
+        body, html { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; height: 100%; overflow: hidden; }
+        .container { display: flex; height: 100%; }
+        .left-panel { flex: 1; background-color: #e9ebee; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #ddd; }
+        .right-panel { flex: 2; background-color: #ffffff; padding: 40px; overflow-y: auto; }
         h1, h2 { color: #1c1e21; margin-top: 0; }
         .chat-window { flex-grow: 1; border: 1px solid #ccc; border-radius: 8px; background: white; margin-top: 20px; display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .chat-messages { flex-grow: 1; padding: 10px; overflow-y: auto; }
+        .chat-messages { flex-grow: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; }
+        .chat-messages p { margin: 0 0 10px 0; padding: 8px 12px; border-radius: 18px; max-width: 80%; word-wrap: break-word; }
+        .msg-user { background-color: #0084ff; color: white; align-self: flex-end; margin-left: auto; }
+        .msg-assistant { background-color: #f0f0f0; color: #333; align-self: flex-start; }
         .chat-input { display: flex; border-top: 1px solid #ccc; }
-        .chat-input input { flex-grow: 1; border: none; padding: 12px; font-size: 16px; outline: none; }
-        .chat-input button { border: none; background: #0084ff; color: white; padding: 10px 15px; cursor: pointer; }
-        .form-section { margin-bottom: 30px; }
-        .form-section label { display: block; margin-bottom: 8px; font-weight: 600; }
-        .form-section input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-
-        /* --- ESTILOS RESPONSIVOS --- */
-        @media (max-width: 768px) {
-            .header { display: flex; justify-content: space-between; align-items: center; }
-            .main-content { flex-direction: column; }
-            .left-panel, .right-panel { display: none; } /* Ocultamos ambos paneles */
-            .panel-visible { display: flex; flex-grow: 1; } /* Solo mostramos el panel activo */
-            .container { height: auto; min-height: 100%;}
-        }
+        .chat-input input { flex-grow: 1; border: none; padding: 12px; font-size: 16px; outline: none; border-bottom-left-radius: 8px; }
+        .chat-input button { border: none; background: #0084ff; color: white; padding: 10px 15px; cursor: pointer; font-size: 16px; border-bottom-right-radius: 8px; }
+        /* Estilos responsivos que ya teníamos */
+        @media (max-width: 768px) { .container { flex-direction: column; } }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <button id="toggle-chat">{{ _('Asistente') }}</button>
-            <button id="toggle-form">{{ _('Formulario') }}</button>
+        <!-- PANEL IZQUIERDO (ASISTENTE IA) -->
+        <div class="left-panel">
+            <h2>{{ _('Asistente AutoNeura') }}</h2>
+            <div class="chat-window">
+                <div class="chat-messages" id="chat-messages">
+                    <p class="msg-assistant">{{ _('¡Hola! Soy tu asistente. Pídeme lo que necesites.') }}</p>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="user-input" placeholder="{{ _('Escribe tu petición...') }}">
+                    <button id="send-btn">{{ _('Enviar') }}</button>
+                </div>
+            </div>
         </div>
 
-        <div class="main-content">
-            <div class="left-panel panel-visible">
-                <h2>{{ _('Asistente AutoNeura') }}</h2>
-                <div class="chat-window">
-                    <div class="chat-messages">
-                        <p>{{ _('¡Hola! Soy tu asistente. Pídeme lo que necesites.') }}</p>
-                    </div>
-                    <div class="chat-input">
-                        <input type="text" placeholder="{{ _('Escribe tu petición...') }}">
-                        <button>{{ _('Enviar') }}</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="right-panel">
-                <h1>{{ _('Panel de Control') }}</h1>
-                <h2>{{ _('Crear Nueva Campaña') }}</h2>
-                <div class="form-section">
-                    <label for="campaign-name">{{ _('Paso 1: Dale un Nombre a tu Campaña') }}</label>
-                    <input type="text" id="campaign-name" placeholder="{{ _('Ej: Búsqueda de Spas en Medellín') }}">
-                </div>
-                <!-- Más secciones del formulario aquí -->
-            </div>
+        <!-- PANEL DERECHO (FORMULARIO) -->
+        <div class="right-panel">
+            <h1>{{ _('Panel de Control') }}</h1>
+            <!-- El resto del formulario va aquí -->
         </div>
     </div>
     
+    <!-- === EL NUEVO SCRIPT INTELIGENTE === -->
     <script>
-        // Lógica simple para cambiar de panel en vista móvil
-        const toggleChat = document.getElementById('toggle-chat');
-        const toggleForm = document.getElementById('toggle-form');
-        const leftPanel = document.querySelector('.left-panel');
-        const rightPanel = document.querySelector('.right-panel');
+        const sendBtn = document.getElementById('send-btn');
+        const userInput = document.getElementById('user-input');
+        const chatMessages = document.getElementById('chat-messages');
 
-        if (toggleChat && toggleForm) {
-            toggleChat.addEventListener('click', () => {
-                leftPanel.classList.add('panel-visible');
-                rightPanel.classList.remove('panel-visible');
-            });
-            toggleForm.addEventListener('click', () => {
-                rightPanel.classList.add('panel-visible');
-                leftPanel.classList.remove('panel-visible');
-            });
+        async function sendMessage() {
+            const message = userInput.value;
+            if (!message) return;
+
+            // Muestra el mensaje del usuario en el chat
+            addMessage(message, 'user');
+            userInput.value = '';
+
+            try {
+                // Envía el mensaje al backend (a la ruta /chat)
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                
+                // Muestra la respuesta de la IA en el chat
+                addMessage(data.response, 'assistant');
+
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('Lo siento, ocurrió un error al contactar al asistente.', 'assistant');
+            }
         }
+
+        function addMessage(text, sender) {
+            const p = document.createElement('p');
+            p.textContent = text;
+            p.className = sender === 'user' ? 'msg-user' : 'msg-assistant';
+            chatMessages.appendChild(p);
+            // Hace scroll hasta el final para ver el último mensaje
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
     </script>
 </body>
 </html>
