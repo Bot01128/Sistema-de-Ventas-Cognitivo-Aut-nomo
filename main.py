@@ -20,16 +20,16 @@ def dashboard():
 @app.route('/chat', methods=['POST'])
 def chat():
     if not dashboard_brain:
-        return jsonify({"error": "El cerebro no está disponible."}), 500
+        return jsonify({"error": "Cerebro no disponible."}), 500
 
     user_message = request.json.get('message')
     if not user_message:
-        return jsonify({"error": "No se recibió mensaje."}), 400
+        return jsonify({"error": "No hay mensaje."}), 400
 
     print(f"--- Mensaje chat: '{user_message}' ---")
     
     try:
-        # Sintaxis moderna con .invoke()
+        # Nueva sintaxis de invocación para la cadena simple
         response = dashboard_brain.invoke({"question": user_message})
         print(f"--- Respuesta IA: '{response}' ---")
         
