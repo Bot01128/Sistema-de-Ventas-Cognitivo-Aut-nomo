@@ -40,66 +40,50 @@
         </div>
 
         <!-- PANEL DERECHO (FORMULARIO) -->
-        <div class="right-panel">
-            <h1>{{ _('Panel de Control') }}</h1>
-            <!-- El resto del formulario va aquí -->
+<div class="right-panel">
+    <h1>{{ _('Panel de Control') }}</h1>
+    
+    <!-- SECCIÓN DE CREAR CAMPAÑA -->
+    <div class="form-section">
+        <h2>{{ _('Crear Nueva Campaña') }}</h2>
+        
+        <label for="campaign-name">{{ _('Paso 1: Nombre de la Campaña') }}</label>
+        <input type="text" id="campaign-name" placeholder="{{ _('Ej: Búsqueda de Restaurantes en Miami') }}">
+    </div>
+
+    <!-- SECCIÓN DE CANALES -->
+    <div class="form-section">
+        <label>{{ _('Paso 2: Canales de Búsqueda') }}</label>
+        <div class="checkbox-group">
+            <input type="checkbox" id="google-maps" checked disabled>
+            <label for="google-maps">Google Maps (Activado)</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="instagram" disabled>
+            <label for="instagram">Instagram (Próximamente)</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="tiktok" disabled>
+            <label for="tiktok">TikTok (Próximamente)</label>
         </div>
     </div>
+
+    <!-- SECCIÓN DE CRITERIOS -->
+    <div class="form-section">
+        <label>{{ _('Paso 3: Criterios de Búsqueda') }}</label>
+        <label for="business-type" style="margin-top:10px;">{{ _('Tipo de negocio a buscar') }}</label>
+        <input type="text" id="business-type" placeholder="{{ _('Ej: Restaurantes italianos') }}">
+        
+        <label for="location" style="margin-top: 15px;">{{ _('Ubicación (Ciudad, País)') }}</label>
+        <input type="text" id="location" placeholder="{{ _('Ej: Miami, USA') }}">
+
+        <label for="prospect-count" style="margin-top: 15px;">{{ _('Cantidad de prospectos a encontrar') }}</label>
+        <input type="number" id="prospect-count" value="100">
+    </div>
     
-    <!-- === EL NUEVO SCRIPT INTELIGENTE === -->
-    <script>
-        const sendBtn = document.getElementById('send-btn');
-        const userInput = document.getElementById('user-input');
-        const chatMessages = document.getElementById('chat-messages');
+    <!-- BOTÓN DE ACCIÓN -->
+    <button class="cta-button">{{ _('Lanzar Campaña') }}</button>
 
-        async function sendMessage() {
-            const message = userInput.value;
-            if (!message) return;
-
-            // Muestra el mensaje del usuario en el chat
-            addMessage(message, 'user');
-            userInput.value = '';
-
-            try {
-                // Envía el mensaje al backend (a la ruta /chat)
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ message: message })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-
-                const data = await response.json();
-                
-                // Muestra la respuesta de la IA en el chat
-                addMessage(data.response, 'assistant');
-
-            } catch (error) {
-                console.error('Error:', error);
-                addMessage('Lo siento, ocurrió un error al contactar al asistente.', 'assistant');
-            }
-        }
-
-        function addMessage(text, sender) {
-            const p = document.createElement('p');
-            p.textContent = text;
-            p.className = sender === 'user' ? 'msg-user' : 'msg-assistant';
-            chatMessages.appendChild(p);
-            // Hace scroll hasta el final para ver el último mensaje
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        sendBtn.addEventListener('click', sendMessage);
-        userInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-    </script>
+</div>
 </body>
 </html>
