@@ -3,94 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ _('AutoNeura AI - Dashboard') }}</title>
+    <title>AutoNeura AI - Dashboard</title>
     <style>
         body, html { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; height: 100%; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 40px; border-bottom: 1px solid #ddd; }
-        .user-info span { margin-right: 20px; }
-        .recharge-btn { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-        .container { display: flex; height: calc(100% - 61px); }
-        .left-panel { flex: 0 0 400px; background-color: #f8f9fa; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #ddd; }
-        .right-panel { flex-grow: 1; background-color: #ffffff; padding: 40px; overflow-y: auto; }
-        h1, h2 { color: #1c1e21; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .chat-window { flex-grow: 1; border: 1px solid #ccc; border-radius: 8px; background: white; margin-top: 20px; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .chat-messages { flex-grow: 1; padding: 10px; overflow-y: auto; }
-        .chat-input { display: flex; border-top: 1px solid #ccc; }
-        .chat-input input { flex-grow: 1; border: none; padding: 12px; font-size: 16px; outline: none; }
-        .form-section { margin-bottom: 25px; border: 1px solid #eee; padding: 20px; border-radius: 8px; }
+        .container { display: flex; height: 100%; }
+        .left-panel { flex: 0 0 450px; background-color: #ffffff; padding: 30px; display: flex; flex-direction: column; border-right: 1px solid #ddd; }
+        .right-panel { flex-grow: 1; background-color: #f8f9fa; padding: 40px; overflow-y: auto; }
+        h1, h2, h3 { color: #1c1e21; margin-top: 0; }
+        .chat-header h2 { font-size: 24px; }
+        .chat-window { flex-grow: 1; border-radius: 8px; margin-top: 20px; display: flex; flex-direction: column; }
+        .chat-messages { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .chat-messages p { margin: 0; padding: 10px 15px; border-radius: 20px; max-width: 85%; word-wrap: break-word; line-height: 1.5; font-size: 15px;}
+        .msg-user { background-color: #007bff; color: white; align-self: flex-end; margin-left: auto; }
+        .msg-assistant { background-color: #e9ecef; color: #333; align-self: flex-start; }
+        .chat-input { display: flex; border-top: 1px solid #ddd; padding-top: 15px; margin-top: 15px; }
+        .chat-input input { flex-grow: 1; border: 1px solid #ccc; border-radius: 20px; padding: 10px 15px; font-size: 16px; outline: none; margin-right: 10px;}
+        .chat-input button { border: none; background: #007bff; color: white; padding: 10px 20px; cursor: pointer; font-size: 16px; border-radius: 20px; }
+        .tab-nav { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 30px; }
+        .tab-nav button { background: none; border: none; padding: 15px 20px; cursor: pointer; font-size: 16px; color: #606770; border-bottom: 3px solid transparent; }
+        .tab-nav button.active { color: #007bff; border-bottom-color: #007bff; font-weight: 600; }
+        .form-section { margin-bottom: 25px; }
         .form-section label { display: block; margin-bottom: 8px; font-weight: 600; color: #495057; }
         .form-section input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        .cta-button { background-color: #28a745; color: white; padding: 15px 25px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; }
+        .cta-button { background-color: #28a745; color: white; padding: 15px 25px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px;}
         /* Estilos responsivos */
         @media (max-width: 900px) { .container { flex-direction: column; overflow: auto; } .left-panel { flex-basis: 50vh; min-height: 400px; } }
     </style>
 </head>
 <body>
-    <div class="top-bar">
-        <div class="logo"><h2>AutoNeura AI</h2></div>
-        <div class="user-info">
-            <span>{{ _('Bienvenido, Moises') }}</span>
-            <span><strong>{{ _('Saldo:') }}</strong> $50.00</span>
-            <button class="recharge-btn">{{ _('+ Recargar Saldo') }}</button>
-        </div>
-    </div>
     <div class="container">
+        <!-- === PANEL IZQUIERDO (ASISTENTE IA V2.0) === -->
         <div class="left-panel">
-            <h3>{{ _('Asistente Rápido') }}</h3>
+            <div class="chat-header">
+                <h2>Inteligencia Artificial AutoNeura</h2>
+            </div>
             <div class="chat-window">
-                <!-- Chat content here -->
+                <div class="chat-messages" id="chat-messages">
+                    <p class="msg-assistant">{{ _("¡Hola! Soy AutoNeura, tu socio estratégico de IA. Mi misión es simple: conseguirte clientes. Utilizo técnicas psicológicas y de marketing que superan a cualquier humano para encontrar prospectos, contactarlos, convencerlos y hacerles seguimiento hasta que estén listos para comprar. Mi trabajo es tan efectivo que si, después de mi seguimiento avanzado, ningún prospecto hace clic en tu botón de compra, te daré un mes de mi servicio completamente gratis.") }}</p>
+                    <p class="msg-assistant">{{ _("¿Tienes alguna pregunta?") }}</p>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="user-input" placeholder="{{ _('Escribe tu petición...') }}">
+                    <button id="send-btn">{{ _('Enviar') }}</button>
+                </div>
             </div>
         </div>
+
+        <!-- === PANEL DERECHO (PESTAÑAS) === -->
         <div class="right-panel">
-            <h1>{{ _('Panel de Campañas') }}</h1>
-            <div class="form-section">
-                <h2>{{ _('Crear Nueva Campaña de Prospección') }}</h2>
-                <label for="campaign-name">{{ _('Nombre de la Campaña') }}</label>
-                <input type="text" id="campaign-name" placeholder="{{ _('Ej: Búsqueda de Restaurantes en Miami') }}">
+            <div class="tab-nav">
+                <button class="tab-button active" data-tab="campaign">{{ _('Crear Campaña') }}</button>
+                <button class="tab-button" data-tab="data">{{ _('Datos Personales') }}</button>
+                <button class="tab-button" data-tab="billing">{{ _('Saldo y Facturación') }}</button>
             </div>
-            <div class="form-section">
-                <label>{{ _('Criterios de Prospección') }}</label>
-                <label for="product-service" style="margin-top:10px;">{{ _('¿Qué vendes?') }}</label>
-                <input type="text" id="product-service" placeholder="{{ _('Ej: Software para restaurantes, servicios de marketing') }}">
-                <label for="target-audience" style="margin-top: 15px;">{{ _('¿A quién va dirigido?') }}</label>
-                <input type="text" id="target-audience" placeholder="{{ _('Ej: Restaurantes italianos, Ferreterías, Abogados') }}">
-                <label for="location" style="margin-top: 15px;">{{ _('Ubicación') }}</label>
-                <input type="text" id="location" placeholder="{{ _('Ej: España, Madrid / USA, Miami') }}">
-                <label for="prospects-per-day" style="margin-top: 15px;">{{ _('Prospectos por Día (mínimo 15)') }}</label>
-                <input type="number" id="prospects-per-day" value="15" min="15">
+
+            <!-- Pestaña de Crear Campaña -->
+            <div class="tab-content" id="campaign">
+                <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
+                <!-- Aquí va el formulario que ya conocemos -->
             </div>
-            <div class="form-section" style="background-color: #f8f9fa;">
-                <h4>{{ _('Resumen de Costos') }}</h4>
-                <p>Prospectos por mes: <strong id="total-prospects">450</strong></p>
-                <p>Costo por prospecto: <strong>$2.00</strong></p>
-                <hr>
-                <p>Costo Mensual Estimado: <strong id="total-cost">$900.00</strong></p>
-                <small>Este monto se descontará de tu saldo diariamente.</small>
+
+            <!-- Pestaña de Datos Personales -->
+            <div class="tab-content" id="data" style="display:none;">
+                <h2>{{ _('Mis Datos y Enlaces') }}</h2>
+                <div class="form-section">
+                    <label for="contact-email">{{ _('Correo Electrónico de Contacto') }}</label>
+                    <input type="text" id="contact-email" placeholder="{{ _('El correo donde recibirás notificaciones') }}">
+                </div>
+                <div class="form-section">
+                    <label for="contact-whatsapp">{{ _('Número de WhatsApp (con código de país)') }}</label>
+                    <input type="text" id="contact-whatsapp" placeholder="{{ _('Ej: +584121234567') }}">
+                </div>
+                <div class="form-section">
+                    <label for="purchase-link">{{ _('Enlace de Venta (URL de Pago)') }}</label>
+                    <input type="text" id="purchase-link" placeholder="{{ _('La página donde tus clientes te pagan') }}">
+                </div>
+                <button class="cta-button">{{ _('Guardar Datos') }}</button>
             </div>
-            <button class="cta-button">{{ _('Lanzar Campaña') }}</button>
+            
+            <!-- Pestaña de Saldo y Facturación -->
+            <div class="tab-content" id="billing" style="display:none;">
+                <h2>{{ _('Mi Saldo') }}</h2>
+                <h3>Saldo Actual: $0.00</h3>
+                <!-- Aquí irá la lógica para recargar saldo -->
+            </div>
         </div>
     </div>
+    
     <script>
-        const prospectsPerDayInput = document.getElementById('prospects-per-day');
-        const totalProspectsEl = document.getElementById('total-prospects');
-        const totalCostEl = document.getElementById('total-cost');
-        const costPerProspect = 2;
+        // Lógica para manejar las pestañas del panel derecho
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
 
-        function updateCosts() {
-            let dailyCount = parseInt(prospectsPerDayInput.value) || 0;
-            if (dailyCount < 15) {
-                dailyCount = 15;
-                prospectsPerDayInput.value = 15;
-            }
-            const monthlyCount = dailyCount * 30;
-            const monthlyCost = monthlyCount * costPerProspect;
-            totalProspectsEl.textContent = monthlyCount;
-            totalCostEl.textContent = `$${monthlyCost.toFixed(2)}`;
-        }
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
 
-        prospectsPerDayInput.addEventListener('input', updateCosts);
-        // Initial calculation
-        updateCosts();
+                const tabId = button.getAttribute('data-tab');
+                tabContents.forEach(content => {
+                    if (content.id === tabId) {
+                        content.style.display = 'block';
+                    } else {
+                        content.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        // El script del chat va aquí
     </script>
 </body>
 </html>
