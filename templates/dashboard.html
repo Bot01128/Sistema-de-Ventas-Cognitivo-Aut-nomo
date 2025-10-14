@@ -100,6 +100,29 @@
                     <label for="contact-email">{{ _('Correo Electrónico de Contacto') }}</label>
                     <input type="text" id="contact-email" placeholder="{{ _('El correo donde recibirás notificaciones') }}">
                 </div>
+                <div class="tab-content" id="data" style="display:none;">
+    <h2>{{ _('Información del Producto o Servicio') }}</h2>
+
+    <div class="form-section">
+        <label>{{ _('Tipo de Producto') }}</label>
+        <div class="radio-group">
+            <input type="radio" id="tangible" name="product-type" value="tangible">
+            <label for="tangible">{{ _('Tangible (un objeto físico)') }}</label>
+        </div>
+        <div class="radio-group">
+            <input type="radio" id="intangible" name="product-type" value="intangible">
+            <label for="intangible">{{ _('Intangible (un servicio, software, curso)') }}</label>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <label for="product-description">{{ _('Descripción Clave del Producto/Servicio') }}</label>
+        <textarea id="product-description" rows="6" maxlength="1000" placeholder="{{ _('Describe en menos de 1000 caracteres qué vendes, a quién y qué problema solucionas. Esta será la base del conocimiento de la IA.') }}"></textarea>
+        <small id="char-count">1000 caracteres restantes</small>
+    </div>
+    
+    <button class="cta-button">{{ _('Guardar Información') }}</button>
+</div>
                 <div class="form-section">
                     <label for="contact-whatsapp">{{ _('Número de WhatsApp (con código de país)') }}</label>
                     <input type="text" id="contact-whatsapp" placeholder="{{ _('Ej: +584121234567') }}">
