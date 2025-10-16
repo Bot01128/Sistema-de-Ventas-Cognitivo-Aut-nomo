@@ -41,17 +41,23 @@ al<!DOCTYPE html>
     margin-top: 20px;
     font-size: 14px;
 }
+.campaign-table {
+    width: 100%;
+    border-collapse: collapse; /* Une los bordes */
+    margin-top: 20px;
+    font-size: 14px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
 .campaign-table th, .campaign-table td {
-    border: 1px solid #ddd;
-    padding: 12px;
+    border: 1px solid #ddd; /* Añade los bordes */
+    padding: 12px 15px;
     text-align: left;
 }
-.campaign-table th {
+.campaign-table thead th {
     background-color: #f8f9fa;
     font-weight: 600;
-}
-.campaign-table tbody tr:nth-child(even) {
-    background-color: #f2f2f2;
+    color: #495057;
 }
 .campaign-table tbody tr:hover {
     background-color: #e9ecef;
