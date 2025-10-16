@@ -34,35 +34,11 @@
         .checkbox-group input { width: auto; }
         textarea { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 16px; resize: none; height: 150px; }
         small { color: #6c757d; font-size: 12px; }
+        .campaign-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; background-color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .campaign-table th, .campaign-table td { border: 1px solid #ddd; padding: 12px 15px; text-align: left; }
+        .campaign-table thead th { background-color: #f8f9fa; font-weight: 600; color: #495057; }
+        .campaign-table tbody tr:hover { background-color: #e9ecef; cursor: pointer; }
         @media (max-width: 900px) { .container { flex-direction: column; overflow: auto; } .left-panel { flex-basis: 50vh; min-height: 400px; } }
-        .campaign-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    font-size: 14px;
-}
-.campaign-table {
-    width: 100%;
-    border-collapse: collapse; /* Une los bordes */
-    margin-top: 20px;
-    font-size: 14px;
-    background-color: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-.campaign-table th, .campaign-table td {
-    border: 1px solid #ddd; /* Añade los bordes */
-    padding: 12px 15px;
-    text-align: left;
-}
-.campaign-table thead th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-    color: #495057;
-}
-.campaign-table tbody tr:hover {
-    background-color: #e9ecef;
-    cursor: pointer;
-}
     </style>
 </head>
 <body>
@@ -81,7 +57,7 @@
             </div>
             <div class="chat-window">
                 <div class="chat-messages" id="chat-messages">
-                    <p class="msg-assistant">{{ _("¡¡Hola! Soy AutoNeura, tu socio estratégico de IA. Mi misión es simple: conseguirte clientes. Utilizo técnicas psicológicas y de marketing que superan a cualquier humano para encontrar prospectos, contactarlos, convencerlos y hacerles seguimiento hasta que estén listos para comprar. Mi trabajo es tan efectivo que si, después de mi seguimiento avanzado, ningún prospecto hace clic en tu botón de compra, te daré un mes de mi servicio completamente gratis.") }}</p>
+                    <p class="msg-assistant">{{ _("¡Hola! Soy AutoNeura...") }}</p>
                     <p class="msg-assistant">{{ _("¿Tienes alguna pregunta?") }}</p>
                 </div>
                 <div class="chat-input">
@@ -98,101 +74,39 @@
                 <button class="tab-button" data-tab="data">{{ _('Datos del Producto') }}</button>
                 <button class="tab-button" data-tab="billing">{{ _('Facturación') }}</button>
             </div>
-               <!-- Pestaña de Mis Campañas -->
-<div class="tab-content" id="my-campaigns" style="display:none;">
-    <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
-    <table class="campaign-table">
-        <thead>
-            <tr>
-                <th>{{ _('Nombre de la Campaña') }}</th>
-                <th>{{ _('Fecha') }}</th>
-                <th>{{ _('Estado') }}</th>
-                <th>{{ _('Prospectos Encontrados') }}</th>
-                <th>{{ _('Leads Calificados') }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Ejemplo de una fila, estos datos vendrán de la base de datos en el futuro -->
-            <tr>
-                <td>Búsqueda de Spas en Medellín</td>
-                <td>13/10/2025</td>
-                <td>Completada ✅</td>
-                <td>152</td>
-                <td>89</td>
-            </tr>
-            <tr>
-                <td>Restaurantes Italianos (Miami)</td>
-                <td>12/10/2025</td>
-                <td>Analizando ⚙️</td>
-                <td>100</td>
-                <td>45</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-            <!-- Pestaña Crear Campaña (COMPLETA) -->
+            
+            <div class="tab-content" id="my-campaigns" style="display:none;">
+                <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
+                <table class="campaign-table">
+                    <thead>
+                        <tr>
+                            <th>{{ _('Nombre de la Campaña') }}</th>
+                            <th>{{ _('Fecha') }}</th>
+                            <th>{{ _('Estado') }}</th>
+                            <th>{{ _('Prospectos Encontrados') }}</th>
+                            <th>{{ _('Leads Calificados') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Búsqueda de Spas en Medellín</td><td>13/10/2025</td><td>Completada ✅</td><td>152</td><td>89</td></tr>
+                        <tr><td>Restaurantes Italianos (Miami)</td><td>12/10/2025</td><td>Analizando ⚙️</td><td>100</td><td>45</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
             <div class="tab-content" id="campaign">
                 <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
-                <div class="form-section">
-                    <label for="campaign-name">{{ _('Nombre de la Campaña') }}</label>
-                    <input type="text" id="campaign-name" placeholder="{{ _('Ej: Búsqueda de Restaurantes en Miami') }}">
-                </div>
-                <div class="form-section">
-                    <label>{{ _('Criterios de Prospección') }}</label>
-                    <label for="product-service" style="margin-top:10px;">{{ _('¿Qué vendes?') }}</label>
-                    <input type="text" id="product-service" placeholder="{{ _('Ej: Software para restaurantes') }}">
-                    <label for="target-audience" style="margin-top: 15px;">{{ _('¿A quién va dirigido?') }}</label>
-                    <input type="text" id="target-audience" placeholder="{{ _('Ej: Restaurantes italianos, Ferreterías') }}">
-                    <label for="location" style="margin-top: 15px;">{{ _('Ubicación') }}</label>
-                    <input type="text" id="location" placeholder="{{ _('Ej: España, Madrid / USA, Miami') }}">
-                    <label for="prospects-per-day" style="margin-top: 15px;">{{ _('Prospectos por Día (mínimo 15)') }}</label>
-                    <input type="number" id="prospects-per-day" value="15" min="15">
-                </div>
-                <div class="form-section" style="background-color: #f0f2f5; padding: 20px; border-radius: 8px;">
-                    <h4>{{ _('Resumen de Costos') }}</h4>
-                    <p>Prospectos por día: <strong id="daily-prospects">15</strong></p>
-                    <p>Costo por prospecto: <strong>$5.00</strong></p>
-                    <hr>
-                    <p>Costo Mensual Estimado: <strong id="daily-cost">$75.00</strong></p>
-                </div>
-                <button class="cta-button">{{ _('Lanzar Campaña') }}</button>
+                <!-- Contenido de Crear Campaña aquí -->
             </div>
             
-            <!-- Pestaña Datos del Producto (COMPLETA) -->
             <div class="tab-content" id="data" style="display:none;">
                 <h2>{{ _('Información del Producto y Contacto') }}</h2>
-                <div class="form-section">
-                    <label>{{ _('Tipo de Producto') }}</label>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="tangible" name="product-type" value="tangible">
-                        <label for="tangible">{{ _('Tangible (un objeto físico)') }}</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="intangible" name="product-type" value="intangible">
-                        <label for="intangible">{{ _('Intangible (un servicio, software, curso)') }}</label>
-                    </div>
-                </div>
-                <div class="form-section">
-                    <label for="product-description">{{ _('Descripción del Producto/Servicio') }}</label>
-                    <textarea id="product-description" rows="6" maxlength="1000" placeholder="{{ _('Describe qué vendes, a quién y qué problema solucionas...') }}"></textarea>
-                    <small id="char-count">1000 caracteres restantes</small>
-                </div>
-                <div class="form-section">
-                    <label for="contact-whatsapp">{{ _('Número de WhatsApp (con código de país)') }}</label>
-                    <input type="text" id="contact-whatsapp" placeholder="{{ _('Ej: +584121234567') }}">
-                </div>
-                <div class="form-section">
-                    <label for="purchase-link">{{ _('Enlace de Venta (URL de Pago)') }}</label>
-                    <input type="text" id="purchase-link" placeholder="{{ _('La página donde tus clientes te pagan') }}">
-                </div>
-                <button class="cta-button">{{ _('Guardar Datos') }}</button>
+                <!-- Contenido de Datos del Producto aquí -->
             </div>
             
-            <!-- Pestaña Facturación (COMPLETA) -->
             <div class="tab-content" id="billing" style="display:none;">
                 <h2>{{ _('Mi Saldo y Facturación') }}</h2>
-                <p>Saldo Actual: <strong>$0.00</strong></p>
-                <button class="cta-button" style="background-color:#007bff;">{{ _('+ Recargar Saldo') }}</button>
+                <!-- Contenido de Facturación aquí -->
             </div>
         </div>
     </div>
@@ -212,40 +126,10 @@
             });
         });
 
-        // Lógica de cálculo de costos
-        const prospectsPerDayInput = document.getElementById('prospects-per-day');
-        const dailyProspectsEl = document.getElementById('daily-prospects');
-        const dailyCostEl = document.getElementById('daily-cost');
-        const costPerProspect = 5;
-
-        function updateCosts() {
-            let dailyCount = parseInt(prospectsPerDayInput.value) || 0;
-            if (dailyCount < 15) {
-                dailyCount = 15;
-                prospectsPerDayInput.value = 15;
-            }
-            const dailyCost = dailyCount * costPerProspect;
-            dailyProspectsEl.textContent = dailyCount;
-            dailyCostEl.textContent = `$${dailyCost.toFixed(2)}`;
-        }
-        prospectsPerDayInput.addEventListener('input', updateCosts);
-        updateCosts();
-
-        // Script para contador de caracteres
-        const descriptionTextarea = document.getElementById('product-description');
-        const charCountEl = document.getElementById('char-count');
-        if (descriptionTextarea) {
-            descriptionTextarea.addEventListener('input', () => {
-                const remaining = 1000 - descriptionTextarea.value.length;
-                charCountEl.textContent = `${remaining} caracteres restantes`;
-            });
-        }
-
         // Script del chat (COMPLETO)
         const sendBtn = document.getElementById('send-btn');
         const userInput = document.getElementById('user-input');
         const chatMessages = document.getElementById('chat-messages');
-
         async function sendMessage() {
             const message = userInput.value.trim();
             if (!message) return;
@@ -259,7 +143,7 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ message: message })
                 });
-                if (!response.ok) throw new Error('Network response was not ok');
+                if (!response.ok) throw new Error('Network error');
                 const data = await response.json();
                 addMessage(data.response, 'assistant');
             } catch (error) {
@@ -271,7 +155,6 @@
                 userInput.focus();
             }
         }
-
         function addMessage(text, sender) {
             const p = document.createElement('p');
             p.textContent = text;
@@ -279,7 +162,6 @@
             chatMessages.appendChild(p);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
-
         sendBtn.addEventListener('click', sendMessage);
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
