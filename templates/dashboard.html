@@ -70,7 +70,38 @@ al<!DOCTYPE html>
                 <button class="tab-button" data-tab="data">{{ _('Datos del Producto') }}</button>
                 <button class="tab-button" data-tab="billing">{{ _('Facturación') }}</button>
             </div>
-
+               <!-- Pestaña de Mis Campañas -->
+<div class="tab-content" id="my-campaigns" style="display:none;">
+    <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
+    <table class="campaign-table">
+        <thead>
+            <tr>
+                <th>{{ _('Nombre de la Campaña') }}</th>
+                <th>{{ _('Fecha') }}</th>
+                <th>{{ _('Estado') }}</th>
+                <th>{{ _('Prospectos Encontrados') }}</th>
+                <th>{{ _('Leads Calificados') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Ejemplo de una fila, estos datos vendrán de la base de datos en el futuro -->
+            <tr>
+                <td>Búsqueda de Spas en Medellín</td>
+                <td>13/10/2025</td>
+                <td>Completada ✅</td>
+                <td>152</td>
+                <td>89</td>
+            </tr>
+            <tr>
+                <td>Restaurantes Italianos (Miami)</td>
+                <td>12/10/2025</td>
+                <td>Analizando ⚙️</td>
+                <td>100</td>
+                <td>45</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
             <!-- Pestaña Crear Campaña (COMPLETA) -->
             <div class="tab-content" id="campaign">
                 <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
