@@ -11,4 +11,4 @@ oauth2client
 beautifulsoup4
 gspread
 oauth2client
-google-generativeai
+google-generativeai==0.8.5
