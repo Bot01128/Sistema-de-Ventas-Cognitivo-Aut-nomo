@@ -9,3 +9,6 @@ psycopg2-binary
 gspread
 oauth2client
 beautifulsoup4
+gspread
+oauth2client
+google-generativeai
