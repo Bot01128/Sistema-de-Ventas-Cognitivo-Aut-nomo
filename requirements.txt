@@ -12,3 +12,4 @@ beautifulsoup4
 gspread
 oauth2client
 google-generativeai==0.8.5
+# Versión 4 - Forzando reconstrucción para el persuasor
