@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico Personalizado para {{ nombre_negocio }}</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #5a29e4; }
+        .section { margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+        .chat-simulator { border: 1px solid #ccc; padding: 15px; border-radius: 5px; background: #f9f9f9; }
+        .chat-q { font-weight: bold; color: #333; }
+        .chat-a { color: #555; margin-left: 20px; font-style: italic; }
+        .cta-button { display: inline-block; background-color: #5a29e4; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="section">
+            <h1>{{ titulo_personalizado }}</h1>
+            <p>Hemos preparado este breve análisis y demostración para mostrarte cómo la IA puede potenciar tu comunicación con los clientes.</p>
+        </div>
+
+        <div class="section">
+            <h2>Diagnóstico Rápido</h2>
+            <p>{{ texto_diagnostico }}</p>
+        </div>
+
+        <div class="section">
+            <h2>Demostración Interactiva</h2>
+            <p>Imagina que un cliente te contacta. Así es como un Agente de IA podría gestionar la conversación:</p>
+            <div class="chat-simulator">
+                <p class="chat-q">Cliente: {{ ejemplo_pregunta_1 }}</p>
+                <p class="chat-a"><strong>Tu Agente IA:</strong> {{ ejemplo_respuesta_1 }}</p>
+                <hr>
+                <p class="chat-q">Cliente: {{ ejemplo_pregunta_2 }}</p>
+                <p class="chat-a"><strong>Tu Agente IA:</strong> {{ ejemplo_respuesta_2 }}</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Contenido de Valor para tu Negocio</h2>
+            <p>{{ texto_contenido_de_valor }}</p>
+        </div>
+
+        <div class="section">
+            <h2>Siguiente Paso</h2>
+            <p>¿Te parece interesante? Podemos explorar cómo adaptar esto a las necesidades específicas de tu negocio en una llamada rápida y sin compromiso.</p>
+            <a href="https://calendly.com/tu-usuario" class="cta-button" target="_blank">Agendar una Demo de 15 Minutos</a>
+        </div>
+    </div>
+</body>
+</html>
