@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Análisis de Oportunidad para {{ nombre_negocio }}</title>
+    <style>/* Mismos estilos que nido_template.html para consistencia */</style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ titulo_contenido_de_valor }}</h1>
+        
+        <p>{{ texto_contenido_de_valor }}</p>
+        
+        <hr>
+        
+        <h2>¿Quieres un Diagnóstico Completo y Personalizado?</h2>
+        <p>Lo anterior es solo una idea. Hemos preparado un <strong>diagnóstico interactivo</strong> específicamente para <strong>{{ nombre_negocio }}</strong>, donde verás ejemplos de cómo un Agente de IA podría responder a tus clientes.</p>
+        
+        <form action="/generar-nido" method="post">
+            <input type="hidden" name="prospecto_id_oculto" value="{{ prospecto_id }}">
+            <input type="email" name="email_prospecto" placeholder="Tu mejor correo para recibir el acceso" required>
+            <button type="submit">Generar mi Diagnóstico Personalizado</button>
+        </form>
+    </div>
+</body>
+</html>
