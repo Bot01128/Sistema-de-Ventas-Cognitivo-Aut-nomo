@@ -9,6 +9,7 @@ app = Flask(__name__)
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def get_locale():
+    # Detecta el idioma del navegador del usuario. Si no lo encuentra, usa 'es' por defecto.
     if not request.accept_languages:
         return 'es'
     return request.accept_languages.best_match(['en', 'es'])
@@ -27,7 +28,6 @@ def dashboard():
 # --- RUTA DE CHAT PARA EL DASHBOARD ---
 @app.route('/chat', methods=['POST'])
 def chat():
-    # ... (Tu código de chat funcional se mantiene aquí, omitido por brevedad) ...
     if not dashboard_brain:
         return jsonify({"error": "Cerebro no disponible."}), 500
     user_message = request.json.get('message')
@@ -42,34 +42,35 @@ def chat():
         print(f"!!! ERROR al procesar chat: {e} !!!")
         return jsonify({"error": "Ocurrió un error al procesar."}), 500
 
-# --- RUTA DE PRUEBA ANTIGUA (La mantenemos por si acaso) ---
+# --- RUTA DE PRUEBA ANTIGUA (Se mantiene por seguridad) ---
 @app.route('/test-nido')
 def test_nido():
-    # ... (Tu código de test-nido se mantiene aquí, omitido por brevedad) ...
     datos_de_prueba = {
         "nombre_negocio": "Ferretería El Tornillo Feliz",
         "titulo_personalizado": "Diagnóstico y Oportunidades para Ferretería El Tornillo Feliz",
-        "texto_diagnostico": "Hemos detectado que su sitio web actual no ofrece a los clientes una forma inmediata de contacto, como un chat en vivo...",
+        "texto_diagnostico": "Hemos detectado que su sitio web actual no ofrece a los clientes una forma inmediata de contacto, como un chat en vivo, lo que podría estar causando la pérdida de clientes impacientes.",
         "ejemplo_pregunta_1": "¿Tienen stock de taladros inalámbricos DeWalt?",
-        "ejemplo_respuesta_1": "¡Claro que sí! Tenemos el modelo DCD777C2 a $120.00...",
+        "ejemplo_respuesta_1": "¡Claro que sí! Tenemos el modelo DCD777C2 a $120.00. Incluye 2 baterías y cargador. ¿Le gustaría que le reservemos uno?",
         "ejemplo_pregunta_2": "¿Hasta qué hora están abiertos hoy?",
         "ejemplo_respuesta_2": "Hoy estamos abiertos hasta las 6:00 PM. ¡Lo esperamos!",
-        "texto_contenido_de_valor": "Un Agente de IA no solo responde preguntas, también puede capturar los datos de contacto de clientes potenciales..."
+        "texto_contenido_de_valor": "Un Agente de IA no solo responde preguntas, también puede capturar los datos de contacto de clientes potenciales fuera de horario, asegurando que ninguna oportunidad de venta se pierda."
     }
     return render_template('nido_template.html', **datos_de_prueba)
 
-
-# --- NUEVO FLUJO DEL "PRE-NIDO" V3.0 ---
+# --- NUEVO FLUJO DEL "PRE-NIDO" V3.1 (MULTILINGÜE) ---
 
 @app.route('/pre-nido/<uuid:id_unico>')
 def mostrar_pre_nido(id_unico):
-    """Muestra la página de 'aporte de valor' antes de pedir el email."""
-    print(f"--- Solicitud de Pre-Nido para ID: {id_unico} ---")
+    """Muestra la página de 'aporte de valor' en el idioma del usuario."""
+    
+    # Paso 1: Detectar el idioma del prospecto
+    idioma_detectado = get_locale()
+    print(f"--- Solicitud de Pre-Nido para ID: {id_unico} en idioma '{idioma_detectado}' ---")
+    
     conn = None
     try:
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
-        # Buscamos el ID y el nombre del prospecto usando el id_unico
         cur.execute("SELECT id, nombre_negocio FROM prospectos WHERE id_unico = %s", (str(id_unico),))
         prospecto = cur.fetchone()
 
@@ -78,16 +79,31 @@ def mostrar_pre_nido(id_unico):
         
         prospecto_id, nombre_negocio = prospecto
 
-        # TAREA PENDIENTE: Llamar a la IA para generar contenido de valor único aquí
-        # Por ahora, usamos texto de ejemplo
-        titulo_valor = f"3 Formas de Aumentar Ventas para {nombre_negocio}"
-        texto_valor = "El marketing de contenidos es clave. Un blog relevante atrae clientes. La automatización de respuestas en redes sociales captura leads 24/7. Y ofrecer demos personalizadas cierra ventas. Nosotros nos especializamos en las dos últimas."
+        # Paso 2: Generar contenido en el idioma detectado (por ahora simulado)
+        # TAREA PENDIENTE: Reemplazar esto con una llamada real a la IA
+        textos = {}
+        if idioma_detectado == 'en':
+            textos['titulo_valor'] = f"3 Ways to Increase Sales for {nombre_negocio}"
+            textos['texto_valor'] = "Content marketing is key. A relevant blog attracts customers. Automating social media responses captures leads 24/7. We specialize in the latter."
+            textos['h2_siguiente_nivel'] = "Ready for the Next Level?"
+            textos['p1_diagnostico'] = f"The above is a general idea. We have prepared an interactive and 100% personalized diagnosis for <strong>{nombre_negocio}</strong>, where you'll see real examples of how an AI Agent could transform your customer communication."
+            textos['p2_gratis'] = "It's free and non-binding. Simply enter your email to generate instant access."
+            textos['placeholder_email'] = "Your best email to receive access"
+            textos['texto_boton'] = "Generate my Personalized Diagnosis"
+        else: # Por defecto, en español
+            textos['titulo_valor'] = f"3 Formas de Aumentar Ventas para {nombre_negocio}"
+            textos['texto_valor'] = "El marketing de contenidos es clave. Un blog relevante atrae clientes. La automatización de respuestas en redes sociales captura leads 24/7. Nosotros nos especializamos en esto último."
+            textos['h2_siguiente_nivel'] = "¿Listo para el Siguiente Nivel?"
+            textos['p1_diagnostico'] = f"Lo anterior es solo una idea general. Hemos preparado un <strong>diagnóstico interactivo y 100% personalizado</strong> para <strong>{nombre_negocio}</strong>, donde verás ejemplos reales de cómo un Agente de IA podría transformar tu comunicación con los clientes."
+            textos['p2_gratis'] = "Es gratuito y sin compromiso. Simplemente introduce tu correo para generar tu acceso al instante."
+            textos['placeholder_email'] = "Tu mejor correo para recibir el acceso"
+            textos['texto_boton'] = "Generar mi Diagnóstico Personalizado"
 
         return render_template('pre_nido.html', 
                                prospecto_id=prospecto_id, 
                                nombre_negocio=nombre_negocio,
-                               titulo_contenido_de_valor=titulo_valor,
-                               texto_contenido_de_valor=texto_valor)
+                               textos=textos
+                               )
     except Exception as e:
         print(f"!!! ERROR al mostrar pre-nido: {e} !!!")
         return "Error al cargar la página.", 500
@@ -98,26 +114,13 @@ def mostrar_pre_nido(id_unico):
 
 @app.route('/generar-nido', methods=['POST'])
 def generar_nido_y_enviar_enlace():
-    """Recibe el email y redirige al Nido final (en el futuro, enviará un enlace)."""
+    # ... (Tu código funcional de generar-nido se mantiene aquí, omitido por brevedad) ...
     email_cliente = request.form.get('email_prospecto')
     prospecto_id = request.form.get('prospecto_id_oculto')
     
-    # --- TAREA PENDIENTE ---
-    # 1. Guardar el `email_cliente` en la base de datos para el `prospecto_id`.
-    # 2. Activar al "Nutridor" para este prospecto.
-    # 3. En lugar de redirigir, en el futuro generaremos un token y enviaremos un email.
-    # ------------------------
-    
     print(f"EMAIL CAPTURADO: {email_cliente} para el prospecto ID: {prospecto_id}. Redirigiendo al Nido...")
     
-    # Por ahora, simplemente redirigimos al Nido final usando el prospecto_id
-    # En el futuro, será a una URL con un token único.
-    # Esta es una implementación temporal para probar el flujo.
-    # Aquí iría la lógica para mostrar el `nido_template.html` dinámico.
-    # Vamos a reutilizar la lógica de `test_nido` por ahora.
-    
-    # Obtenemos el nombre del negocio para la redirección
-    nombre_negocio = "tu negocio" # Valor temporal
+    nombre_negocio = "tu negocio"
     conn = None
     try:
         conn = psycopg2.connect(DATABASE_URL)
@@ -132,9 +135,8 @@ def generar_nido_y_enviar_enlace():
         if conn:
             cur.close()
             conn.close()
-
-    # TAREA PENDIENTE: Aquí deberíamos llamar a la IA para generar el contenido del Nido.
-    # Por ahora, usamos los datos de prueba para demostrar el flujo.
+            
+    # TAREA PENDIENTE: Llamar a la IA para generar el contenido del Nido.
     datos_del_nido = {
         "nombre_negocio": nombre_negocio,
         "titulo_personalizado": f"Diagnóstico y Oportunidades para {nombre_negocio}",
@@ -147,7 +149,6 @@ def generar_nido_y_enviar_enlace():
     }
     
     return render_template('nido_template.html', **datos_del_nido)
-
 
 # --- BLOQUE DE ARRANQUE DEL SERVIDOR ---
 if __name__ == '__main__':
