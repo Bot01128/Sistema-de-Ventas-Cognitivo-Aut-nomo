@@ -1,15 +1,21 @@
-python-dotenv==1.0.1
+# === Servidor Web ===
+Flask==3.0.3
 gunicorn==22.0.0
-Flask-Babel==3.1.0
-Flask==2.3.3
-langchain==0.2.1
-langchain-openai
-apify-client
-psycopg2-binary
-gspread
-oauth2client
-beautifulsoup4
-gspread
-oauth2client
-google-generativeai==0.8.5
-# Versión 4 - Forzando reconstrucción para el persuasor
+Flask-Babel==4.0.0
+python-dotenv==1.0.1
+
+# === Inteligencia Artificial ===
+google-generativeai==0.5.4
+langchain==0.1.20
+langchain-openai==0.1.6
+
+# === Herramientas y Bases de Datos ===
+apify-client==2.2.1
+psycopg2-binary==2.9.9
+gspread==6.0.2
+oauth2client==4.1.3
+beautifulsoup4==4.12.3
+SQLAlchemy==2.0.25
+
+# === No necesitaremos estas por ahora ===
+# tavily-python
