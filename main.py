@@ -1,5 +1,7 @@
 import os
 import psycopg2
+import json
+import google.generativeai as genai
 from flask import Flask, render_template, request, jsonify
 from flask_babel import Babel
 from cerebro_dashboard import create_dashboard_brain
@@ -7,6 +9,12 @@ from cerebro_dashboard import create_dashboard_brain
 # --- CONFIGURACIÓN INICIAL ---
 app = Flask(__name__)
 DATABASE_URL = os.environ.get("DATABASE_URL")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+
+# Configurar la IA de Google globalmente
+if GOOGLE_API_KEY:
+    genai.configure(api_key=GOOGLE_API_KEY)
+    print(">>> IA de Google configurada exitosamente para la aplicación.")
 
 def get_locale():
     # Detecta el idioma del navegador del usuario. Si no lo encuentra, usa 'es' por defecto.
@@ -57,13 +65,12 @@ def test_nido():
     }
     return render_template('nido_template.html', **datos_de_prueba)
 
-# --- NUEVO FLUJO DEL "PRE-NIDO" V3.1 (MULTILINGÜE) ---
+# --- NUEVO FLUJO DEL "PRE-NIDO" V3.2 (CON IA MULTILINGÜE) ---
 
 @app.route('/pre-nido/<uuid:id_unico>')
 def mostrar_pre_nido(id_unico):
-    """Muestra la página de 'aporte de valor' en el idioma del usuario."""
+    """Muestra la página de 'aporte de valor' en el idioma del usuario, generada por IA."""
     
-    # Paso 1: Detectar el idioma del prospecto
     idioma_detectado = get_locale()
     print(f"--- Solicitud de Pre-Nido para ID: {id_unico} en idioma '{idioma_detectado}' ---")
     
@@ -79,25 +86,34 @@ def mostrar_pre_nido(id_unico):
         
         prospecto_id, nombre_negocio = prospecto
 
-        # Paso 2: Generar contenido en el idioma detectado (por ahora simulado)
-        # TAREA PENDIENTE: Reemplazar esto con una llamada real a la IA
-        textos = {}
-        if idioma_detectado == 'en':
-            textos['titulo_valor'] = f"3 Ways to Increase Sales for {nombre_negocio}"
-            textos['texto_valor'] = "Content marketing is key. A relevant blog attracts customers. Automating social media responses captures leads 24/7. We specialize in the latter."
-            textos['h2_siguiente_nivel'] = "Ready for the Next Level?"
-            textos['p1_diagnostico'] = f"The above is a general idea. We have prepared an interactive and 100% personalized diagnosis for <strong>{nombre_negocio}</strong>, where you'll see real examples of how an AI Agent could transform your customer communication."
-            textos['p2_gratis'] = "It's free and non-binding. Simply enter your email to generate instant access."
-            textos['placeholder_email'] = "Your best email to receive access"
-            textos['texto_boton'] = "Generate my Personalized Diagnosis"
-        else: # Por defecto, en español
-            textos['titulo_valor'] = f"3 Formas de Aumentar Ventas para {nombre_negocio}"
-            textos['texto_valor'] = "El marketing de contenidos es clave. Un blog relevante atrae clientes. La automatización de respuestas en redes sociales captura leads 24/7. Nosotros nos especializamos en esto último."
-            textos['h2_siguiente_nivel'] = "¿Listo para el Siguiente Nivel?"
-            textos['p1_diagnostico'] = f"Lo anterior es solo una idea general. Hemos preparado un <strong>diagnóstico interactivo y 100% personalizado</strong> para <strong>{nombre_negocio}</strong>, donde verás ejemplos reales de cómo un Agente de IA podría transformar tu comunicación con los clientes."
-            textos['p2_gratis'] = "Es gratuito y sin compromiso. Simplemente introduce tu correo para generar tu acceso al instante."
-            textos['placeholder_email'] = "Tu mejor correo para recibir el acceso"
-            textos['texto_boton'] = "Generar mi Diagnóstico Personalizado"
+        # --- ¡LA MAGIA DE LA IA MULTILINGÜE! ---
+        if not GOOGLE_API_KEY:
+            return "Error: La clave de API de Google no está configurada.", 500
+
+        prompt = f"""
+        Actúa como un experto en marketing y un traductor profesional. Tu misión es generar un objeto JSON con los textos para una página web de marketing, traducidos al idioma con el código '{idioma_detectado}'.
+
+        El nombre del negocio del prospecto es: "{nombre_negocio}"
+
+        TAREA: Genera un objeto JSON con las siguientes claves, con su contenido traducido perfectamente al idioma '{idioma_detectado}':
+        1. "titulo_valor": "3 Formas de Aumentar Ventas para {nombre_negocio}"
+        2. "texto_valor": "El marketing de contenidos es clave. Un blog relevante atrae clientes. La automatización de respuestas en redes sociales captura leads 24/7. Nosotros nos especializamos en esto último."
+        3. "h2_siguiente_nivel": "¿Listo para el Siguiente Nivel?"
+        4. "p1_diagnostico": "Lo anterior es solo una idea general. Hemos preparado un <strong>diagnóstico interactivo y 100% personalizado</strong> para <strong>{nombre_negocio}</strong>, donde verás ejemplos reales de cómo un Agente de IA podría transformar tu comunicación con los clientes."
+        5. "p2_gratis": "Es gratuito y sin compromiso. Simplemente introduce tu correo para generar tu acceso al instante."
+        6. "placeholder_email": "Tu mejor correo para recibir el acceso"
+        7. "texto_boton": "Generar mi Diagnóstico Personalizado"
+
+        IMPORTANTE: El nombre del negocio '{nombre_negocio}' no debe ser traducido. Devuelve solo el objeto JSON, sin explicaciones ni nada más.
+        """
+        
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt)
+        # Limpiar la respuesta para que sea un JSON válido
+        json_text = response.text.strip().replace("```json", "").replace("```", "")
+        textos = json.loads(json_text)
+        
+        print(f">>> Contenido multilingüe generado por IA para el idioma '{idioma_detectado}'.")
 
         return render_template('pre_nido.html', 
                                prospecto_id=prospecto_id, 
@@ -105,7 +121,7 @@ def mostrar_pre_nido(id_unico):
                                textos=textos
                                )
     except Exception as e:
-        print(f"!!! ERROR al mostrar pre-nido: {e} !!!")
+        print(f"!!! ERROR al mostrar pre-nido con IA multilingüe: {e} !!!")
         return "Error al cargar la página.", 500
     finally:
         if conn:
