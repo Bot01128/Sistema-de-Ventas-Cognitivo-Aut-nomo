@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ get_locale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -90,21 +90,20 @@
     <div class="container">
         
         <div class="value-section">
-            <h1>{{ titulo_contenido_de_valor }}</h1>
-            <p>{{ texto_contenido_de_valor }}</p>
+            <h1>{{ textos.titulo_valor }}</h1>
+            <p>{{ textos.texto_valor }}</p>
         </div>
         
         <hr>
         
-        <h2>¿Listo para el Siguiente Nivel?</h2>
-        <p>Lo anterior es solo una idea general. Hemos preparado un <strong>diagnóstico interactivo y 100% personalizado</strong> para <strong>{{ nombre_negocio }}</strong>, donde verás ejemplos reales de cómo un Agente de IA podría transformar tu comunicación con los clientes.</p>
-        
-        <p>Es gratuito y sin compromiso. Simplemente introduce tu correo para generar tu acceso al instante.</p>
+        <h2>{{ textos.h2_siguiente_nivel }}</h2>
+        <p>{{ textos.p1_diagnostico | safe }}</p> <!-- | safe es para que renderice el <strong> -->
+        <p>{{ textos.p2_gratis }}</p>
         
         <form action="/generar-nido" method="post">
             <input type="hidden" name="prospecto_id_oculto" value="{{ prospecto_id }}">
-            <input type="email" name="email_prospecto" placeholder="Tu mejor correo para recibir el acceso" required>
-            <button type="submit">Generar mi Diagnóstico Personalizado</button>
+            <input type="email" name="email_prospecto" placeholder="{{ textos.placeholder_email }}" required>
+            <button type="submit">{{ textos.texto_boton }}</button>
         </form>
 
     </div>
