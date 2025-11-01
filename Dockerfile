@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 8080
 
 # El comando final para ejecutar la aplicación
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "main:app"]
+CMD gunicorn main:app --bind 0.0.0.0:$PORT
