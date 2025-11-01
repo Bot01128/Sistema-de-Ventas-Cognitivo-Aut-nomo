@@ -4,7 +4,7 @@
 #
 
 app = "sistema-de-ventas-cognitivo-aut-nomo"
-primary_region = "mia"
+primary_region = "iad"
 
 [build]
   dockerfile = "Dockerfile"
