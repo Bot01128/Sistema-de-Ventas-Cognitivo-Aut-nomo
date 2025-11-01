@@ -1,5 +1,5 @@
-# Usa una imagen oficial de Python como base
-FROM python:3.11-slim
+# Usa una imagen oficial de Python completa (no la slim)
+FROM python:3.11
 
 # Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 8080
 
 # El comando final para ejecutar la aplicación
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "main:app"]
+CMD ["gunicorn", "main:app", "--bind", "0.0.0.0:8080"]
