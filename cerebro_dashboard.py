@@ -8,7 +8,7 @@ print(">>> [Cerebro Dashboard v-Google] Cargando...")
 
 try:
     # ¡CAMBIAMOS EL MOTOR DE IA A GOOGLE GEMINI!
-    llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7)
+    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", temperature=0.7)
     print(">>> [Cerebro Dashboard v-Google] Conexión con Google AI exitosa.")
 except Exception as e:
     print(f"!!! ERROR [Cerebro v-Google]: No se pudo inicializar. Revisa tu GOOGLE_API_KEY. Error: {e} !!!")
