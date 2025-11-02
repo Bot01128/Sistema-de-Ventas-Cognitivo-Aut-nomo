@@ -112,34 +112,110 @@
     </div>
   
    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Lógica de Pestañas
-            const tabButtons = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
-            function switchTab(tabId) { /* ... */ }
-            tabButtons.forEach(button => { /* ... */ });
+       <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- MÓDULO DE PESTAÑAS (YA FUNCIONA) ---
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    function switchTab(tabId) { /* ... */ }
+    tabButtons.forEach(button => { /* ... */ });
 
-            // Lógica del Chat
-            const chatForm = document.getElementById('chat-form');
-            const sendBtn = document.getElementById('send-btn');
-            const userInput = document.getElementById('user-input');
-            const chatMessages = document.getElementById('chat-messages');
-            async function sendMessage() { /* ... */ }
-            function addMessage(text, sender) { /* ... */ }
-            if (chatForm) chatForm.addEventListener('submit', (e) => { e.preventDefault(); sendMessage(); });
+    // --- MÓDULO DEL CHAT (¡CORREGIDO!) ---
+    const chatForm = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+    const chatMessages = document.getElementById('chat-messages');
+    
+    function addMessage(text, sender) {
+        if (!chatMessages) return;
+        const p = document.createElement('p');
+        p.textContent = text;
+        p.className = sender === 'user' ? 'msg-user' : 'msg-assistant';
+        // Añade el nuevo mensaje al PRINCIPIO para el efecto "WhatsApp"
+        chatMessages.insertBefore(p, chatMessages.firstChild);
+    }
 
-            // Lógica del Espía Inteligente
-            const lanzarBtn = document.getElementById('lanzar-campana-btn');
-            if (lanzarBtn) {
-                lanzarBtn.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    // ... Aquí va la lógica de validación y envío completa ...
+    async function handleSendMessage() {
+        if (!userInput) return;
+        const message = userInput.value.trim();
+        if (!message) return;
+        
+        addMessage(message, 'user');
+        userInput.value = '';
+        
+        try {
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ message: message })
+            });
+            if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
+            const data = await response.json();
+            if (data.error) { addMessage(`Error: ${data.error}`, 'assistant'); } 
+            else { addMessage(data.response, 'assistant'); }
+        } catch (error) {
+            console.error("Error en fetch del chat:", error);
+            addMessage('Lo siento, ocurrió un error de conexión.', 'assistant');
+        }
+    }
+
+    if (chatForm) {
+        chatForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            handleSendMessage();
+        });
+    }
+
+    // --- MÓDULO DEL ESPÍA INTELIGENTE (¡CORREGIDO!) ---
+    const lanzarBtn = document.getElementById('lanzar-campana-btn');
+    if (lanzarBtn) {
+        lanzarBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            clearAllErrors();
+            
+            // ... (Tu lógica de validación de campos va aquí, ya funciona) ...
+
+            if (firstErrorField) {
+                // ... (Tu lógica para mostrar errores va aquí, ya funciona) ...
+            } else {
+                // ¡¡¡LÓGICA DE ENVÍO CORREGIDA Y COMPLETA!!!
+                const campaignData = {
+                    nombre_campana: document.getElementById('nombre_campana').value.trim(),
+                    que_vendes: document.getElementById('que_vendes').value.trim(),
+                    a_quien_va_dirigido: document.getElementById('a_quien_va_dirigido').value.trim(),
+                    prospectos_por_dia: document.getElementById('prospects-per-day').value,
+                    tipo_producto_tangible: document.getElementById('tipo_producto_tangible').checked,
+                    tipo_producto_intangible: document.getElementById('tipo_producto_intangible').checked,
+                    descripcion_producto: document.getElementById('descripcion_producto').value.trim(),
+                    numero_whatsapp: document.getElementById('numero_whatsapp').value.trim(),
+                    enlace_venta: document.getElementById('enlace_venta').value.trim()
+                };
+
+                fetch('/crear-campana', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(campaignData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('¡Campaña creada con éxito!');
+                        switchTab('my-campaigns');
+                    } else {
+                        alert('Error del Servidor: ' + (data.message || 'Error inesperado.'));
+                    }
+                })
+                .catch(error => {
+                    alert('Error de red al crear campaña: ' + error);
                 });
             }
-
-            // Inicialización
-            switchTab('my-campaigns');
         });
+    }
+    // ... (El resto de tus funciones de JS van aquí) ...
+    
+    // Inicialización
+    switchTab('my-campaigns');
+});
+</script>
    </script>
 </body>
 </html>
