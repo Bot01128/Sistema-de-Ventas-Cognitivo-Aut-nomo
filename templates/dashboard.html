@@ -242,6 +242,57 @@
         if (userInput) userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
+       const chatForm = document.getElementById('chat-form');
+            const userInput = document.getElementById('user-input');
+            const chatMessages = document.getElementById('chat-messages');
+            
+            function addMessage(text, sender) {
+                if(!chatMessages) return;
+                const p = document.createElement('p');
+                p.textContent = text;
+                p.className = sender === 'user' ? 'msg-user' : 'msg-assistant';
+                chatMessages.appendChild(p);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            async function handleSendMessage() {
+                const message = userInput.value.trim();
+                if (!message) return;
+                
+                addMessage(message, 'user');
+                userInput.value = '';
+                
+                try {
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ message: message })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.error) {
+                        addMessage(`Error: ${data.error}`, 'assistant');
+                    } else {
+                        addMessage(data.response, 'assistant');
+                    }
+                    
+                } catch (error) {
+                    console.error("Error en la función fetch del chat:", error);
+                    addMessage('Lo siento, ocurrió un error de conexión.', 'assistant');
+                }
+            }
+
+            if (chatForm) {
+                chatForm.addEventListener('submit', function(event) {
+                    event.preventDefault(); // ¡La línea mágica que evita que la página se recargue!
+                    handleSendMessage();
+                });
+            }
    </script>
 </body>
 </html>
