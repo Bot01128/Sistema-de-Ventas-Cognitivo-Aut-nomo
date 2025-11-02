@@ -53,6 +53,7 @@
         .plan-card.selected { border-color: #007bff; box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); transform: translateY(-5px); }
         .plan-card h4 { margin: 0 0 10px 0; }
         .plan-card .price { font-size: 24px; font-weight: bold; margin: 10px 0; }
+        .iti { width: 100%; }
         @media (max-width: 900px) { .container { flex-direction: column; overflow: auto; } .left-panel { flex-basis: auto; min-height: 400px; } }
     </style>
 </head>
@@ -91,29 +92,44 @@
             <div class="tab-content" id="my-campaigns">
                 <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
                 <table class="campaign-table">
-                    <!-- ... Tu tabla ... -->
+                    <!-- Tu tabla original aquí -->
                 </table>
             </div>
             <div class="tab-content" id="campaign" style="display:none;">
                 <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
-                <!-- ... Tu formulario de campaña ... -->
+                <!-- Tu formulario de campaña original aquí -->
                 <button id="lanzar-campana-btn" class="cta-button">{{ _('Lanzar Campaña') }}</button>
             </div>
             <div class="tab-content" id="data" style="display:none;">
                 <h2>{{ _('Información del Producto y Contacto') }}</h2>
-                <!-- ... Tu formulario de datos ... -->
+                <div class="form-section">
+                    <label>{{ _('Tipo de Producto') }}</label>
+                    <div class="checkbox-group"><input type="checkbox" id="tipo_producto_tangible"><label for="tipo_producto_tangible">{{ _('Tangible') }}</label></div>
+                    <div class="checkbox-group"><input type="checkbox" id="tipo_producto_intangible"><label for="tipo_producto_intangible">{{ _('Intangible') }}</label></div>
+                </div>
+                <div class="form-section">
+                    <label for="descripcion_producto">{{ _('Descripción del Producto/Servicio') }}</label>
+                    <textarea id="descripcion_producto" maxlength="1000" placeholder="{{ _('Describe qué vendes...') }}"></textarea><small id="char-count">1000 caracteres restantes</small>
+                </div>
+                <div class="form-section">
+                    <label for="numero_whatsapp">{{ _('Número de WhatsApp') }}</label>
+                    <input type="tel" id="numero_whatsapp">
+                </div>
+                <div class="form-section">
+                    <label for="enlace_venta">{{ _('Enlace de Venta') }}</label>
+                    <input type="text" id="enlace_venta">
+                </div>
+                <button class="cta-button">{{ _('Guardar Datos') }}</button>
             </div>
             <div class="tab-content" id="billing" style="display:none;">
                 <h2>{{ _('Mi Saldo y Facturación') }}</h2>
-                <!-- ... Tu contenido de facturación ... -->
+                <!-- Tu contenido de facturación original aquí -->
             </div>
         </div>
     </div>
   
    <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // --- CÓDIGO JAVASCRIPT COMPLETO Y CORREGIDO ---
-            
             // Lógica de Pestañas
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabContents = document.querySelectorAll('.tab-content');
@@ -123,36 +139,56 @@
             }
             tabButtons.forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)));
 
-            // Lógica de Planes y Costos
-            const planCards = document.querySelectorAll('.plan-card');
-            const prospectsInput = document.getElementById('prospects-per-day');
-            // ... (el resto de tus variables de planes)
-            const plans = { /* ... tu objeto de planes ... */ };
-            function updateCosts() { /* ... tu lógica de costos ... */ }
-            if(prospectsInput) prospectsInput.addEventListener('input', updateCosts);
-            planCards.forEach(card => { card.addEventListener('click', () => { /* ... tu lógica de planes ... */ }); });
-            if(prospectsInput) updateCosts();
-
             // Lógica del Chat
-            const chatForm = document.getElementById('chat-input'); // Corregido para apuntar al div
+            const sendBtn = document.getElementById('send-btn');
             const userInput = document.getElementById('user-input');
             const chatMessages = document.getElementById('chat-messages');
-            const sendBtn = document.getElementById('send-btn');
-            function addMessage(text, sender) { /* ... tu lógica para añadir mensaje ... */ }
-            async function handleSendMessage() { /* ... tu lógica para enviar y recibir mensaje ... */ }
-            if (sendBtn) sendBtn.addEventListener('click', (e) => { e.preventDefault(); handleSendMessage(); });
-            if (userInput) userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleSendMessage(); } });
+            async function sendMessage() {
+                const message = userInput.value.trim();
+                if (!message) return;
+                addMessage(message, 'user');
+                userInput.value = '';
+                try {
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ message: message })
+                    });
+                    const data = await response.json();
+                    addMessage(data.response, 'assistant');
+                } catch (error) {
+                    addMessage('Lo siento, ocurrió un error de conexión.', 'assistant');
+                }
+            }
+            function addMessage(text, sender) {
+                const p = document.createElement('p');
+                p.textContent = text;
+                p.className = sender === 'user' ? 'msg-user' : 'msg-assistant';
+                chatMessages.appendChild(p);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+            if (userInput) userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
             
-            // Lógica del Espía Inteligente
-            const lanzarBtn = document.getElementById('lanzar-campana-btn');
-            if (lanzarBtn) {
-                lanzarBtn.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    // ... (toda la lógica de validación completa va aquí) ...
+            // Lógica del Teléfono
+            const phoneInputField = document.querySelector("#numero_whatsapp");
+            if (phoneInputField) {
+                const phoneInput = window.intlTelInput(phoneInputField, {
+                    initialCountry: "auto",
+                    geoIpLookup: function(callback) { fetch("https://ipapi.co/json").then(res => res.json()).then(data => callback(data.country_code)).catch(() => callback("us")); },
+                    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
                 });
             }
 
-            // Inicialización de la primera pestaña
+            // Lógica del Botón Lanzar Campaña
+            const lanzarBtn = document.getElementById('lanzar-campana-btn');
+            if (lanzarBtn) {
+                lanzarBtn.addEventListener('click', function(event) {
+                    // ... Aquí va la lógica de validación y envío que ya funciona ...
+                });
+            }
+
+            // Inicialización
             switchTab('my-campaigns');
         });
    </script>
