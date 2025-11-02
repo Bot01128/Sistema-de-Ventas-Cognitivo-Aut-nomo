@@ -239,59 +239,76 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- CÓDIGO DEL "ESPÍA INTELIGENTE" ---
-    const lanzarBtn = document.getElementById('lanzar-campana-btn');
-    if (lanzarBtn) {
-        lanzarBtn.addEventListener('click', function(event) {
-            event.preventDefault(); 
-            clearAllErrors();
-            const fieldsToValidate = [
-                { id: 'nombre_campana', tab: 'campaign', message: 'Por favor, dale un nombre a tu campaña.' },
-                { id: 'que_vendes', tab: 'campaign', message: 'Por favor, describe qué vendes.' },
-                { id: 'a_quien_va_dirigido', tab: 'campaign', message: 'Por favor, especifica a quién va dirigido.' },
-                { id: 'descripcion_producto', tab: 'data', message: 'La descripción del producto es necesaria.' },
-                { id: 'numero_whatsapp', tab: 'data', message: 'Necesitamos un número de WhatsApp de contacto.' },
-                { id: 'enlace_venta', tab: 'data', message: 'El enlace de venta es crucial para el cierre.' }
-            ];
-            let firstErrorField = null;
-            for (const field of fieldsToValidate) {
-                const element = document.getElementById(field.id);
-                if (!element || !element.value.trim()) {
-                    if(element) showError(element, field.message);
-                    if (!firstErrorField) { firstErrorField = { element, tab: field.tab }; }
-                }
-            }
-            const tangible = document.getElementById('tipo_producto_tangible');
-            const intangible = document.getElementById('tipo_producto_intangible');
-            if (tangible && intangible && !tangible.checked && !intangible.checked) {
-                 if (!firstErrorField) { firstErrorField = { element: tangible, tab: 'data' }; }
-                showError(tangible.parentElement.parentElement, 'Debes seleccionar al menos un tipo de producto.');
-            }
-            if (firstErrorField) {
-                switchTab(firstErrorField.tab);
-                setTimeout(() => {
-                   if(firstErrorField.element) {
-                       firstErrorField.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                       firstErrorField.element.focus();
-                   }
-                }, 100);
-            } else {
-                console.log("Validación exitosa. ¡Enviando datos al servidor!");
-                alert("¡Validación exitosa! Próximamente enviaremos esto al servidor.");
-            }
-        });
-    }
-    function showError(element, message) {
-        element.classList.add('error');
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-message';
-        errorDiv.textContent = message;
-        element.parentElement.appendChild(errorDiv);
-    }
-    function clearAllErrors() {
-        document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
-        document.querySelectorAll('.error-message').forEach(el => el.remove());
-    }
+  const lanzarBtn = document.getElementById('lanzar-campana-btn');
+            if (lanzarBtn) {
+                lanzarBtn.addEventListener('click', function(event) {
+                    event.preventDefault(); 
+                    clearAllErrors();
+                    const fieldsToValidate = [
+                        { id: 'nombre_campana', tab: 'campaign', message: 'Por favor, dale un nombre a tu campaña.' },
+                        { id: 'que_vendes', tab: 'campaign', message: 'Por favor, describe qué vendes.' },
+                        { id: 'a_quien_va_dirigido', tab: 'campaign', message: 'Por favor, especifica a quién va dirigido.' },
+                        { id: 'descripcion_producto', tab: 'data', message: 'La descripción del producto es necesaria.' },
+                        { id: 'numero_whatsapp', tab: 'data', message: 'Necesitamos un número de WhatsApp de contacto.' },
+                        { id: 'enlace_venta', tab: 'data', message: 'El enlace de venta es crucial para el cierre.' }
+                    ];
+                    let firstErrorField = null;
+                    for (const field of fieldsToValidate) {
+                        const element = document.getElementById(field.id);
+                        if (!element || !element.value.trim()) {
+                            if(element) showError(element, field.message);
+                            if (!firstErrorField) { firstErrorField = { element, tab: field.tab }; }
+                        }
+                    }
+                    const tangible = document.getElementById('tipo_producto_tangible');
+                    const intangible = document.getElementById('tipo_producto_intangible');
+                    if (tangible && intangible && !tangible.checked && !intangible.checked) {
+                         if (!firstErrorField) { firstErrorField = { element: tangible, tab: 'data' }; }
+                        showError(tangible.parentElement.parentElement, 'Debes seleccionar al menos un tipo de producto.');
+                    }
+                    if (firstErrorField) {
+                        switchTab(firstErrorField.tab);
+                        setTimeout(() => {
+                           if(firstErrorField.element) {
+                               firstErrorField.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                               firstErrorField.element.focus();
+                           }
+                        }, 100);
+                    } else {
+                        // ¡¡¡CÓDIGO CORREGIDO!!! AHORA SÍ RECOGE TODO.
+                        const campaignData = {
+                            nombre_campana: document.getElementById('nombre_campana').value,
+                            que_vendes: document.getElementById('que_vendes').value,
+                            a_quien_va_dirigido: document.getElementById('a_quien_va_dirigido').value,
+                            prospectos_por_dia: document.getElementById('prospects-per-day').value,
+                            tipo_producto_tangible: document.getElementById('tipo_producto_tangible').checked,
+                            tipo_producto_intangible: document.getElementById('tipo_producto_intangible').checked,
+                            descripcion_producto: document.getElementById('descripcion_producto').value,
+                            numero_whatsapp: document.getElementById('numero_whatsapp').value,
+                            enlace_venta: document.getElementById('enlace_venta').value
+                        };
 
+                        fetch('/crear-campana', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(campaignData)
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                alert('¡Éxito! El Orquestador ha recibido la campaña: ' + data.message);
+                                switchTab('my-campaigns');
+                            } else {
+                                alert('Error del Servidor: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error de red al crear campaña:', error);
+                            alert('Error de conexión al intentar crear la campaña.');
+                        });
+                    }
+                });
+            }
     // --- CÓDIGO PROFESIONAL PARA WHATSAPP ---
     const phoneInputField = document.querySelector("#numero_whatsapp");
     if (phoneInputField) {
