@@ -6,6 +6,12 @@
 app = "sistema-de-ventas-cognitivo-aut-nomo"
 primary_region = "iad"
 
+# Aumentamos la memoria de la máquina para evitar errores "Out of Memory" con la IA.
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
 [build]
   dockerfile = "Dockerfile"
 
