@@ -4,8 +4,8 @@ import json
 import google.generativeai as genai
 from flask import Flask, render_template, request, jsonify
 from flask_babel import Babel
-# ¡IMPORTANTE! Importamos las funciones del nuevo cerebro simplificado
-from cerebro_dashboard import obtener_cerebro, obtener_prompt_sistema
+# ¡Volvemos a importar la función original de LangChain!
+from cerebro_dashboard import create_dashboard_brain
 
 # --- CONFIGURACIÓN INICIAL ---
 app = Flask(__name__)
@@ -17,12 +17,11 @@ if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
     print(">>> IA de Google configurada exitosamente para la aplicación.")
 else:
-    print("!!! ADVERTENCIA: GOOGLE_API_KEY no encontrada. El chat no funcionará.")
+    print("!!! ADVERTENCIA: GOOGLE_API_KEY no encontrada.")
 
 # --- INICIALIZACIÓN DEL CEREBRO ---
-# Obtenemos el cerebro una sola vez al arrancar la aplicación
-dashboard_brain = obtener_cerebro()
-prompt_sistema_cerebro = obtener_prompt_sistema()
+# ¡Volvemos a llamar a la función original que crea la cadena de LangChain!
+dashboard_brain = create_dashboard_brain()
 
 # --- CONFIGURACIÓN DE IDIOMA ---
 def get_locale():
@@ -39,33 +38,27 @@ app.jinja_env.globals.update(get_locale=get_locale)
 def dashboard():
     return render_template('dashboard.html')
 
+# --- ¡¡¡RUTA DE CHAT CORREGIDA PARA LANGCHAIN!!! ---
 @app.route('/chat', methods=['POST'])
 def chat():
     if not dashboard_brain:
-        return jsonify({"error": "Cerebro no disponible. Revisa la GOOGLE_API_KEY."}), 500
+        return jsonify({"error": "Cerebro no disponible."}), 500
     
     user_message = request.json.get('message')
     if not user_message:
         return jsonify({"error": "No hay mensaje."}), 400
         
-    print(f"--- Mensaje chat: '{user_message}' ---")
-    
     try:
-        # Construimos el prompt completo con el sistema y la pregunta del usuario
-        full_prompt = f"{prompt_sistema_cerebro}\n\nUsuario: {user_message}\nAsistente:"
-        
-        # Obtenemos la respuesta directamente del modelo de Gemini
-        response = dashboard_brain.generate_content(full_prompt)
-        
-        # Limpiamos y devolvemos la respuesta
-        ai_response = response.text.strip()
-        print(f"--- Respuesta IA: '{ai_response}' ---")
-        return jsonify({"response": ai_response})
-
+        # ¡Usamos .invoke() porque estamos usando LangChain!
+        print(f"--- [LangChain] Invocando cerebro con: '{user_message}' ---")
+        response = dashboard_brain.invoke({"question": user_message})
+        print(f"--- [LangChain] Respuesta recibida: '{response}' ---")
+        return jsonify({"response": response})
     except Exception as e:
-        print(f"!!! ERROR al procesar chat con Google-Directo: {e} !!!")
-        return jsonify({"error": "Ocurrió un error al procesar la respuesta."}), 500
+        print(f"!!! ERROR al procesar chat con LangChain: {e} !!!")
+        return jsonify({"error": "Ocurrió un error al procesar."}), 500
 
+# --- RUTA DE PRUEBA ANTIGUA (Se mantiene intacta) ---
 @app.route('/test-nido')
 def test_nido():
     datos_de_prueba = {
@@ -80,6 +73,7 @@ def test_nido():
     }
     return render_template('nido_template.html', **datos_de_prueba)
 
+# --- NUEVO FLUJO DEL "PRE-NIDO" V3.2 (Se mantiene intacto) ---
 @app.route('/pre-nido/<uuid:id_unico>')
 def mostrar_pre_nido(id_unico):
     idioma_detectado = get_locale()
@@ -96,7 +90,20 @@ def mostrar_pre_nido(id_unico):
         if not GOOGLE_API_KEY:
             return "Error: La clave de API de Google no está configurada.", 500
         prompt = f"""
-        Actúa como un experto en marketing y un traductor profesional... (resto del prompt)
+        Actúa como un experto en marketing y un traductor profesional. Tu misión es generar un objeto JSON con los textos para una página web de marketing, traducidos al idioma con el código '{idioma_detectado}'.
+
+        El nombre del negocio del prospecto es: "{nombre_negocio}"
+
+        TAREA: Genera un objeto JSON con las siguientes claves, con su contenido traducido perfectamente al idioma '{idioma_detectado}':
+        1. "titulo_valor": "3 Formas de Aumentar Ventas para {nombre_negocio}"
+        2. "texto_valor": "El marketing de contenidos es clave. Un blog relevante atrae clientes. La automatización de respuestas en redes sociales captura leads 24/7. Nosotros nos especializamos en esto último."
+        3. "h2_siguiente_nivel": "¿Listo para el Siguiente Nivel?"
+        4. "p1_diagnostico": "Lo anterior es solo una idea general. Hemos preparado un <strong>diagnóstico interactivo y 100% personalizado</strong> para <strong>{nombre_negocio}</strong>, donde verás ejemplos reales de cómo un Agente de IA podría transformar tu comunicación con los clientes."
+        5. "p2_gratis": "Es gratuito y sin compromiso. Simplemente introduce tu correo para generar tu acceso al instante."
+        6. "placeholder_email": "Tu mejor correo para recibir el acceso"
+        7. "texto_boton": "Generar mi Diagnóstico Personalizado"
+
+        IMPORTANTE: El nombre del negocio '{nombre_negocio}' no debe ser traducido. Devuelve solo el objeto JSON, sin explicaciones ni nada más.
         """
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
         response = model.generate_content(prompt)
@@ -112,6 +119,7 @@ def mostrar_pre_nido(id_unico):
             cur.close()
             conn.close()
 
+# --- RUTA GENERAR-NIDO (Se mantiene intacta) ---
 @app.route('/generar-nido', methods=['POST'])
 def generar_nido_y_enviar_enlace():
     email_cliente = request.form.get('email_prospecto')
