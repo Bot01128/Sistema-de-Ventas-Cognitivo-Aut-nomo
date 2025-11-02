@@ -21,13 +21,13 @@
             flex-grow: 1;
             overflow-y: auto;
             display: flex;
-            flex-direction: column;
+            flex-direction: column-reverse; /* ¡LA CORRECCIÓN MÁGICA PARA EL CHAT! */
             padding-right: 10px;
         }
-        .chat-messages p { margin: 0; padding: 10px 15px; border-radius: 20px; max-width: 85%; word-wrap: break-word; line-height: 1.5; font-size: 15px; margin-top: 12px; }
+        .chat-messages p { margin: 0; padding: 10px 15px; border-radius: 20px; max-width: 85%; word-wrap: break-word; line-height: 1.5; font-size: 15px; margin-bottom: 12px; }
         .msg-user { background-color: #007bff; color: white; align-self: flex-end; }
         .msg-assistant { background-color: #e9ecef; color: #333; align-self: flex-start; }
-        .chat-input { display: flex; border-top: 1px solid #ddd; padding-top: 15px; margin-top: auto; }
+        .chat-input { display: flex; border-top: 1px solid #ddd; padding-top: 15px; margin-top: 15px; }
         .chat-input input { flex-grow: 1; border: 1px solid #ccc; border-radius: 20px; padding: 10px 15px; font-size: 16px; outline: none; margin-right: 10px;}
         .chat-input button { border: none; background: #007bff; color: white; padding: 10px 20px; cursor: pointer; font-size: 16px; border-radius: 20px; }
         .tab-nav { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 30px; }
@@ -76,10 +76,10 @@
                     <p class="msg-assistant">{{ _("¡Hola! Soy la Inteligencia Artificial AutoNeura...") }}</p>
                     <p class="msg-assistant">{{ _("¿Tienes alguna pregunta?") }}</p>
                 </div>
-                <div class="chat-input">
+                <form id="chat-form" class="chat-input">
                     <input type="text" id="user-input" placeholder="{{ _('Escribe tu pregunta...') }}">
-                    <button id="send-btn">{{ _('Enviar') }}</button>
-                </div>
+                    <button id="send-btn" type="submit">{{ _('Enviar') }}</button>
+                </form>
             </div>
         </div>
         <div class="right-panel">
@@ -92,8 +92,7 @@
             <div class="tab-content" id="my-campaigns">
                 <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
                 <table class="campaign-table">
-                    <thead><tr><th>...</th></tr></thead>
-                    <tbody><tr><td>...</td></tr></tbody>
+                    <!-- ... Tu tabla ... -->
                 </table>
             </div>
             <div class="tab-content" id="campaign" style="display:none;">
@@ -103,24 +102,7 @@
             </div>
             <div class="tab-content" id="data" style="display:none;">
                 <h2>{{ _('Información del Producto y Contacto') }}</h2>
-                <div class="form-section">
-                    <label>{{ _('Tipo de Producto') }}</label>
-                    <div class="checkbox-group"><input type="checkbox" id="tipo_producto_tangible"><label for="tipo_producto_tangible">{{ _('Tangible') }}</label></div>
-                    <div class="checkbox-group"><input type="checkbox" id="tipo_producto_intangible"><label for="tipo_producto_intangible">{{ _('Intangible') }}</label></div>
-                </div>
-                <div class="form-section">
-                    <label for="descripcion_producto">{{ _('Descripción del Producto/Servicio') }}</label>
-                    <textarea id="descripcion_producto" maxlength="1000" placeholder="{{ _('Describe qué vendes...') }}"></textarea><small id="char-count">1000 caracteres restantes</small>
-                </div>
-                <div class="form-section">
-                    <label for="numero_whatsapp">{{ _('Número de WhatsApp') }}</label>
-                    <input type="tel" id="numero_whatsapp">
-                </div>
-                <div class="form-section">
-                    <label for="enlace_venta">{{ _('Enlace de Venta') }}</label>
-                    <input type="text" id="enlace_venta">
-                </div>
-                <button class="cta-button">{{ _('Guardar Datos') }}</button>
+                <!-- ... Tu formulario de datos ... -->
             </div>
             <div class="tab-content" id="billing" style="display:none;">
                 <h2>{{ _('Mi Saldo y Facturación') }}</h2>
@@ -138,30 +120,20 @@
             tabButtons.forEach(button => { /* ... */ });
 
             // Lógica del Chat
+            const chatForm = document.getElementById('chat-form');
             const sendBtn = document.getElementById('send-btn');
             const userInput = document.getElementById('user-input');
             const chatMessages = document.getElementById('chat-messages');
             async function sendMessage() { /* ... */ }
             function addMessage(text, sender) { /* ... */ }
-            if (sendBtn) sendBtn.addEventListener('click', sendMessage);
-            if (userInput) userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
-            
-            // Lógica del Teléfono
-            const phoneInputField = document.querySelector("#numero_whatsapp");
-            if (phoneInputField) {
-                const phoneInput = window.intlTelInput(phoneInputField, {
-                    initialCountry: "auto",
-                    geoIpLookup: function(callback) { fetch("https://ipapi.co/json").then(res => res.json()).then(data => callback(data.country_code)).catch(() => callback("us")); },
-                    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
-                });
-            }
+            if (chatForm) chatForm.addEventListener('submit', (e) => { e.preventDefault(); sendMessage(); });
 
-            // Lógica del Botón Lanzar Campaña
+            // Lógica del Espía Inteligente
             const lanzarBtn = document.getElementById('lanzar-campana-btn');
             if (lanzarBtn) {
                 lanzarBtn.addEventListener('click', function(event) {
                     event.preventDefault();
-                    // ... Aquí va la lógica de validación y envío que ya funciona ...
+                    // ... Aquí va la lógica de validación y envío completa ...
                 });
             }
 
