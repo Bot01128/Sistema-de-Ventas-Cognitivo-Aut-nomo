@@ -1,28 +1,35 @@
 import os
-import google.generativeai as genai
+# ¡Importaciones correctas para LangChain + Google!
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 
-print(">>> [Cerebro Dashboard v-Google-Directo] Cargando...")
+print(">>> [Cerebro Dashboard v-LangChain-Google] Cargando...")
 
-model = None
 try:
-    # La GOOGLE_API_KEY ya debería estar configurada en el main.py
-    # Aquí solo intentamos inicializar el modelo.
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
-    print(">>> [Cerebro Dashboard v-Google-Directo] Modelo de IA inicializado.")
+    # --- ¡LA SOLUCIÓN DE LOS FOROS! ---
+    # Usamos LangChain, pero forzamos la versión de la API a 'v1'
+    llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7, api_version="v1")
+    print(">>> [Cerebro Dashboard v-LangChain-Google] Conexión con Google AI (v1) exitosa.")
 except Exception as e:
-    print(f"!!! ERROR [Cerebro v-Google-Directo]: {e} !!!")
+    print(f"!!! ERROR [Cerebro v-LangChain-Google]: {e} !!!")
+    llm = None
 
-# El prompt ahora es un texto simple, no un objeto complejo.
-PROMPT_SYSTEM = "Eres 'Auto', un asistente de IA amigable y ultra-eficiente, la cara visible de AutoNeura..."
+# Mantenemos el prompt profesional de LangChain
+PROMPT = ChatPromptTemplate.from_messages([
+    ("system", "Eres 'Auto', un asistente de IA amigable y ultra-eficiente, la cara visible de AutoNeura. Tu propósito es responder a las preguntas de los clientes sobre los planes, características y funcionamiento del sistema de ventas automatizado. Tu tono debe ser claro, servicial y generar confianza."),
+    ("human", "{question}"),
+])
 
 def create_dashboard_brain():
     """
-    Esta función ahora simplemente confirma que el modelo está listo.
-    La lógica de la cadena se manejará directamente en main.py.
+    Crea y devuelve la cadena de LangChain para el chat del dashboard.
     """
-    if not model:
-        print("!!! ADVERTENCIA [Cerebro v-Google-Directo]: El modelo de IA no está disponible.")
+    if not llm:
+        print("!!! ADVERTENCIA [Cerebro v-LangChain-Google]: El modelo de IA no está disponible.")
         return None
     
-    print(">>> [Cerebro Dashboard v-Google-Directo] Creado exitosamente.")
-    return model # Devolvemos el modelo directamente
+    # La cadena sigue siendo la misma: Prompt -> LLM -> Parser
+    chain = PROMPT | llm | StrOutputParser()
+    print(">>> [Cerebro Dashboard v-LangChain-Google] Creado exitosamente.")
+    return chain
