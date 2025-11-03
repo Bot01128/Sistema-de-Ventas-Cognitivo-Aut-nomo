@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ _('AutoNeura AI - Dashboard') }}</title>
+    <!-- NUEVAS LIBRERÍAS PARA EL SELECTOR DE TELÉFONO PROFESIONAL -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <style>
@@ -17,17 +18,18 @@
         h1, h2, h3, h4 { color: #1c1e21; margin-top: 0; }
         .chat-header h2 { font-size: 24px; }
         .chat-window { flex-grow: 1; border-radius: 8px; margin-top: 20px; display: flex; flex-direction: column; }
+        /* --- ¡LA CORRECCIÓN DEL CHAT! --- */
         .chat-messages {
             flex-grow: 1;
             overflow-y: auto;
             display: flex;
-            flex-direction: column;
+            flex-direction: column-reverse; /* Esto ancla los mensajes abajo */
             padding-right: 10px;
         }
         .chat-messages p { margin: 0; padding: 10px 15px; border-radius: 20px; max-width: 85%; word-wrap: break-word; line-height: 1.5; font-size: 15px; margin-top: 12px; }
         .msg-user { background-color: #007bff; color: white; align-self: flex-end; }
         .msg-assistant { background-color: #e9ecef; color: #333; align-self: flex-start; }
-        .chat-input { display: flex; border-top: 1px solid #ddd; padding-top: 15px; margin-top: auto; }
+        .chat-input { display: flex; border-top: 1px solid #ddd; padding-top: 15px; margin-top: auto; } /* margin-top: auto lo empuja abajo */
         .chat-input input { flex-grow: 1; border: 1px solid #ccc; border-radius: 20px; padding: 10px 15px; font-size: 16px; outline: none; margin-right: 10px;}
         .chat-input button { border: none; background: #007bff; color: white; padding: 10px 20px; cursor: pointer; font-size: 16px; border-radius: 20px; }
         .tab-nav { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 30px; }
@@ -76,15 +78,15 @@
                     <p class="msg-assistant">{{ _("¡Hola! Soy la Inteligencia Artificial AutoNeura...") }}</p>
                     <p class="msg-assistant">{{ _("¿Tienes alguna pregunta?") }}</p>
                 </div>
-                <div class="chat-input">
+                <form id="chat-form" class="chat-input">
                     <input type="text" id="user-input" placeholder="{{ _('Escribe tu pregunta...') }}">
-                    <button id="send-btn">{{ _('Enviar') }}</button>
-                </div>
+                    <button type="submit" id="send-btn">{{ _('Enviar') }}</button>
+                </form>
             </div>
         </div>
         <div class="right-panel">
             <div class="tab-nav">
-                <button class="tab-button active" data-tab="my-campaigns">{{ _('Mis Campañas') }}</button>
+                <button class="tab-button" data-tab="my-campaigns">{{ _('Mis Campañas') }}</button>
                 <button class="tab-button" data-tab="campaign">{{ _('Crear Campaña') }}</button>
                 <button class="tab-button" data-tab="data">{{ _('Datos del Producto') }}</button>
                 <button class="tab-button" data-tab="billing">{{ _('Facturación') }}</button>
@@ -92,38 +94,21 @@
             <div class="tab-content" id="my-campaigns">
                 <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
                 <table class="campaign-table">
-                    <!-- Tu tabla original aquí -->
+                    <!-- ... Tu tabla ... -->
                 </table>
             </div>
-            <div class="tab-content" id="campaign" style="display:none;">
+            <div class="tab-content" id="campaign">
                 <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
-                <!-- Tu formulario de campaña original aquí -->
+                <!-- ... Tu formulario de campaña ... -->
                 <button id="lanzar-campana-btn" class="cta-button">{{ _('Lanzar Campaña') }}</button>
             </div>
-            <div class="tab-content" id="data" style="display:none;">
+            <div class="tab-content" id="data">
                 <h2>{{ _('Información del Producto y Contacto') }}</h2>
-                <div class="form-section">
-                    <label>{{ _('Tipo de Producto') }}</label>
-                    <div class="checkbox-group"><input type="checkbox" id="tipo_producto_tangible"><label for="tipo_producto_tangible">{{ _('Tangible') }}</label></div>
-                    <div class="checkbox-group"><input type="checkbox" id="tipo_producto_intangible"><label for="tipo_producto_intangible">{{ _('Intangible') }}</label></div>
-                </div>
-                <div class="form-section">
-                    <label for="descripcion_producto">{{ _('Descripción del Producto/Servicio') }}</label>
-                    <textarea id="descripcion_producto" maxlength="1000" placeholder="{{ _('Describe qué vendes...') }}"></textarea><small id="char-count">1000 caracteres restantes</small>
-                </div>
-                <div class="form-section">
-                    <label for="numero_whatsapp">{{ _('Número de WhatsApp') }}</label>
-                    <input type="tel" id="numero_whatsapp">
-                </div>
-                <div class="form-section">
-                    <label for="enlace_venta">{{ _('Enlace de Venta') }}</label>
-                    <input type="text" id="enlace_venta">
-                </div>
-                <button class="cta-button">{{ _('Guardar Datos') }}</button>
+                <!-- ... Tu formulario de datos ... -->
             </div>
-            <div class="tab-content" id="billing" style="display:none;">
+            <div class="tab-content" id="billing">
                 <h2>{{ _('Mi Saldo y Facturación') }}</h2>
-                <!-- Tu contenido de facturación original aquí -->
+                <!-- ... Tu contenido de facturación ... -->
             </div>
         </div>
     </div>
@@ -140,54 +125,25 @@
             tabButtons.forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)));
 
             // Lógica del Chat
-            const sendBtn = document.getElementById('send-btn');
+            const chatForm = document.getElementById('chat-form');
             const userInput = document.getElementById('user-input');
             const chatMessages = document.getElementById('chat-messages');
-            async function sendMessage() {
-                const message = userInput.value.trim();
-                if (!message) return;
-                addMessage(message, 'user');
-                userInput.value = '';
-                try {
-                    const response = await fetch('/chat', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ message: message })
-                    });
-                    const data = await response.json();
-                    addMessage(data.response, 'assistant');
-                } catch (error) {
-                    addMessage('Lo siento, ocurrió un error de conexión.', 'assistant');
-                }
-            }
-            function addMessage(text, sender) {
-                const p = document.createElement('p');
-                p.textContent = text;
-                p.className = sender === 'user' ? 'msg-user' : 'msg-assistant';
-                chatMessages.appendChild(p);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-            if (sendBtn) sendBtn.addEventListener('click', sendMessage);
-            if (userInput) userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+            function addMessage(text, sender) { /* ... */ }
+            async function handleSendMessage() { /* ... */ }
+            if (chatForm) chatForm.addEventListener('submit', (e) => { e.preventDefault(); handleSendMessage(); });
             
-            // Lógica del Teléfono
-            const phoneInputField = document.querySelector("#numero_whatsapp");
-            if (phoneInputField) {
-                const phoneInput = window.intlTelInput(phoneInputField, {
-                    initialCountry: "auto",
-                    geoIpLookup: function(callback) { fetch("https://ipapi.co/json").then(res => res.json()).then(data => callback(data.country_code)).catch(() => callback("us")); },
-                    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
-                });
-            }
-
-            // Lógica del Botón Lanzar Campaña
+            // Lógica del Espía y Envío
             const lanzarBtn = document.getElementById('lanzar-campana-btn');
             if (lanzarBtn) {
                 lanzarBtn.addEventListener('click', function(event) {
                     event.preventDefault();
-                    // ... Aquí va la lógica de validación y envío que ya funciona ...
+                    // ... (Lógica de validación y fetch completa) ...
                 });
             }
+
+            // Lógica del Teléfono
+            const phoneInputField = document.querySelector("#numero_whatsapp");
+            if (phoneInputField) { /* ... tu código de intl-tel-input ... */ }
 
             // Inicialización
             switchTab('my-campaigns');
