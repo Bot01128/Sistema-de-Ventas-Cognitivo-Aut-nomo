@@ -21,13 +21,13 @@
             flex-grow: 1;
             overflow-y: auto;
             display: flex;
-            flex-direction: column-reverse; /* ¡LA CORRECCIÓN MÁGICA PARA EL CHAT! */
+            flex-direction: column;
             padding-right: 10px;
         }
-        .chat-messages p { margin: 0; padding: 10px 15px; border-radius: 20px; max-width: 85%; word-wrap: break-word; line-height: 1.5; font-size: 15px; margin-bottom: 12px; }
+        .chat-messages p { margin: 0; padding: 10px 15px; border-radius: 20px; max-width: 85%; word-wrap: break-word; line-height: 1.5; font-size: 15px; margin-top: 12px; }
         .msg-user { background-color: #007bff; color: white; align-self: flex-end; }
         .msg-assistant { background-color: #e9ecef; color: #333; align-self: flex-start; }
-        .chat-input { display: flex; border-top: 1px solid #ddd; padding-top: 15px; margin-top: 15px; }
+        .chat-input { display: flex; border-top: 1px solid #ddd; padding-top: 15px; margin-top: auto; }
         .chat-input input { flex-grow: 1; border: 1px solid #ccc; border-radius: 20px; padding: 10px 15px; font-size: 16px; outline: none; margin-right: 10px;}
         .chat-input button { border: none; background: #007bff; color: white; padding: 10px 20px; cursor: pointer; font-size: 16px; border-radius: 20px; }
         .tab-nav { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 30px; }
@@ -76,10 +76,10 @@
                     <p class="msg-assistant">{{ _("¡Hola! Soy la Inteligencia Artificial AutoNeura...") }}</p>
                     <p class="msg-assistant">{{ _("¿Tienes alguna pregunta?") }}</p>
                 </div>
-                <form id="chat-form" class="chat-input">
+                <div class="chat-input">
                     <input type="text" id="user-input" placeholder="{{ _('Escribe tu pregunta...') }}">
-                    <button id="send-btn" type="submit">{{ _('Enviar') }}</button>
-                </form>
+                    <button id="send-btn">{{ _('Enviar') }}</button>
+                </div>
             </div>
         </div>
         <div class="right-panel">
@@ -92,130 +92,106 @@
             <div class="tab-content" id="my-campaigns">
                 <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
                 <table class="campaign-table">
-                    <!-- ... Tu tabla ... -->
+                    <!-- Tu tabla original aquí -->
                 </table>
             </div>
             <div class="tab-content" id="campaign" style="display:none;">
                 <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
-                <!-- ... Tu formulario de campaña ... -->
+                <!-- Tu formulario de campaña original aquí -->
                 <button id="lanzar-campana-btn" class="cta-button">{{ _('Lanzar Campaña') }}</button>
             </div>
             <div class="tab-content" id="data" style="display:none;">
                 <h2>{{ _('Información del Producto y Contacto') }}</h2>
-                <!-- ... Tu formulario de datos ... -->
+                <div class="form-section">
+                    <label>{{ _('Tipo de Producto') }}</label>
+                    <div class="checkbox-group"><input type="checkbox" id="tipo_producto_tangible"><label for="tipo_producto_tangible">{{ _('Tangible') }}</label></div>
+                    <div class="checkbox-group"><input type="checkbox" id="tipo_producto_intangible"><label for="tipo_producto_intangible">{{ _('Intangible') }}</label></div>
+                </div>
+                <div class="form-section">
+                    <label for="descripcion_producto">{{ _('Descripción del Producto/Servicio') }}</label>
+                    <textarea id="descripcion_producto" maxlength="1000" placeholder="{{ _('Describe qué vendes...') }}"></textarea><small id="char-count">1000 caracteres restantes</small>
+                </div>
+                <div class="form-section">
+                    <label for="numero_whatsapp">{{ _('Número de WhatsApp') }}</label>
+                    <input type="tel" id="numero_whatsapp">
+                </div>
+                <div class="form-section">
+                    <label for="enlace_venta">{{ _('Enlace de Venta') }}</label>
+                    <input type="text" id="enlace_venta">
+                </div>
+                <button class="cta-button">{{ _('Guardar Datos') }}</button>
             </div>
             <div class="tab-content" id="billing" style="display:none;">
                 <h2>{{ _('Mi Saldo y Facturación') }}</h2>
-                <!-- ... Tu contenido de facturación ... -->
+                <!-- Tu contenido de facturación original aquí -->
             </div>
         </div>
     </div>
   
    <script>
-       <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // --- MÓDULO DE PESTAÑAS (YA FUNCIONA) ---
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
-    function switchTab(tabId) { /* ... */ }
-    tabButtons.forEach(button => { /* ... */ });
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lógica de Pestañas
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            function switchTab(tabId) {
+                tabButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
+                tabContents.forEach(content => content.style.display = content.id === tabId ? 'block' : 'none');
+            }
+            tabButtons.forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)));
 
-    // --- MÓDULO DEL CHAT (¡CORREGIDO!) ---
-    const chatForm = document.getElementById('chat-form');
-    const userInput = document.getElementById('user-input');
-    const chatMessages = document.getElementById('chat-messages');
-    
-    function addMessage(text, sender) {
-        if (!chatMessages) return;
-        const p = document.createElement('p');
-        p.textContent = text;
-        p.className = sender === 'user' ? 'msg-user' : 'msg-assistant';
-        // Añade el nuevo mensaje al PRINCIPIO para el efecto "WhatsApp"
-        chatMessages.insertBefore(p, chatMessages.firstChild);
-    }
-
-    async function handleSendMessage() {
-        if (!userInput) return;
-        const message = userInput.value.trim();
-        if (!message) return;
-        
-        addMessage(message, 'user');
-        userInput.value = '';
-        
-        try {
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ message: message })
-            });
-            if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
-            const data = await response.json();
-            if (data.error) { addMessage(`Error: ${data.error}`, 'assistant'); } 
-            else { addMessage(data.response, 'assistant'); }
-        } catch (error) {
-            console.error("Error en fetch del chat:", error);
-            addMessage('Lo siento, ocurrió un error de conexión.', 'assistant');
-        }
-    }
-
-    if (chatForm) {
-        chatForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            handleSendMessage();
-        });
-    }
-
-    // --- MÓDULO DEL ESPÍA INTELIGENTE (¡CORREGIDO!) ---
-    const lanzarBtn = document.getElementById('lanzar-campana-btn');
-    if (lanzarBtn) {
-        lanzarBtn.addEventListener('click', function(event) {
-            event.preventDefault();
-            clearAllErrors();
+            // Lógica del Chat
+            const sendBtn = document.getElementById('send-btn');
+            const userInput = document.getElementById('user-input');
+            const chatMessages = document.getElementById('chat-messages');
+            async function sendMessage() {
+                const message = userInput.value.trim();
+                if (!message) return;
+                addMessage(message, 'user');
+                userInput.value = '';
+                try {
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ message: message })
+                    });
+                    const data = await response.json();
+                    addMessage(data.response, 'assistant');
+                } catch (error) {
+                    addMessage('Lo siento, ocurrió un error de conexión.', 'assistant');
+                }
+            }
+            function addMessage(text, sender) {
+                const p = document.createElement('p');
+                p.textContent = text;
+                p.className = sender === 'user' ? 'msg-user' : 'msg-assistant';
+                chatMessages.appendChild(p);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+            if (userInput) userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
             
-            // ... (Tu lógica de validación de campos va aquí, ya funciona) ...
-
-            if (firstErrorField) {
-                // ... (Tu lógica para mostrar errores va aquí, ya funciona) ...
-            } else {
-                // ¡¡¡LÓGICA DE ENVÍO CORREGIDA Y COMPLETA!!!
-                const campaignData = {
-                    nombre_campana: document.getElementById('nombre_campana').value.trim(),
-                    que_vendes: document.getElementById('que_vendes').value.trim(),
-                    a_quien_va_dirigido: document.getElementById('a_quien_va_dirigido').value.trim(),
-                    prospectos_por_dia: document.getElementById('prospects-per-day').value,
-                    tipo_producto_tangible: document.getElementById('tipo_producto_tangible').checked,
-                    tipo_producto_intangible: document.getElementById('tipo_producto_intangible').checked,
-                    descripcion_producto: document.getElementById('descripcion_producto').value.trim(),
-                    numero_whatsapp: document.getElementById('numero_whatsapp').value.trim(),
-                    enlace_venta: document.getElementById('enlace_venta').value.trim()
-                };
-
-                fetch('/crear-campana', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(campaignData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        alert('¡Campaña creada con éxito!');
-                        switchTab('my-campaigns');
-                    } else {
-                        alert('Error del Servidor: ' + (data.message || 'Error inesperado.'));
-                    }
-                })
-                .catch(error => {
-                    alert('Error de red al crear campaña: ' + error);
+            // Lógica del Teléfono
+            const phoneInputField = document.querySelector("#numero_whatsapp");
+            if (phoneInputField) {
+                const phoneInput = window.intlTelInput(phoneInputField, {
+                    initialCountry: "auto",
+                    geoIpLookup: function(callback) { fetch("https://ipapi.co/json").then(res => res.json()).then(data => callback(data.country_code)).catch(() => callback("us")); },
+                    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
                 });
             }
+
+            // Lógica del Botón Lanzar Campaña
+            const lanzarBtn = document.getElementById('lanzar-campana-btn');
+            if (lanzarBtn) {
+                lanzarBtn.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    // ... Aquí va la lógica de validación y envío que ya funciona ...
+                });
+            }
+
+            // Inicialización
+            switchTab('my-campaigns');
         });
-    }
-    // ... (El resto de tus funciones de JS van aquí) ...
-    
-    // Inicialización
-    switchTab('my-campaigns');
-});
-</script>
    </script>
 </body>
 </html>
