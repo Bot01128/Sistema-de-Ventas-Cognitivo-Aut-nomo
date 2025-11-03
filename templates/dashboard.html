@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ _('AutoNeura AI - Dashboard') }}</title>
-    <!-- NUEVAS LIBRERÍAS PARA EL SELECTOR DE TELÉFONO PROFESIONAL -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <style>
         body, html { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; height: 100%; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 40px; border-bottom: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -18,18 +15,11 @@
         h1, h2, h3, h4 { color: #1c1e21; margin-top: 0; }
         .chat-header h2 { font-size: 24px; }
         .chat-window { flex-grow: 1; border-radius: 8px; margin-top: 20px; display: flex; flex-direction: column; }
-        /* --- ¡LA CORRECCIÓN DEL CHAT! --- */
-        .chat-messages {
-            flex-grow: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column-reverse; /* Esto ancla los mensajes abajo */
-            padding-right: 10px;
-        }
-        .chat-messages p { margin: 0; padding: 10px 15px; border-radius: 20px; max-width: 85%; word-wrap: break-word; line-height: 1.5; font-size: 15px; margin-top: 12px; }
-        .msg-user { background-color: #007bff; color: white; align-self: flex-end; }
+        .chat-messages { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 10px; }
+        .chat-messages p { margin: 0; padding: 10px 15px; border-radius: 20px; max-width: 85%; word-wrap: break-word; line-height: 1.5; font-size: 15px;}
+        .msg-user { background-color: #007bff; color: white; align-self: flex-end; margin-left: auto; }
         .msg-assistant { background-color: #e9ecef; color: #333; align-self: flex-start; }
-        .chat-input { display: flex; border-top: 1px solid #ddd; padding-top: 15px; margin-top: auto; } /* margin-top: auto lo empuja abajo */
+        .chat-input { display: flex; border-top: 1px solid #ddd; padding-top: 15px; margin-top: 15px; }
         .chat-input input { flex-grow: 1; border: 1px solid #ccc; border-radius: 20px; padding: 10px 15px; font-size: 16px; outline: none; margin-right: 10px;}
         .chat-input button { border: none; background: #007bff; color: white; padding: 10px 20px; cursor: pointer; font-size: 16px; border-radius: 20px; }
         .tab-nav { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 30px; }
@@ -38,8 +28,6 @@
         .form-section { margin-bottom: 25px; }
         .form-section label { display: block; margin-bottom: 8px; font-weight: 600; color: #495057; }
         .form-section input, textarea { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        .form-section input.error, textarea.error { border-color: #dc3545 !important; box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); }
-        .error-message { color: #dc3545; font-size: 12px; margin-top: 4px; display: block; }
         .cta-button { background-color: #28a745; color: white; padding: 15px 25px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px;}
         .checkbox-group { display: flex; align-items: center; margin-bottom: 10px; }
         .checkbox-group label { font-weight: normal; margin-left: 8px; }
@@ -55,7 +43,6 @@
         .plan-card.selected { border-color: #007bff; box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); transform: translateY(-5px); }
         .plan-card h4 { margin: 0 0 10px 0; }
         .plan-card .price { font-size: 24px; font-weight: bold; margin: 10px 0; }
-        .iti { width: 100%; }
         @media (max-width: 900px) { .container { flex-direction: column; overflow: auto; } .left-panel { flex-basis: auto; min-height: 400px; } }
     </style>
 </head>
@@ -75,18 +62,18 @@
             </div>
             <div class="chat-window">
                 <div class="chat-messages" id="chat-messages">
-                    <p class="msg-assistant">{{ _("¡Hola! Soy la Inteligencia Artificial AutoNeura...") }}</p>
+                    <p class="msg-assistant">{{ _("¡Hola! Soy la Inteligencia Artificial AutoNeura, Estoy exclusivamente para generar ventas a través de todos los medios por internet  y trabajo 24/7 los 365 días del año nunca descanso busco analizo y proceso seguimientos a los prospectos de clientes de tus productos. No tendrás gastos por procesos si no por resultados, no pagas los miles de Prospectos que nosotros buscaremos en redes sociales como Facebook, Instagram, TIKTOK, X, etc. Como sucede con otros ADS que cobran por interacciones como: Clics, impresiones o vistas, no por ventas directas ni resultados garantizados. Te garantizo que soy tu mejor socio estratégico de Inteligencia Artificial aunque tú te quedes con toda la ganancia y yo me quedare con la satisfacción de haberte ayudado. Mi misión es simple: Te Conseguiré clientes utilizando técnicas Psicológicas y de Marketing que superan a todos los humanos juntos para encontrar prospectos, contactarlos, hacerle seguimientos hasta que le den comprar. Mi trabajo es tan efectivo que si, después de mi seguimiento avanzado, ningún prospecto hace clic en tu botón de compra: te daré un mes de mi servicio completamente gratis.") }}</p>
                     <p class="msg-assistant">{{ _("¿Tienes alguna pregunta?") }}</p>
                 </div>
-                <form id="chat-form" class="chat-input">
+                <div class="chat-input">
                     <input type="text" id="user-input" placeholder="{{ _('Escribe tu pregunta...') }}">
-                    <button type="submit" id="send-btn">{{ _('Enviar') }}</button>
-                </form>
+                    <button id="send-btn">{{ _('Enviar') }}</button>
+                </div>
             </div>
         </div>
         <div class="right-panel">
             <div class="tab-nav">
-                <button class="tab-button" data-tab="my-campaigns">{{ _('Mis Campañas') }}</button>
+                <button class="tab-button active" data-tab="my-campaigns">{{ _('Mis Campañas') }}</button>
                 <button class="tab-button" data-tab="campaign">{{ _('Crear Campaña') }}</button>
                 <button class="tab-button" data-tab="data">{{ _('Datos del Producto') }}</button>
                 <button class="tab-button" data-tab="billing">{{ _('Facturación') }}</button>
@@ -94,59 +81,166 @@
             <div class="tab-content" id="my-campaigns">
                 <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
                 <table class="campaign-table">
-                    <!-- ... Tu tabla ... -->
+                    <thead>
+                        <tr>
+                            <th>{{ _('Nombre de la Campaña') }}</th>
+                            <th>{{ _('Fecha') }}</th>
+                            <th>{{ _('Estado') }}</th>
+                            <th>{{ _('Prospectos Encontrados') }}</th>
+                            <th>{{ _('Leads Calificados') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Búsqueda de Spas en Medellín</td><td>13/10/2025</td><td>Completada ✅</td><td>152</td><td>89</td></tr>
+                        <tr><td>Restaurantes Italianos (Miami)</td><td>12/10/2025</td><td>Analizando ⚙️</td><td>100</td><td>45</td></tr>
+                    </tbody>
                 </table>
             </div>
-            <div class="tab-content" id="campaign">
+            <div class="tab-content" id="campaign" style="display:none;">
                 <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
-                <!-- ... Tu formulario de campaña ... -->
-                <button id="lanzar-campana-btn" class="cta-button">{{ _('Lanzar Campaña') }}</button>
+                <div class="form-section">
+                    <label>{{ _('1. Selecciona un Plan') }}</label>
+                    <div class="plans-container">
+                        <div class="plan-card" data-plan="arrancador"><h4>{{ _('El Arrancador') }}</h4><div class="price">$149<span>/mes</span></div><small>4 prospectos/día</small></div>
+                        <div class="plan-card" data-plan="profesional"><h4>{{ _('El Profesional') }}</h4><div class="price">$399<span>/mes</span></div><small>15 prospectos/día</small></div>
+                        <div class="plan-card" data-plan="dominador"><h4>{{ _('El Dominador') }}</h4><div class="price">$999<span>/mes</span></div><small>50 prospectos/día</small></div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <label for="prospects-per-day">{{ _('2. O personaliza la cantidad de Prospectos por Día') }}</label>
+                    <input type="number" id="prospects-per-day" value="4" min="4">
+                </div>
+                <div class="form-section">
+                    <label>{{ _('3. Define tu Campaña') }}</label>
+                    <label for="campaign-name" style="margin-top:10px;">{{ _('Nombre de la Campaña') }}</label>
+                    <input type="text" id="campaign-name" placeholder="{{ _('Ej: Búsqueda de Restaurantes en Miami') }}">
+                    <label for="product-service" style="margin-top:15px;">{{ _('¿Qué vendes?') }}</label>
+                    <input type="text" id="product-service" placeholder="{{ _('Ej: Software para restaurantes') }}">
+                    <label for="target-audience" style="margin-top: 15px;">{{ _('¿A quién va dirigido?') }}</label>
+                    <input type="text" id="target-audience" placeholder="{{ _('Ej: Restaurantes italianos, Ferreterías') }}">
+                </div>
+                <div class="form-section" style="background-color: #e9ecef; padding: 20px; border-radius: 8px;">
+                    <h4>{{ _('Resumen Final') }}</h4>
+                    <p>Plan Seleccionado: <strong id="selected-plan">El Arrancador</strong></p>
+                    <p>Prospectos por día: <strong id="daily-prospects">4</strong></p>
+                    <p>Costo Mensual Final: <strong id="total-cost">$149.00</strong></p>
+                </div>
+                <button class="cta-button">{{ _('Lanzar Campaña') }}</button>
             </div>
-            <div class="tab-content" id="data">
+            <div class="tab-content" id="data" style="display:none;">
                 <h2>{{ _('Información del Producto y Contacto') }}</h2>
-                <!-- ... Tu formulario de datos ... -->
+                <div class="form-section"><label>{{ _('Tipo de Producto') }}</label><div class="checkbox-group"><input type="checkbox" id="tangible"><label for="tangible">{{ _('Tangible') }}</label></div><div class="checkbox-group"><input type="checkbox" id="intangible"><label for="intangible">{{ _('Intangible') }}</label></div></div>
+                <div class="form-section"><label for="product-description">{{ _('Descripción del Producto/Servicio') }}</label><textarea id="product-description" maxlength="1000" placeholder="{{ _('Describe qué vendes...') }}"></textarea><small id="char-count">1000 caracteres restantes</small></div>
+                <div class="form-section"><label for="contact-whatsapp">{{ _('Número de WhatsApp') }}</label><input type="text" id="contact-whatsapp"></div>
+                <div class="form-section"><label for="purchase-link">{{ _('Enlace de Venta') }}</label><input type="text" id="purchase-link"></div>
+                <button class="cta-button">{{ _('Guardar Datos') }}</button>
             </div>
-            <div class="tab-content" id="billing">
+            <div class="tab-content" id="billing" style="display:none;">
                 <h2>{{ _('Mi Saldo y Facturación') }}</h2>
-                <!-- ... Tu contenido de facturación ... -->
+                <p>Saldo Actual: <strong>$0.00</strong></p>
+                <button class="cta-button" style="background-color:#007bff;">{{ _('+ Recargar Saldo') }}</button>
             </div>
         </div>
     </div>
   
    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Lógica de Pestañas
-            const tabButtons = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
-            function switchTab(tabId) {
-                tabButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
-                tabContents.forEach(content => content.style.display = content.id === tabId ? 'block' : 'none');
-            }
-            tabButtons.forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)));
-
-            // Lógica del Chat
-            const chatForm = document.getElementById('chat-form');
-            const userInput = document.getElementById('user-input');
-            const chatMessages = document.getElementById('chat-messages');
-            function addMessage(text, sender) { /* ... */ }
-            async function handleSendMessage() { /* ... */ }
-            if (chatForm) chatForm.addEventListener('submit', (e) => { e.preventDefault(); handleSendMessage(); });
-            
-            // Lógica del Espía y Envío
-            const lanzarBtn = document.getElementById('lanzar-campana-btn');
-            if (lanzarBtn) {
-                lanzarBtn.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    // ... (Lógica de validación y fetch completa) ...
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                tabContents.forEach(content => {
+                    content.style.display = content.id === tabId ? 'block' : 'none';
                 });
+            });
+        });
+
+        const planCards = document.querySelectorAll('.plan-card');
+        const prospectsInput = document.getElementById('prospects-per-day');
+        const selectedPlanEl = document.getElementById('selected-plan');
+        const dailyProspectsEl = document.getElementById('daily-prospects');
+        const totalCostEl = document.getElementById('total-cost');
+        
+        const plans = {
+            arrancador: { name: 'El Arrancador', basePrice: 149, baseProspects: 4, pricePerExtra: 30 },
+            profesional: { name: 'El Profesional', basePrice: 399, baseProspects: 15, pricePerExtra: 27 },
+            dominador: { name: 'El Dominador', basePrice: 999, baseProspects: 50, pricePerExtra: 20 }
+        };
+        let currentPlanKey = 'arrancador';
+
+        function updateCosts() {
+            let dailyCount = parseInt(prospectsInput.value) || 4;
+            if (dailyCount < 4) { dailyCount = 4; prospectsInput.value = 4; }
+
+            if (dailyCount >= 4 && dailyCount < 15) currentPlanKey = 'arrancador';
+            else if (dailyCount >= 15 && dailyCount < 50) currentPlanKey = 'profesional';
+            else currentPlanKey = 'dominador';
+            
+            const plan = plans[currentPlanKey];
+            const extraProspects = dailyCount - plan.baseProspects;
+            const finalCost = plan.basePrice + (extraProspects > 0 ? extraProspects * plan.pricePerExtra : 0);
+
+            planCards.forEach(card => {
+                card.classList.toggle('selected', card.dataset.plan === currentPlanKey);
+            });
+
+            selectedPlanEl.textContent = plan.name;
+            dailyProspectsEl.textContent = dailyCount;
+            totalCostEl.textContent = `$${finalCost.toFixed(2)}`;
+        }
+
+        prospectsInput.addEventListener('input', updateCosts);
+        
+        planCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const planKey = card.dataset.plan;
+                prospectsInput.value = plans[planKey].baseProspects;
+                updateCosts();
+            });
+        });
+        updateCosts();
+
+        const descriptionTextarea = document.getElementById('product-description');
+        const charCountEl = document.getElementById('char-count');
+        if (descriptionTextarea) {
+            descriptionTextarea.addEventListener('input', () => {
+                const remaining = 1000 - descriptionTextarea.value.length;
+                charCountEl.textContent = `${remaining} caracteres restantes`;
+            });
+        }
+
+        const sendBtn = document.getElementById('send-btn');
+        const userInput = document.getElementById('user-input');
+        const chatMessages = document.getElementById('chat-messages');
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            addMessage(message, 'user');
+            userInput.value = '';
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ message: message })
+                });
+                const data = await response.json();
+                addMessage(data.response, 'assistant');
+            } catch (error) {
+                addMessage('Lo siento, ocurrió un error.', 'assistant');
             }
-
-            // Lógica del Teléfono
-            const phoneInputField = document.querySelector("#numero_whatsapp");
-            if (phoneInputField) { /* ... tu código de intl-tel-input ... */ }
-
-            // Inicialización
-            switchTab('my-campaigns');
+        }
+        function addMessage(text, sender) {
+            const p = document.createElement('p');
+            p.textContent = text;
+            p.className = sender === 'user' ? 'msg-user' : 'msg-assistant';
+            chatMessages.appendChild(p);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+        if (userInput) userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
         });
    </script>
 </body>
