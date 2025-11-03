@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ _('AutoNeura AI - Dashboard') }}</title>
-    <!-- CONEXIONES A ARCHIVOS EXTERNOS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
+    <!-- CONEXIÓN AL ARCHIVO CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
 </head>
 <body>
     <div class="top-bar">
@@ -16,11 +14,10 @@
             <span>{{ _('Bienvenido, Moises') }}</span>
             <span><strong>{{ _('Saldo:') }}</strong> $0.00</span>
             <button class="recharge-btn">{{ _('+ Recargar Saldo') }}</button>
-            <button id="mobile-chat-toggle">💬</button>
         </div>
     </div>
     <div class="container">
-        <div class="left-panel" id="left-panel">
+        <div class="left-panel">
             <div class="chat-header">
                 <h2>Inteligencia Artificial AutoNeura</h2>
             </div>
@@ -29,10 +26,10 @@
                     <p class="msg-assistant">{{ _("¡Hola! Soy la Inteligencia Artificial AutoNeura...") }}</p>
                     <p class="msg-assistant">{{ _("¿Tienes alguna pregunta?") }}</p>
                 </div>
-                <form id="chat-form" class="chat-input">
+                <div class="chat-input">
                     <input type="text" id="user-input" placeholder="{{ _('Escribe tu pregunta...') }}">
-                    <button type="submit" id="send-btn">{{ _('Enviar') }}</button>
-                </form>
+                    <button id="send-btn">{{ _('Enviar') }}</button>
+                </div>
             </div>
         </div>
         <div class="right-panel">
@@ -45,27 +42,25 @@
             <div class="tab-content" id="my-campaigns">
                 <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
                 <table class="campaign-table">
-                    <thead><tr><th>...</th></tr></thead>
-                    <tbody><tr><td>...</td></tr></tbody>
+                    <!-- ... Tu tabla ... -->
                 </table>
             </div>
             <div class="tab-content" id="campaign" style="display:none;">
                 <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
-                <!-- ... Tu formulario de campaña original ... -->
-                <button id="lanzar-campana-btn" class="cta-button">{{ _('Lanzar Campaña') }}</button>
+                <!-- ... Tu formulario de campaña ... -->
             </div>
             <div class="tab-content" id="data" style="display:none;">
                 <h2>{{ _('Información del Producto y Contacto') }}</h2>
-                <div class="form-section"><label>...</label></div>
-                <div class="form-section"><label for="numero_whatsapp">...</label><input type="tel" id="numero_whatsapp"></div>
-                <!-- ... el resto de tu formulario de datos ... -->
+                <!-- ... Tu formulario de datos ... -->
             </div>
             <div class="tab-content" id="billing" style="display:none;">
                 <h2>{{ _('Mi Saldo y Facturación') }}</h2>
-                <p>...</p>
+                <!-- ... Tu contenido de facturación ... -->
             </div>
         </div>
     </div>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  
+   <!-- CONEXIÓN AL ARCHIVO JAVASCRIPT -->
+   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
