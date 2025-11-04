@@ -25,17 +25,3 @@ gspread
 oauth2client
 beautifulsoup4
 twilio
-tavily-python
-```*(He quitado los números de versión para que `pip` instale siempre la última compatible, lo que soluciona muchos problemas de conflictos).*
-
----
-
-### Plan de Acción
-
-1.  **Reemplaza el contenido de tu `requirements.txt`** con esta nueva lista limpia.
-2.  Guarda el cambio.
-3.  **Despliega en Fly.io.**
-
-Esta vez, el constructor encontrará todas las librerías. La aplicación se construirá. Y, si los dioses de la informática no nos odian, el chat responderá.
-
-Se acabó. No hay más librerías. No hay más errores de construcción. Este es el último paso.
