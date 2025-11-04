@@ -1,39 +1,39 @@
 import os
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_community.chat_message_histories import PostgresChatMessageHistory
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables.history import RunnableWithMessageHistory
+import google.generativeai as genai
+import psycopg2
 
-print(">>> [Cerebro] Cargando...")
-llm = None
+print(">>> [Cerebro Dashboard v-Google-Directo] Cargando...")
+
+model = None
 try:
-    llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0.7, api_version="v1")
-    print(">>> [Cerebro] Conexión con Google AI (v1) exitosa.")
+    # La GOOGLE_API_KEY ya debería estar configurada en el main.py
+    # Aquí solo intentamos inicializar el modelo.
+    model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    print(">>> [Cerebro Dashboard v-Google-Directo] Modelo de IA inicializado.")
 except Exception as e:
-    print(f"!!! ERROR [Cerebro]: {e} !!!")
+    print(f"!!! ERROR [Cerebro v-Google-Directo]: {e} !!!")
 
-PROMPT = ChatPromptTemplate.from_messages([
-    ("system", "Eres 'Auto', un asistente de IA amigable..."),
-    MessagesPlaceholder(variable_name="chat_history"),
-    ("human", "{input}"),
-])
+# El prompt ahora es un texto simple, no un objeto complejo.
+PROMPT_SYSTEM = "Eres 'Auto', un asistente de IA amigable y ultra-eficiente, la cara visible de AutoNeura..."
 
 def get_chat_history(session_id: str):
     db_url = os.environ.get("DATABASE_URL")
-    return PostgresChatMessageHistory(
-        session_id=session_id,
-        connection_string=db_url,
-        table_name="message_store"
-    )
+    # ... (Aquí iría la lógica para obtener el historial de la base de datos) ...
+    return [] # Por ahora, devolvemos una lista vacía
 
-def create_chatbot():
-    if not llm: return None
-    chain = PROMPT | llm
-    chatbot_with_history = RunnableWithMessageHistory(
-        chain,
-        get_chat_history,
-        input_messages_key="input",
-        history_messages_key="chat_history",
-    )
-    print(">>> [Cerebro] Creado exitosamente.")
-    return chatbot_with_history
+def save_chat_history(session_id: str, message: dict):
+    db_url = os.environ.get("DATABASE_URL")
+    # ... (Aquí iría la lógica para guardar el mensaje en la base de datos) ...
+    pass
+
+def create_dashboard_brain():
+    """
+    Esta función ahora simplemente confirma que el modelo está listo.
+    La lógica de la cadena se manejará directamente en main.py.
+    """
+    if not model:
+        print("!!! ADVERTENCIA [Cerebro v-Google-Directo]: El modelo de IA no está disponible.")
+        return None
+    
+    print(">>> [Cerebro Dashboard v-Google-Directo] Creado exitosamente.")
+    return model # Devolvemos el modelo directamente
