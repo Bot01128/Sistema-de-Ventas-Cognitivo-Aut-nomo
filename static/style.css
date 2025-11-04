@@ -17,13 +17,30 @@ h1, h2, h3, h4 { color: #1c1e21; margin-top: 0; }
     flex-direction: column; 
     overflow: hidden; /* Evita que el contenido se desborde antes de aplicar el scroll */
 }
-.chat-messages { 
-    flex-grow: 1; 
-    overflow-y: auto; /* ¡LA LÍNEA MÁGICA! */
-    display: flex; 
-    flex-direction: column; 
-    gap: 12px; 
-    padding-right: 15px; /* Más espacio para el scroll */
+/* --- NUEVOS ESTILOS PARA LA BARRA DE SCROLL DEL CHAT --- */
+.chat-messages {
+    flex-grow: 1;
+    overflow-y: auto; /* ¡LA LÍNEA MÁGICA! Le dice a este div que muestre una barra de scroll si el contenido se desborda */
+    display: flex;
+    flex-direction: column; /* Apila los mensajes verticalmente */
+    padding-right: 15px; /* Un poco de espacio para la barra */
+}
+
+/* Estilos para la barra de scroll (opcional, pero se ve más pro) */
+.chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+.chat-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+.chat-messages::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
 }
 /* --- FIN DE LA SECCIÓN MODIFICADA --- */
 
