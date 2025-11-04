@@ -1,11 +1,25 @@
+# === Servidor Web ===
 Flask==3.0.3
 gunicorn==22.0.0
 python-dotenv==1.0.1
-requests==2.32.3
-twilio==9.2.1
-langchain==0.2.1
-langchain-google-genai==1.0.5
+requests # Necesario para el seguimiento.py
+
+# === Inteligencia Artificial ===
+langchain>=0.1.20
+langchain-google-genai>=0.1.4
+langchain-community
+
+# === Herramientas y Bases de Datos ===
 psycopg2-binary==2.9.9
 SQLAlchemy==2.0.30
-langchain-community==0.2.1
-psycopg
+psycopg # Necesario para la memoria del cerebro
+supabase
+
+# === Herramientas Externas ===
+twilio # Aunque no lo usemos para enviar, puede ser una dependencia de otro paquete
+apify-client==2.2.1
+gspread==6.0.2
+oauth2client # Dependencia de gspread
+beautifulsoup4==4.12.3
+langchain-community # (Duplicado, pero asegurado)
+tavily-sdk # La librería correcta para TavilySearchResults
