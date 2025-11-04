@@ -12,7 +12,8 @@ langchain-community
 
 # === Herramientas y Bases de Datos ===
 apify-client==2.2.1
-psycopg-binary # <-- La versión correcta para Supabase
+psycopg-binary
+psycopg
 gspread==6.0.2
 beautifulsoup4==4.12.3
 SQLAlchemy==2.0.25
