@@ -1,74 +1,141 @@
 import os
-from flask import Flask, request
-from dotenv import load_dotenv
-from twilio.rest import Client
-from cerebro import create_chatbot
+import psycopg2
+import json
+import google.generativeai as genai
+from flask import Flask, render_template, request, jsonify
+from flask_babel import Babel
+# --- ¡LA ÚNICA IMPORTACIÓN DEL CEREBRO QUE NECESITAMOS! ---
+from bot_de_respuesta.cerebro import create_chatbot
 
-print(">>> [main.py] Cargando Módulo... VERSIÓN BACKEND-PURO")
-load_dotenv()
+# --- CONFIGURACIÓN INICIAL ---
 app = Flask(__name__)
-print(">>> [main.py] App Flask creada.")
+DATABASE_URL = os.environ.get("DATABASE_URL")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
-# --- CONFIGURACIÓN DE TWILIO ---
-try:
-    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
-    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
-    TWILIO_FACEBOOK_SENDER_ID = os.environ.get('TWILIO_FACEBOOK_SENDER_ID')
-    twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-    print(">>> [main.py] Cliente Twilio inicializado.")
-except Exception as e:
-    print(f"!!! ERROR [main.py]: Faltan las credenciales de Twilio o son incorrectas: {e} !!!")
-    twilio_client = None
+# Configurar la IA de Google globalmente (CRÍTICO)
+if GOOGLE_API_KEY:
+    genai.configure(api_key=GOOGLE_API_KEY)
+    print(">>> [main.py] IA de Google configurada exitosamente.")
+else:
+    print("!!! ADVERTENCIA: [main.py] GOOGLE_API_KEY no encontrada.")
 
-# --- INICIALIZACIÓN DEL CEREBRO ---
-final_chain = create_chatbot()
+# --- INICIALIZACIÓN DEL NUEVO CEREBRO (EL TRASPLANTADO) ---
+dashboard_brain = create_chatbot()
+if dashboard_brain:
+    print(">>> [main.py] Cerebro con memoria (trasplantado) inicializado con éxito.")
+else:
+    print("!!! ERROR CRÍTICO: [main.py] No se pudo inicializar el cerebro del chat.")
 
-# --- RUTA PRINCIPAL (PARA VERIFICAR QUE ESTÁ VIVO) ---
+# --- CONFIGURACIÓN DE IDIOMA ---
+def get_locale():
+    if not request.accept_languages:
+        return 'es'
+    return request.accept_languages.best_match(['en', 'es'])
+
+babel = Babel(app, locale_selector=get_locale)
+app.jinja_env.globals.update(get_locale=get_locale)
+
+# --- RUTAS DE LA APLICACIÓN ---
+
 @app.route('/')
-def home():
-    # Este es el mensaje simple que debe mostrar la URL pública
-    return "<h1>Servidor AutoNeura AI (Twilio) está VIVO</h1>", 200
+def dashboard():
+    return render_template('dashboard.html')
 
-# --- RUTA WEBHOOK PARA TWILIO ---
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    if not twilio_client or not final_chain:
-        print("!!! ERROR CRÍTICO [main.py]: El bot no está configurado correctamente. Ignorando mensaje.")
-        return "OK", 200
-
-    incoming_data = request.values
-    sender_id = incoming_data.get('From')
-    message_text = incoming_data.get('Body')
+# --- ¡¡¡RUTA DE CHAT CON LA LÓGICA DEL BOT DE FACEBOOK!!! ---
+@app.route('/chat', methods=['POST'])
+def chat():
+    if not dashboard_brain:
+        return jsonify({"error": "El cerebro del chat no está funcionando."}), 500
     
-    if sender_id and sender_id.startswith('messenger:'):
-        sender_id = sender_id.replace('messenger:', '')
-
-    if sender_id and message_text:
-        print(f"--- [BACKEND-PURO] Mensaje de {sender_id}: '{message_text}' ---")
-        try:
-            response_object = final_chain.invoke(
-                {"input": message_text},
-                config={"configurable": {"session_id": sender_id}}
-            )
-            response_text = response_object.content
-            
-            print(f"--- [BACKEND-PURO] Respuesta IA: '{response_text}' ---")
-            send_message_via_twilio(sender_id, response_text)
-        except Exception as e:
-            print(f"!!! ERROR [BACKEND-PURO] al procesar mensaje: {e} !!!")
+    data = request.get_json()
+    user_message = data.get('message')
+    # Para el dashboard, cada sesión del navegador es una conversación.
+    # Usaremos un ID estático por ahora para probar la memoria.
+    session_id = "dashboard_user_session" 
     
-    return "OK", 200
-
-# --- FUNCIÓN PARA ENVIAR MENSAJES VÍA TWILIO ---
-def send_message_via_twilio(recipient_id, message_text):
+    if not user_message:
+        return jsonify({"error": "No se recibió ningún mensaje."}), 400
+        
     try:
-        message = twilio_client.messages.create(
-            to=f'messenger:{recipient_id}',
-            from_=f'messenger:{TWILIO_FACEBOOK_SENDER_ID}',
-            body=message_text
+        print(f"--- [main.py] Invocando cerebro con: '{user_message}' (Sesión: {session_id}) ---")
+        
+        # Usamos la estructura que espera el cerebro con memoria de LangChain
+        response_object = dashboard_brain.invoke(
+            {"input": user_message},
+            config={"configurable": {"session_id": session_id}}
         )
-        print(f"Mensaje [BACKEND-PURO] enviado SID: {message.sid}")
-    except Exception as e:
-        print(f"!!! ERROR [BACKEND-PURO] al enviar con Twilio: {e} !!!")
+        
+        # Extraemos el contenido de la respuesta
+        ai_response = response_object.content
+        
+        print(f"--- [main.py] Respuesta del cerebro: '{ai_response}' ---")
+        return jsonify({"response": ai_response})
 
-print(">>> [main.py] Módulo cargado. VERSIÓN BACKEND-PURO")
+    except Exception as e:
+        print(f"!!! ERROR [main.py] al procesar el chat: {e} !!!")
+        return jsonify({"error": "Ocurrió un error interno al pensar la respuesta."}), 500
+
+# --- RUTA DE PRUEBA ANTIGUA ---
+@app.route('/test-nido')
+def test_nido():
+    datos_de_prueba = { "nombre_negocio": "Ferretería El Tornillo Feliz", "titulo_personalizado": "Diagnóstico y Oportunidades para Ferretería El Tornillo Feliz", "texto_diagnostico": "Hemos detectado que su sitio web actual no ofrece a los clientes una forma inmediata de contacto, como un chat en vivo, lo que podría estar causando la pérdida de clientes impacientes.", "ejemplo_pregunta_1": "¿Tienen stock de taladros inalámbricos DeWalt?", "ejemplo_respuesta_1": "¡Claro que sí! Tenemos el modelo DCD777C2 a $120.00. Incluye 2 baterías y cargador. ¿Le gustaría que le reservemos uno?", "ejemplo_pregunta_2": "¿Hasta qué hora están abiertos hoy?", "ejemplo_respuesta_2": "Hoy estamos abiertos hasta las 6:00 PM. ¡Lo esperamos!", "texto_contenido_de_valor": "Un Agente de IA no solo responde preguntas, también puede capturar los datos de contacto de clientes potenciales fuera de horario, asegurando que ninguna oportunidad de venta se pierda." }
+    return render_template('nido_template.html', **datos_de_prueba)
+
+# --- NUEVO FLUJO DEL "PRE-NIDO" ---
+@app.route('/pre-nido/<uuid:id_unico>')
+def mostrar_pre_nido(id_unico):
+    idioma_detectado = get_locale()
+    print(f"--- Solicitud de Pre-Nido para ID: {id_unico} en idioma '{idioma_detectado}' ---")
+    conn = None
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute("SELECT id, nombre_negocio FROM prospectos WHERE id_unico = %s", (str(id_unico),))
+        prospecto = cur.fetchone()
+        if not prospecto: return "Enlace no válido.", 404
+        prospecto_id, nombre_negocio = prospecto
+        if not GOOGLE_API_KEY: return "Error: La clave de API de Google no está configurada.", 500
+        prompt = f"""
+        Actúa como un experto en marketing y un traductor profesional...
+        """
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        response = model.generate_content(prompt)
+        json_text = response.text.strip().replace("```json", "").replace("```", "")
+        textos = json.loads(json_text)
+        print(f">>> Contenido multilingüe generado para '{idioma_detectado}'.")
+        return render_template('pre_nido.html', prospecto_id=prospecto_id, nombre_negocio=nombre_negocio, textos=textos)
+    except Exception as e:
+        print(f"!!! ERROR al mostrar pre-nido: {e} !!!")
+        return "Error al cargar la página.", 500
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+# --- RUTA GENERAR-NIDO ---
+@app.route('/generar-nido', methods=['POST'])
+def generar_nido_y_enviar_enlace():
+    email_cliente = request.form.get('email_prospecto')
+    prospecto_id = request.form.get('prospecto_id_oculto')
+    print(f"EMAIL CAPTURADO: {email_cliente} para ID: {prospecto_id}. Redirigiendo...")
+    nombre_negocio = "tu negocio"
+    conn = None
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute("SELECT nombre_negocio FROM prospectos WHERE id = %s", (prospecto_id,))
+        resultado = cur.fetchone()
+        if resultado: nombre_negocio = resultado[0]
+    except Exception as e:
+        print(f"Error recuperando nombre para nido: {e}")
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+    datos_del_nido = { "nombre_negocio": nombre_negocio, "titulo_personalizado": f"Diagnóstico para {nombre_negocio}", "texto_diagnostico": "Hemos detectado una oportunidad de mejora...", "ejemplo_pregunta_1": "Pregunta de ejemplo 1", "ejemplo_respuesta_1": "Respuesta de ejemplo 1", "ejemplo_pregunta_2": "Pregunta de ejemplo 2", "ejemplo_respuesta_2": "Respuesta de ejemplo 2", "texto_contenido_de_valor": "Contenido de valor de ejemplo." }
+    return render_template('nido_template.html', **datos_del_nido)
+
+# --- BLOQUE DE ARRANQUE DEL SERVIDOR ---
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)
