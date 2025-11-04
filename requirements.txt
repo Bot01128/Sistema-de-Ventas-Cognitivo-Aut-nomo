@@ -26,4 +26,4 @@ oauth2client # Dependencia de gspread
 beautifulsoup4==4.12.3
 twilio==9.2.1 # Lo mantenemos por si alguna librería interna lo necesita
 tavily-sdk
-langchain-community
+
