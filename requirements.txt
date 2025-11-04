@@ -1,20 +1,29 @@
 # === Servidor Web ===
 Flask==3.0.3
 gunicorn==22.0.0
-Flask-Babel==4.0.0
 python-dotenv==1.0.1
+requests
+
+# === Internacionalización ===
+Flask-Babel==4.0.0
 
 # === Inteligencia Artificial ===
 google-generativeai>=0.4.0
-langchain>=0.1.20
+langchain>=0.2.1
 langchain-google-genai>=0.1.4
-langchain-community
+langchain-community>=0.2.1
 
 # === Herramientas y Bases de Datos ===
-apify-client==2.2.1
-psycopg-binary
+# Para conectar con Postgres (Supabase)
+psycopg2-binary==2.9.9
 psycopg
-gspread==6.0.2
-beautifulsoup4==4.12.3
-SQLAlchemy==2.0.25
+SQLAlchemy==2.0.30
 supabase
+
+# === Herramientas Externas y Varios ===
+apify-client==2.2.1
+gspread==6.0.2
+oauth2client # Dependencia de gspread
+beautifulsoup4==4.12.3
+twilio==9.2.1 # Lo mantenemos por si alguna librería interna lo necesita
+tavily-sdk
