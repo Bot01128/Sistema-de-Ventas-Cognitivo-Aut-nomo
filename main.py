@@ -80,14 +80,65 @@ def test_nido():
 # --- NUEVO FLUJO DEL "PRE-NIDO" (Tu código original, intacto) ---
 @app.route('/pre-nido/<uuid:id_unico>')
 def mostrar_pre_nido(id_unico):
-    # (Tu código original para esta ruta va aquí, sin cambios)
-    pass
+    idioma_detectado = get_locale()
+    print(f"--- Solicitud de Pre-Nido para ID: {id_unico} en idioma '{idioma_detectado}' ---")
+    conn = None
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute("SELECT id, nombre_negocio FROM prospectos WHERE id_unico = %s", (str(id_unico),))
+        prospecto = cur.fetchone()
+        if not prospecto: return "Enlace no válido.", 404
+        prospecto_id, nombre_negocio = prospecto
+        if not GOOGLE_API_KEY: return "Error: La clave de API de Google no está configurada.", 500
+        prompt = f"""
+        Actúa como un experto en marketing y un traductor profesional...
+        """
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        response = model.generate_content(prompt)
+        json_text = response.text.strip().replace("```json", "").replace("```", "")
+        textos = json.loads(json_text)
+        print(f">>> Contenido multilingüe generado para '{idioma_detectado}'.")
+        return render_template('pre_nido.html', prospecto_id=prospecto_id, nombre_negocio=nombre_negocio, textos=textos)
+    except Exception as e:
+        print(f"!!! ERROR al mostrar pre-nido: {e} !!!")
+        return "Error al cargar la página.", 500
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
 
 # --- RUTA GENERAR-NIDO (Tu código original, intacto) ---
 @app.route('/generar-nido', methods=['POST'])
 def generar_nido_y_enviar_enlace():
-    # (Tu código original para esta ruta va aquí, sin cambios)
-    pass
+    email_cliente = request.form.get('email_prospecto')
+    prospecto_id = request.form.get('prospecto_id_oculto')
+    print(f"EMAIL CAPTURADO: {email_cliente} para ID: {prospecto_id}. Redirigiendo...")
+    nombre_negocio = "tu negocio"
+    conn = None
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute("SELECT nombre_negocio FROM prospectos WHERE id = %s", (prospecto_id,))
+        resultado = cur.fetchone()
+        if resultado: nombre_negocio = resultado[0]
+    except Exception as e:
+        print(f"Error recuperando nombre para nido: {e}")
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+    datos_del_nido = {
+        "nombre_negocio": nombre_negocio,
+        "titulo_personalizado": f"Diagnóstico para {nombre_negocio}",
+        "texto_diagnostico": "Hemos detectado una oportunidad de mejora...",
+        "ejemplo_pregunta_1": "Pregunta de ejemplo 1",
+        "ejemplo_respuesta_1": "Respuesta de ejemplo 1",
+        "ejemplo_pregunta_2": "Pregunta de ejemplo 2",
+        "ejemplo_respuesta_2": "Respuesta de ejemplo 2",
+        "texto_contenido_de_valor": "Contenido de valor de ejemplo."
+    }
+    return render_template('nido_template.html', **datos_del_nido)
 
 # --- BLOQUE DE ARRANQUE DEL SERVIDOR ---
 if __name__ == '__main__':
