@@ -1,7 +1,8 @@
 import os
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+from langchain_community.chat_message_histories import PostgresChatMessageHistory
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.history import RunnableWithMessageHistory
 
 print(">>> [Cerebro] Cargando...")
 llm = None
@@ -13,11 +14,26 @@ except Exception as e:
 
 PROMPT = ChatPromptTemplate.from_messages([
     ("system", "Eres 'Auto', un asistente de IA amigable..."),
-    ("human", "{question}"),
+    MessagesPlaceholder(variable_name="chat_history"),
+    ("human", "{input}"),
 ])
 
-def create_dashboard_brain():
+def get_chat_history(session_id: str):
+    db_url = os.environ.get("DATABASE_URL")
+    return PostgresChatMessageHistory(
+        session_id=session_id,
+        connection_string=db_url,
+        table_name="message_store"
+    )
+
+def create_chatbot():
     if not llm: return None
-    chain = PROMPT | llm | StrOutputParser()
+    chain = PROMPT | llm
+    chatbot_with_history = RunnableWithMessageHistory(
+        chain,
+        get_chat_history,
+        input_messages_key="input",
+        history_messages_key="chat_history",
+    )
     print(">>> [Cerebro] Creado exitosamente.")
-    return chain
+    return chatbot_with_history
