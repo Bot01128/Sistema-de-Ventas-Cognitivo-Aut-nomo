@@ -1,0 +1,63 @@
+# BASE DE CONOCIMIENTO PARA "FERRETERÍA EL TORNILLO FELIZ"
+
+## INFORMACIÓN GENERAL DE LA EMPRESA
+- Nombre de la empresa: Ferretería El Tornillo Feliz
+- Ubicación: Avenida Siempreviva 123, Springfield.
+- Enlace a Google Maps: [ENLACE FICTICIO A GOOGLE MAPS]
+- Horario de atención: Lunes a Viernes de 8:00 AM a 6:00 PM. Sábados de 9:00 AM a 2:00 PM. Domingos CERRADO.
+- Teléfono de contacto: +1 (555) 123-4567
+- Email de contacto: contacto@eltornillofeliz.com
+- Sitio web: www.eltornillofeliz.com
+
+## POLÍTICAS Y PREGUNTAS FRECUENTES (FAQ)
+- Métodos de pago aceptados: Efectivo, tarjetas de crédito (Visa, MasterCard), tarjetas de débito. NO se acepta American Express.
+- Política de devoluciones: Se aceptan devoluciones hasta 30 días después de la compra, presentando el recibo original y con el producto en su empaque original sin abrir. No se aceptan devoluciones de productos cortados a medida como cables o cadenas.
+- ¿Son pet-friendly?: Sí, las mascotas bien educadas y con correa son bienvenidas en la tienda.
+- Estacionamiento: Contamos con 5 espacios de estacionamiento gratuito para clientes justo en frente de la tienda.
+
+## CATÁLOGO DE PRODUCTOS
+### Herramientas Manuales
+- Producto: Martillo de Uña
+  - Marca: Stanley
+  - Precio: $18.50 USD
+  - Descripción: Mango de fibra de vidrio para mayor durabilidad y absorción de impactos. Ideal para trabajos de carpintería y construcción.
+  - SKU: ST-HMR-01
+
+- Producto: Juego de Destornilladores (6 piezas)
+  - Marca: Craftsman
+  - Precio: $25.00 USD
+  - Descripción: Incluye 3 destornilladores planos y 3 de estrella (Phillips) con puntas magnéticas. Mango ergonómico.
+  - SKU: CM-SCR-06
+
+### Herramientas Eléctricas
+- Producto: Taladro Inalámbrico 20V
+  - Marca: DeWalt
+  - Precio: $120.00 USD
+  - Descripción: Taladro/Atornillador compacto. Incluye 2 baterías de Ion de Litio de 20V, cargador rápido y maletín de transporte.
+  - SKU: DW-DRL-20V
+
+- Producto: Sierra Circular 7-1/4"
+  - Marca: Makita
+  - Precio: $150.00 USD
+  - Descripción: Potente motor de 15 amperios para un rendimiento profesional. Ligera y fácil de manejar. No incluye disco.
+  - SKU: MK-SAW-07
+
+### Pintura y Accesorios
+- Producto: Pintura Látex para Interiores (Galón)
+  - Marca: Behr
+  - Precio: $40.00 USD
+  - Descripción: Pintura de alta calidad con acabado mate. Disponible en más de 1000 colores con nuestro servicio de preparación de pintura.
+  - SKU: BH-PNT-01G
+
+## SERVICIOS ADICIONALES
+- Servicio: Duplicado de Llaves
+  - Precio: Desde $2.50 USD por llave estándar. Llaves especiales pueden tener un costo mayor.
+  - Descripción: Hacemos duplicados de la mayoría de llaves de casa y candados al instante.
+
+- Servicio: Preparación de Pintura Personalizada
+  - Precio: Incluido con la compra de la pintura.
+  - Descripción: Trae una muestra de color y nosotros la igualamos con nuestro sistema computarizado para crear el tono exacto que necesitas.
+
+- Servicio: Entrega a Domicilio
+  - Precio: $10 USD para entregas dentro de un radio de 5 km. Consultar para distancias mayores.
+  - Descripción: ¿Compras algo muy grande o pesado? Te lo llevamos a tu casa o proyecto.
