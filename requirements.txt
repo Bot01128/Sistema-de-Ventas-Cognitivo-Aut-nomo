@@ -17,3 +17,5 @@ gspread==6.0.2
 beautifulsoup4==4.12.3
 SQLAlchemy==2.0.25
 supabase
+psycopg
+psycopg-binary
