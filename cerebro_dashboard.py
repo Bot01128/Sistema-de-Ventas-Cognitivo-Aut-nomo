@@ -7,7 +7,19 @@ print(">>> [Cerebro v-Google-Directo-CON-MEMORIA] Cargando...")
 
 model = None
 try:
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    from google.generativeai.client import Client
+# ... (el resto de tus imports) ...
+
+model = None
+try:
+    # Creamos un cliente de API forzando la versión v1
+    api_client = Client(api_key=os.environ.get("GOOGLE_API_KEY"), client_options={"api_version": "v1"})
+    
+    # Usamos ese cliente para crear el modelo
+    model = genai.GenerativeModel('gemini-1.5-flash-latest', client=api_client)
+    print(">>> [Cerebro] Modelo de IA (v1) inicializado.")
+except Exception as e:
+    print(f"!!! ERROR [Cerebro]: {e} !!!")
     print(">>> [Cerebro] Modelo de IA inicializado.")
 except Exception as e:
     print(f"!!! ERROR [Cerebro]: {e} !!!")
