@@ -1,3 +1,4 @@
+# main.py (está bien, no necesitas cambiarlo)
 import os
 import psycopg2
 import json
@@ -15,13 +16,18 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
     print(">>> [main.py] IA de Google configurada.")
+else:
+    print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
 
 # --- INICIALIZACIÓN DEL CEREBRO ---
 dashboard_brain = create_chatbot()
 if dashboard_brain:
     print(">>> [main.py] Cerebro con memoria inicializado.")
+else:
+    print("!!! ERROR [main.py]: El cerebro no pudo ser inicializado.")
 
-# --- CONFIGURACIÓN DE IDIOMA ---
+
+# --- CONFIGURACIÓN DE IDIOMA (Tu código está bien) ---
 def get_locale():
     if not request.accept_languages:
         return 'es'
@@ -29,6 +35,7 @@ def get_locale():
 
 babel = Babel(app, locale_selector=get_locale)
 app.jinja_env.globals.update(get_locale=get_locale)
+
 
 # --- RUTAS DE LA APLICACIÓN ---
 
@@ -39,34 +46,22 @@ def dashboard():
 @app.route('/chat', methods=['POST'])
 def chat():
     if not dashboard_brain:
-        return jsonify({"error": "Cerebro no disponible."}), 500
+        print("!!! ERROR [/chat]: Intento de chat con cerebro no inicializado.")
+        return jsonify({"error": "El servicio de chat no está disponible en este momento. Revisa los logs del servidor."}), 500
     
     user_message = request.json.get('message')
     if not user_message:
-        return jsonify({"error": "No hay mensaje."}), 400
+        return jsonify({"error": "No se recibió ningún mensaje en la solicitud."}), 400
         
     try:
-        response = dashboard_brain.invoke({"question": user_message})
-        return jsonify({"response": response})
+        # La llamada a invoke() sigue funcionando igual
+        response_text = dashboard_brain.invoke({"question": user_message})
+        return jsonify({"response": response_text})
     except Exception as e:
-        print(f"!!! ERROR al procesar chat: {e} !!!")
-        return jsonify({"error": "Ocurrió un error."}), 500
+        print(f"!!! ERROR fatal en la ruta /chat: {e} !!!")
+        return jsonify({"error": "Ocurrió un error inesperado al procesar el mensaje."}), 500
 
-# --- TUS RUTAS ORIGINALES, INTACTAS ---
-@app.route('/test-nido')
-def test_nido():
-    # ... (Tu código de test-nido original va aquí) ...
-    pass
-
-@app.route('/pre-nido/<uuid:id_unico>')
-def mostrar_pre_nido(id_unico):
-    # ... (Tu código de pre-nido original va aquí) ...
-    pass
-
-@app.route('/generar-nido', methods=['POST'])
-def generar_nido_y_enviar_enlace():
-    # ... (Tu código de generar-nido original va aquí) ...
-    pass
+# --- TUS OTRAS RUTAS (No las toques) ---
 
 # --- BLOQUE DE ARRANQUE ---
 if __name__ == '__main__':
