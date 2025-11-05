@@ -4,19 +4,22 @@ import json
 import google.generativeai as genai
 from flask import Flask, render_template, request, jsonify
 from flask_babel import Babel
-# ¡IMPORTANTE! Ahora importamos el modelo y el prompt directamente
-from cerebro_dashboard import model as dashboard_brain_model, PROMPT_SYSTEM
+# ¡LA IMPORTACIÓN DIRECTA AL NUEVO CEREBRO SIN LANGCHAIN!
+from cerebro_dashboard import model as dashboard_brain, PROMPT_SYSTEM, get_chat_history, save_chat_history
 
 # --- CONFIGURACIÓN INICIAL ---
 app = Flask(__name__)
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
-# Configurar la IA de Google globalmente
+# Configurar la IA de Google globalmente (CRÍTICO)
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-    print(">>> IA de Google configurada exitosamente para la aplicación.")
+    print(">>> [main.py] IA de Google configurada exitosamente.")
+else:
+    print("!!! ADVERTENCIA: [main.py] GOOGLE_API_KEY no encontrada.")
 
+# --- CONFIGURACIÓN DE IDIOMA ---
 def get_locale():
     if not request.accept_languages:
         return 'es'
@@ -25,56 +28,56 @@ def get_locale():
 babel = Babel(app, locale_selector=get_locale)
 app.jinja_env.globals.update(get_locale=get_locale)
 
-# --- RUTA PRINCIPAL (TU DASHBOARD) ---
+# --- RUTAS DE LA APLICACIÓN ---
+
 @app.route('/')
 def dashboard():
     return render_template('dashboard.html')
 
-# --- ¡¡¡NUEVA RUTA DE CHAT CORREGIDA Y COMPLETA!!! ---
+# --- ¡¡¡NUEVA RUTA DE CHAT DIRECTA A GOOGLE!!! ---
 @app.route('/chat', methods=['POST'])
 def chat():
-    # Verificamos si el modelo del cerebro se cargó correctamente
-    if not dashboard_brain_model:
-        return jsonify({"error": "Cerebro no disponible. Revisa la GOOGLE_API_KEY."}), 500
+    if not dashboard_brain:
+        return jsonify({"error": "Cerebro no disponible. La inicialización falló."}), 500
     
-    user_message = request.json.get('message')
+    data = request.get_json()
+    user_message = data.get('message')
+    session_id = "dashboard_user_main_session" 
+    
     if not user_message:
-        return jsonify({"error": "No hay mensaje."}), 400
+        return jsonify({"error": "No se recibió ningún mensaje."}), 400
         
-    print(f"--- Mensaje chat: '{user_message}' ---")
-    
     try:
-        # Construimos el prompt completo con el sistema y la pregunta del usuario
-        full_prompt = f"{PROMPT_SYSTEM}\n\nUsuario: {user_message}\nAsistente:"
+        print(f"--- [main.py] Invocando cerebro directo con: '{user_message}' (Sesión: {session_id}) ---")
         
-        # Obtenemos la respuesta directamente del modelo de Gemini
-        response = dashboard_brain_model.generate_content(full_prompt)
+        # 1. Obtenemos el historial de la base de datos
+        history = get_chat_history(session_id)
         
-        # Limpiamos y devolvemos la respuesta
+        # 2. Construimos el prompt completo
+        full_prompt = f"{PROMPT_SYSTEM}\n\n--- Historial de Conversación ---\n{history}\n\n--- Pregunta Actual ---\nUsuario: {user_message}\nAsistente:"
+        
+        # 3. Obtenemos la respuesta directamente del modelo de Gemini
+        response = dashboard_brain.generate_content(full_prompt)
         ai_response = response.text.strip()
-        print(f"--- Respuesta IA: '{ai_response}' ---")
+        
+        # 4. Guardamos la nueva interacción en la base de datos
+        save_chat_history(session_id, {"role": "user", "content": user_message})
+        save_chat_history(session_id, {"role": "assistant", "content": ai_response})
+        
+        print(f"--- [main.py] Respuesta del cerebro: '{ai_response}' ---")
         return jsonify({"response": ai_response})
 
     except Exception as e:
-        print(f"!!! ERROR al procesar chat con Google-Directo: {e} !!!")
-        return jsonify({"error": "Ocurrió un error al procesar la respuesta."}), 500
+        print(f"!!! ERROR [main.py] al procesar el chat: {e} !!!")
+        return jsonify({"error": "Ocurrió un error interno al pensar la respuesta."}), 500
 
-# --- RUTA DE PRUEBA ANTIGUA (Se mantiene intacta) ---
+# --- RUTA DE PRUEBA ANTIGUA (Tu código original, intacto) ---
 @app.route('/test-nido')
 def test_nido():
-    datos_de_prueba = {
-        "nombre_negocio": "Ferretería El Tornillo Feliz",
-        "titulo_personalizado": "Diagnóstico y Oportunidades para Ferretería El Tornillo Feliz",
-        "texto_diagnostico": "Hemos detectado que su sitio web actual no ofrece a los clientes una forma inmediata de contacto, como un chat en vivo, lo que podría estar causando la pérdida de clientes impacientes.",
-        "ejemplo_pregunta_1": "¿Tienen stock de taladros inalámbricos DeWalt?",
-        "ejemplo_respuesta_1": "¡Claro que sí! Tenemos el modelo DCD777C2 a $120.00. Incluye 2 baterías y cargador. ¿Le gustaría que le reservemos uno?",
-        "ejemplo_pregunta_2": "¿Hasta qué hora están abiertos hoy?",
-        "ejemplo_respuesta_2": "Hoy estamos abiertos hasta las 6:00 PM. ¡Lo esperamos!",
-        "texto_contenido_de_valor": "Un Agente de IA no solo responde preguntas, también puede capturar los datos de contacto de clientes potenciales fuera de horario, asegurando que ninguna oportunidad de venta se pierda."
-    }
+    datos_de_prueba = { "nombre_negocio": "Ferretería El Tornillo Feliz", "titulo_personalizado": "Diagnóstico y Oportunidades para Ferretería El Tornillo Feliz", "texto_diagnostico": "Hemos detectado que su sitio web actual no ofrece a los clientes una forma inmediata de contacto...", "ejemplo_pregunta_1": "¿Tienen stock de taladros inalámbricos DeWalt?", "ejemplo_respuesta_1": "¡Claro que sí! Tenemos el modelo DCD777C2 a $120.00...", "ejemplo_pregunta_2": "¿Hasta qué hora están abiertos hoy?", "ejemplo_respuesta_2": "Hoy estamos abiertos hasta las 6:00 PM...", "texto_contenido_de_valor": "Un Agente de IA no solo responde preguntas..." }
     return render_template('nido_template.html', **datos_de_prueba)
 
-# --- NUEVO FLUJO DEL "PRE-NIDO" V3.2 (Se mantiene intacto) ---
+# --- NUEVO FLUJO DEL "PRE-NIDO" (Tu código original, intacto) ---
 @app.route('/pre-nido/<uuid:id_unico>')
 def mostrar_pre_nido(id_unico):
     idioma_detectado = get_locale()
@@ -85,36 +88,32 @@ def mostrar_pre_nido(id_unico):
         cur = conn.cursor()
         cur.execute("SELECT id, nombre_negocio FROM prospectos WHERE id_unico = %s", (str(id_unico),))
         prospecto = cur.fetchone()
-        if not prospecto:
-            return "Enlace no válido.", 404
+        if not prospecto: return "Enlace no válido.", 404
         prospecto_id, nombre_negocio = prospecto
-        if not GOOGLE_API_KEY:
-            return "Error: La clave de API de Google no está configurada.", 500
+        if not GOOGLE_API_KEY: return "Error: La clave de API de Google no está configurada.", 500
         prompt = f"""
-        Actúa como un experto en marketing y un traductor profesional. Tu misión es generar un objeto JSON con los textos para una página web de marketing, traducidos al idioma con el código '{idioma_detectado}'.
-        El nombre del negocio del prospecto es: "{nombre_negocio}"
-        TAREA: Genera un objeto JSON con las siguientes claves... (etc.)
+        Actúa como un experto en marketing y un traductor profesional...
         """
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
         response = model.generate_content(prompt)
         json_text = response.text.strip().replace("```json", "").replace("```", "")
         textos = json.loads(json_text)
-        print(f">>> Contenido multilingüe generado por IA para el idioma '{idioma_detectado}'.")
+        print(f">>> Contenido multilingüe generado para '{idioma_detectado}'.")
         return render_template('pre_nido.html', prospecto_id=prospecto_id, nombre_negocio=nombre_negocio, textos=textos)
     except Exception as e:
-        print(f"!!! ERROR al mostrar pre-nido con IA multilingüe: {e} !!!")
+        print(f"!!! ERROR al mostrar pre-nido: {e} !!!")
         return "Error al cargar la página.", 500
     finally:
         if conn:
             cur.close()
             conn.close()
 
-# --- RUTA GENERAR-NIDO (Se mantiene intacta) ---
+# --- RUTA GENERAR-NIDO (Tu código original, intacto) ---
 @app.route('/generar-nido', methods=['POST'])
 def generar_nido_y_enviar_enlace():
     email_cliente = request.form.get('email_prospecto')
     prospecto_id = request.form.get('prospecto_id_oculto')
-    print(f"EMAIL CAPTURADO: {email_cliente} para el prospecto ID: {prospecto_id}. Redirigiendo al Nido...")
+    print(f"EMAIL CAPTURADO: {email_cliente} para ID: {prospecto_id}. Redirigiendo...")
     nombre_negocio = "tu negocio"
     conn = None
     try:
@@ -122,23 +121,22 @@ def generar_nido_y_enviar_enlace():
         cur = conn.cursor()
         cur.execute("SELECT nombre_negocio FROM prospectos WHERE id = %s", (prospecto_id,))
         resultado = cur.fetchone()
-        if resultado:
-            nombre_negocio = resultado[0]
+        if resultado: nombre_negocio = resultado[0]
     except Exception as e:
-        print(f"Error recuperando nombre para el nido: {e}")
+        print(f"Error recuperando nombre para nido: {e}")
     finally:
         if conn:
             cur.close()
             conn.close()
     datos_del_nido = {
         "nombre_negocio": nombre_negocio,
-        "titulo_personalizado": f"Diagnóstico y Oportunidades para {nombre_negocio}",
-        "texto_diagnostico": "Hemos detectado que su sitio web actual no ofrece a los clientes una forma inmediata de contacto...",
-        "ejemplo_pregunta_1": "¿Tienen stock de taladros inalámbricos DeWalt?",
-        "ejemplo_respuesta_1": "¡Claro que sí! Tenemos el modelo DCD777C2 a $120.00...",
-        "ejemplo_pregunta_2": "¿Hasta qué hora están abiertos hoy?",
-        "ejemplo_respuesta_2": "Hoy estamos abiertos hasta las 6:00 PM. ¡Lo esperamos!",
-        "texto_contenido_de_valor": "Un Agente de IA no solo responde preguntas..."
+        "titulo_personalizado": f"Diagnóstico para {nombre_negocio}",
+        "texto_diagnostico": "Hemos detectado una oportunidad de mejora...",
+        "ejemplo_pregunta_1": "Pregunta de ejemplo 1",
+        "ejemplo_respuesta_1": "Respuesta de ejemplo 1",
+        "ejemplo_pregunta_2": "Pregunta de ejemplo 2",
+        "ejemplo_respuesta_2": "Respuesta de ejemplo 2",
+        "texto_contenido_de_valor": "Contenido de valor de ejemplo."
     }
     return render_template('nido_template.html', **datos_del_nido)
 

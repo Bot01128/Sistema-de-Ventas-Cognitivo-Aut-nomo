@@ -1,18 +1,27 @@
 # === Servidor Web ===
-Flask==3.0.3
-gunicorn==22.0.0
-Flask-Babel==4.0.0
-python-dotenv==1.0.1
+Flask
+gunicorn
+python-dotenv
+requests
+Flask-Babel
 
 # === Inteligencia Artificial ===
-google-generativeai==0.5.4
-langchain==0.1.20
-langchain-openai==0.1.6
-langchain-google-genai # <-- AÑADIDA LA QUE FALTABA
+google-generativeai
+langchain
+langchain-google-genai
+langchain-community
 
 # === Herramientas y Bases de Datos ===
-apify-client==2.2.1
-psycopg2-binary==2.9.9
-gspread==6.0.2
-beautifulsoup4==4.12.3
-SQLAlchemy==2.0.25
+psycopg2-binary
+psycopg
+SQLAlchemy
+supabase
+
+# === Herramientas Externas y Varios ===
+apify-client
+gspread
+oauth2client
+beautifulsoup4
+twilio
+tavily-python
+openai
