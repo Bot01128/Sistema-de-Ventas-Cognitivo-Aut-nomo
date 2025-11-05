@@ -1,35 +1,33 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // --- MÓDULO DE NAVEGACIÓN POR PESTAÑAS ---
+    // Lógica de Pestañas
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
-
     function switchTab(tabId) {
-        // Primero, ocultamos todo
-        tabContents.forEach(content => {
-            content.style.display = 'none';
-        });
-        // Luego, activamos el botón correcto
-        tabButtons.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabId);
-        });
-        // Finalmente, mostramos solo el contenido deseado
-        const activeContent = document.getElementById(tabId);
-        if (activeContent) {
-            activeContent.style.display = 'block';
-        }
+        tabContents.forEach(content => { content.style.display = 'none'; });
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId)?.style.display = 'block';
+        document.querySelector(`.tab-button[data-tab="${tabId}"]`)?.classList.add('active');
     }
+    tabButtons.forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)));
 
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const tabId = button.getAttribute('data-tab');
-            switchTab(tabId);
-        });
+    // Lógica del Chat
+    const chatForm = document.querySelector('.chat-input'); // Apuntamos al div
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    async function handleSendMessage(event) {
+        event.preventDefault(); // ¡PREVENIMOS LA RECARGA AQUÍ!
+        // ... (resto de tu lógica de sendMessage) ...
+    }
+    
+    if (sendBtn) sendBtn.addEventListener('click', handleSendMessage);
+    if (userInput) userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSendMessage(e);
+        }
     });
 
-    // --- CÓDIGO DEL CHAT (LO DEJAREMOS PARA DESPUÉS, PERO DEBE ESTAR) ---
-    // (Aquí va tu lógica de chat original)
-
-    // --- INICIALIZACIÓN ---
-    // Al cargar la página, nos aseguramos de que solo la primera pestaña sea visible.
+    // Inicialización
     switchTab('my-campaigns');
 });
