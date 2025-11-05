@@ -24,3 +24,4 @@ oauth2client
 beautifulsoup4
 twilio
 tavily-python
+openai
