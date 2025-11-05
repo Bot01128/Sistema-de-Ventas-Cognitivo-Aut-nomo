@@ -7,43 +7,8 @@ body, html { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFo
 .right-panel { flex-grow: 1; background-color: #f8f9fa; padding: 40px; overflow-y: auto; }
 h1, h2, h3, h4 { color: #1c1e21; margin-top: 0; }
 .chat-header h2 { font-size: 24px; }
-
-/* --- SECCIÓN MODIFICADA --- */
-.chat-window { 
-    flex-grow: 1; 
-    border-radius: 8px; 
-    margin-top: 20px; 
-    display: flex; 
-    flex-direction: column; 
-    overflow: hidden; /* Evita que el contenido se desborde antes de aplicar el scroll */
-}
-/* --- NUEVOS ESTILOS PARA LA BARRA DE SCROLL DEL CHAT --- */
-.chat-messages {
-    flex-grow: 1;
-    overflow-y: auto; /* ¡LA LÍNEA MÁGICA! Le dice a este div que muestre una barra de scroll si el contenido se desborda */
-    display: flex;
-    flex-direction: column; /* Apila los mensajes verticalmente */
-    padding-right: 15px; /* Un poco de espacio para la barra */
-}
-
-/* Estilos para la barra de scroll (opcional, pero se ve más pro) */
-.chat-messages::-webkit-scrollbar {
-    width: 8px;
-}
-.chat-messages::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-}
-.chat-messages::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
-}
-.chat-messages::-webkit-scrollbar-thumb:hover {
-    background: #aaa;
-}
-}
-/* --- FIN DE LA SECCIÓN MODIFICADA --- */
-
+.chat-window { flex-grow: 1; border-radius: 8px; margin-top: 20px; display: flex; flex-direction: column; overflow: hidden; }
+.chat-messages { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 15px; }
 .chat-messages p { margin: 0; padding: 10px 15px; border-radius: 20px; max-width: 85%; word-wrap: break-word; line-height: 1.5; font-size: 15px;}
 .msg-user { background-color: #007bff; color: white; align-self: flex-end; margin-left: auto; }
 .msg-assistant { background-color: #e9ecef; color: #333; align-self: flex-start; }
@@ -72,18 +37,7 @@ small { color: #6c757d; font-size: 12px; }
 .plan-card h4 { margin: 0 0 10px 0; }
 .plan-card .price { font-size: 24px; font-weight: bold; margin: 10px 0; }
 @media (max-width: 900px) { .container { flex-direction: column; overflow: auto; } .left-panel { flex-basis: auto; min-height: 400px; } }
-
-/* --- NUEVOS ESTILOS PARA LA BARRA DE SCROLL (OPCIONAL PERO RECOMENDADO) --- */
-.chat-messages::-webkit-scrollbar {
-    width: 8px;
-}
-.chat-messages::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-.chat-messages::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
-}
-.chat-messages::-webkit-scrollbar-thumb:hover {
-    background: #aaa;
-}
+.chat-messages::-webkit-scrollbar { width: 8px; }
+.chat-messages::-webkit-scrollbar-track { background: #f1f1f1; }
+.chat-messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+.chat-messages::-webkit-scrollbar-thumb:hover { background: #aaa; }
