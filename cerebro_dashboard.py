@@ -1,20 +1,15 @@
 import os
-import openai
+import google.generativeai as genai
 
-print(">>> [Cerebro Dashboard v-OpenAI-Directo] Cargando...")
+print(">>> [Cerebro Dashboard v-Google-Directo] Cargando...")
 
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+model = None
+try:
+    # La GOOGLE_API_KEY ya debería estar configurada en el main.py
+    # Aquí solo intentamos inicializar el modelo.
+    model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    print(">>> [Cerebro Dashboard v-Google-Directo] Modelo de IA inicializado.")
+except Exception as e:
+    print(f"!!! ERROR [Cerebro v-Google-Directo]: {e} !!!")
 
 PROMPT_SYSTEM = "Eres 'Auto', un asistente de IA amigable y ultra-eficiente, la cara visible de AutoNeura..."
-
-def create_dashboard_brain():
-    """
-    Esta función ahora simplemente confirma que el modelo está listo.
-    La lógica de la cadena se manejará directamente en main.py.
-    """
-    if not openai.api_key:
-        print("!!! ADVERTENCIA [Cerebro v-OpenAI-Directo]: La clave de API de OpenAI no está disponible.")
-        return None
-    
-    print(">>> [Cerebro Dashboard v-OpenAI-Directo] Creado exitosamente.")
-    return openai # Devolvemos el cliente de OpenAI directamente
