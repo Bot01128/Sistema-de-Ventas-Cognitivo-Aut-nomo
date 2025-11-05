@@ -3,13 +3,14 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-print(">>> [Cerebro v-LangChain-Corregido] Cargando...")
+print(">>> [Cerebro v-LangChain-Definitivo] Cargando...")
 
 llm = None
 try:
-    # --- ¡LA SOLUCIÓN DE LOS FOROS, AHORA SÍ! ---
-    llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7, api_version="v1")
-    print(">>> [Cerebro] Conexión con Google AI (v1) exitosa.")
+    # --- ¡LA SOLUCIÓN DE LA COMUNIDAD! ---
+    # Usamos el modelo más nuevo y estable. No necesita el parche 'api_version'.
+    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", temperature=0.7)
+    print(">>> [Cerebro] Conexión con Google AI exitosa.")
 except Exception as e:
     print(f"!!! ERROR [Cerebro]: {e} !!!")
 
