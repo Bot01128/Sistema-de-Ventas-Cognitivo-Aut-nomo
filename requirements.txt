@@ -6,6 +6,7 @@ requests
 Flask-Babel
 
 # === Inteligencia Artificial ===
+google-generativeai
 langchain
 langchain-google-genai
 langchain-community
@@ -23,4 +24,3 @@ oauth2client
 beautifulsoup4
 twilio
 tavily-python
-openai
