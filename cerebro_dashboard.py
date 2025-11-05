@@ -10,7 +10,7 @@ class DashboardBrain:
         self.chat = None
         try:
             # Inicializamos el modelo de IA directamente con la librería de Google
-            self.model = genai.GenerativeModel('gemini-1.5-flash-latest')
+          self.model = genai.GenerativeModel('gemini-1.0-pro')
             # Iniciamos una sesión de chat para que recuerde el historial
             self.chat = self.model.start_chat(history=[])
             print(">>> [Cerebro] Conexión nativa con Google AI exitosa.")
