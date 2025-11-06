@@ -10,7 +10,7 @@ class DashboardBrain:
         self.chat = None
         try:
             # Usamos el modelo 'gemini-1.0-pro', es el más estable y compatible
-            self.model = genai.GenerativeModel('gemini-1.0-pro')
+            self.model = genai.GenerativeModel('models/gemini-pro-latest')
             
             # Iniciamos una sesión de chat para que recuerde el historial
             self.chat = self.model.start_chat(history=[])
