@@ -1,54 +1,44 @@
 import os
 import google.generativeai as genai
-import psycopg2
-import json
 
-print(">>> [Cerebro v-Google-Directo-CON-MEMORIA] Cargando...")
+print(">>> [Cerebro v-Nativo-Google] Cargando...")
 
-model = None
-try:
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
-    print(">>> [Cerebro] Modelo de IA inicializado.")
-except Exception as e:
-    print(f"!!! ERROR [Cerebro]: {e} !!!")
+# Esta clase manejará el estado de la conversación (la memoria)
+class DashboardBrain:
+    def __init__(self):
+        self.model = None
+        self.chat = None
+        try:
+            # Usamos el modelo que descubrimos que SÍ está disponible
+            self.model = genai.GenerativeModel('models/gemini-pro-latest')
+            
+            # Iniciamos una sesión de chat para que recuerde el historial
+            self.chat = self.model.start_chat(history=[])
+            print(">>> [Cerebro] Conexión nativa con Google AI exitosa.")
+        except Exception as e:
+            print(f"!!! ERROR [Cerebro]: No se pudo inicializar el modelo de Google. {e} !!!")
 
-PROMPT_SYSTEM = "Eres 'Auto', un asistente de IA amigable..."
+    def invoke(self, input_data):
+        if not self.chat:
+            return "Error: El cerebro no está disponible en este momento."
 
-def get_chat_history(session_id: str):
-    db_url = os.environ.get("DATABASE_URL")
-    history = []
-    conn = None
-    try:
-        conn = psycopg2.connect(db_url)
-        cur = conn.cursor()
-        cur.execute("SELECT message FROM message_store WHERE session_id = %s ORDER BY id ASC", (session_id,))
-        rows = cur.fetchall()
-        for row in rows:
-            history.append(json.loads(row[0]))
-    except Exception as e:
-        print(f"!!! ERROR al obtener historial de chat: {e} !!!")
-    finally:
-        if conn:
-            cur.close()
-            conn.close()
-    
-    # Formatear historial para el prompt
-    formatted_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history])
-    return formatted_history
+        question = input_data.get("question")
+        if not question:
+            return "Error: No se recibió ninguna pregunta."
 
-def save_chat_history(session_id: str, message: dict):
-    db_url = os.environ.get("DATABASE_URL")
-    conn = None
-    try:
-        conn = psycopg2.connect(db_url)
-        cur = conn.cursor()
-        cur.execute("INSERT INTO message_store (session_id, message) VALUES (%s, %s)", (session_id, json.dumps(message)))
-        conn.commit()
-    except Exception as e:
-        print(f"!!! ERROR al guardar historial de chat: {e} !!!")
-    finally:
-        if conn:
-            cur.close()
-            conn.close()
+        try:
+            response = self.chat.send_message(question)
+            return response.text
+        except Exception as e:
+            print(f"!!! ERROR [Cerebro]: Ocurrió un error al invocar la IA. {e} !!!")
+            return "Lo siento, tuve un problema para procesar tu solicitud."
 
-# No necesitamos create_dashboard_brain, main.py usará el modelo directamente
+# Esta es la función que main.py llamará
+def create_chatbot():
+    brain_instance = DashboardBrain()
+    if brain_instance.model:
+        print(">>> [Cerebro] Instancia creada exitosamente.")
+        return brain_instance
+    else:
+        print("!!! ERROR [Cerebro]: La creación de la instancia falló.")
+        return None
