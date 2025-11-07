@@ -11,6 +11,17 @@ app = Flask(__name__)
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
+# --- CÁMARA DE DIAGNÓSTICO #1 ---
+print("=====================================================")
+print(">>> [DIAGNÓSTICO] INICIANDO APLICACIÓN...")
+if DATABASE_URL:
+    # Imprimimos solo una parte para no exponer la contraseña completa en los logs
+    print(">>> [DIAGNÓSTICO] DATABASE_URL encontrada. Comienza con:", DATABASE_URL[:30]) 
+else:
+    print("!!! ERROR [DIAGNÓSTICO]: ¡DATABASE_URL NO FUE ENCONTRADA EN LAS VARIABLES DE ENTORNO!")
+print("=====================================================")
+
+
 # Configurar la IA de Google globalmente
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
@@ -31,15 +42,20 @@ try:
     cur = conn.cursor()
     cur.execute("SELECT descripcion_producto FROM campanas WHERE id = %s", (ID_DE_LA_CAMPAÑA_ACTUAL,))
     result = cur.fetchone()
+
+    # --- CÁMARA DE DIAGNÓSTICO #2 ---
     if result and result[0]:
         descripcion_de_la_campana = result[0]
-        print(">>> [main.py] ¡Descripción encontrada en Supabase!")
+        print(">>> [DIAGNÓSTICO] ¡ÉXITO! Se encontró la siguiente descripción en Supabase:")
+        print(descripcion_de_la_campana)
     else:
-        print("!!! WARNING [main.py]: No se encontró descripción para esa campaña. Usando descripción por defecto.")
+        print("!!! ERROR [DIAGNÓSTICO]: La conexión a Supabase funcionó, PERO NO SE ENCONTRÓ la campaña con ID 1.")
+    
     cur.close()
     conn.close()
 except Exception as e:
-    print(f"!!! ERROR [main.py]: No se pudo leer la descripción desde Supabase. {e}")
+    print("!!! ERROR FATAL [DIAGNÓSTICO]: ¡LA CONEXIÓN A SUPABASE FALLÓ! El error fue:")
+    print(e)
 
 # --- INICIALIZACIÓN DEL CEREBRO (AHORA CON PERSONALIDAD) ---
 dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
