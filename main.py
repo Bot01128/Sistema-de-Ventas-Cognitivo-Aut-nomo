@@ -14,7 +14,7 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 # Configurar la IA de Google globalmente
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-    print(">>> [main.py] IA de Google configurada.")
+    print(">>> [main.py] IA de Google configurada.!!!")
 else:
     print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
 
