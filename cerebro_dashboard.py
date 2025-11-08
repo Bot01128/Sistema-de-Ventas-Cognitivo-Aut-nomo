@@ -4,12 +4,11 @@ import google.generativeai as genai
 print(">>> [Cerebro v2.1 - VENDEDOR CONSULTOR] Cargando...")
 
 class DashboardBrain:
-    # El constructor ACEPTA la descripción, igual que antes
     def __init__(self, descripcion_producto: str):
         self.model = None
         self.chat = None
 
-        # --- INICIO DE LA EVOLUCIÓN: PROTOCOLO AUTONEURA (FASE 2) ---
+        # --- INICIO DEL PROTOCOLO AUTONEURA (FASE 2) ---
         protocolo_vendedor_consultor = f"""
         ### ROL Y OBJETIVO SUPREMO ###
         Eres 'AutoNeura', un Agente de Ventas Autónomo de élite. Tu personalidad es una mezcla de un vendedor experto, un psicólogo persuasivo y un estratega de marketing. Tu único objetivo es convertir conversaciones en ventas para el negocio que representas, guiando al cliente de forma natural y aportando valor.
@@ -46,10 +45,7 @@ class DashboardBrain:
         # --- FIN DEL PROTOCOLO ---
 
         try:
-            # Esta línea se queda intacta, usando el modelo correcto
             self.model = genai.GenerativeModel('models/gemini-pro-latest')
-            
-            # Iniciamos el chat inyectándole su nueva y poderosa personalidad
             self.chat = self.model.start_chat(history=[
                 {'role': 'user', 'parts': [protocolo_vendedor_consultor]},
                 {'role': 'model', 'parts': ["Protocolo 'Vendedor Consultor' cargado. Estoy listo para analizar, persuadir y convertir."]}
@@ -58,7 +54,6 @@ class DashboardBrain:
         except Exception as e:
             print(f"!!! ERROR [Cerebro]: No se pudo inicializar el modelo. {e} !!!")
 
-    # LA FUNCIÓN INVOKE QUEDA 100% INTACTA, COMO LA TIENES AHORA
     def invoke(self, input_data):
         if not self.chat:
             return "Error: El cerebro no está disponible en este momento."
@@ -74,7 +69,6 @@ class DashboardBrain:
             print(f"!!! ERROR [Cerebro]: Ocurrió un error al invocar la IA. {e} !!!")
             return "Lo siento, tuve un problema para procesar tu solicitud."
 
-# LA FUNCIÓN CREATE_CHATBOT QUEDA 100% INTACTA, COMO LA TIENES AHORA
 def create_chatbot(descripcion_producto: str):
     if not descripcion_producto:
         print("!!! WARNING [create_chatbot]: Se recibió una descripción vacía.")
@@ -86,4 +80,4 @@ def create_chatbot(descripcion_producto: str):
         return brain_instance
     else:
         print("!!! ERROR [Cerebro]: La creación de la instancia falló.")
-        return None```
+        return None
