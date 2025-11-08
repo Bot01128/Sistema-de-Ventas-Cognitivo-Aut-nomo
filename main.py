@@ -101,7 +101,18 @@ def chat():
         print(f"!!! ERROR fatal en la ruta /chat: {e} !!!")
         return jsonify({"error": "Ocurrió un error inesperado al procesar el mensaje."}), 500
 
-# --- TUS OTRAS RUTAS (No las toques) ---
+# --- RUTAS ORIGINALES DEL PROYECTO NIDO (RESTAURADAS) ---
+@app.route('/test-nido')
+def test_nido():
+    return "Ruta de prueba para Nido funcionando."
+
+@app.route('/pre-nido/<uuid:id_unico>')
+def mostrar_pre_nido(id_unico):
+    return render_template('pre_nido.html', id_unico=id_unico)
+
+@app.route('/generar-nido', methods=['POST'])
+def generar_nido_y_enviar_enlace():
+    return "Ruta para generar-nido funcionando (solo POST)."
 
 
 # --- BLOQUE DE ARRANQUE (Tu código intacto) ---
