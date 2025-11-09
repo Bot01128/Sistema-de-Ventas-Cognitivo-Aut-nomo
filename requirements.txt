@@ -1,0 +1,23 @@
+# === Servidor Web ===
+Flask
+gunicorn
+python-dotenv
+requests
+Flask-Babel
+
+# === Inteligencia Artificial ===
+google-generativeai
+
+# === Herramientas y Bases de Datos ===
+psycopg2-binary
+supabase
+
+# === Herramientas Externas y Varios ===
+# (Puedes mantener las otras si las usas, pero para el chat, solo necesitas lo de arriba)
+apify-client
+gspread
+oauth2client
+beautifulsoup4
+twilio
+tavily-python
+openai
