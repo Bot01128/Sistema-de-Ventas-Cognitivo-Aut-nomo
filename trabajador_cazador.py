@@ -3,53 +3,60 @@ import json
 from apify_client import ApifyClient
 import psycopg2
 from dotenv import load_dotenv
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 
 # --- CONFIGURACIÓN ---
+# Carga las variables de entorno desde un archivo .env (útil para pruebas locales)
 load_dotenv()
 
 APIFY_TOKEN = os.environ.get("APIFY_API_TOKEN")
 DATABASE_URL = os.environ.get("DATABASE_URL")
-GOOGLE_SHEETS_CREDENTIALS_JSON = os.environ.get("GOOGLE_SHEETS_CREDENTIALS")
 
-# --- CONEXIÓN AL ARSENAL (GOOGLE SHEETS) ---
+# --- CONEXIÓN AL ARSENAL (EN SUPABASE) ---
 def obtener_info_herramienta(nombre_herramienta):
-    print(f"Buscando herramienta '{nombre_herramienta}' en el Arsenal...")
+    """
+    Busca una herramienta en la tabla arsenal_herramientas de Supabase 
+    y devuelve su información.
+    """
+    print(f"Buscando herramienta '{nombre_herramienta}' en el Arsenal de Supabase...")
+    conn = None
     try:
-        creds_dict = json.loads(GOOGLE_SHEETS_CREDENTIALS_JSON)
-        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-        client = gspread.authorize(creds)
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
         
-        sheet = client.open("Arsenal_AutoNeura").sheet1
+        cur.execute("SELECT * FROM arsenal_herramientas WHERE nombre_herramienta = %s", (nombre_herramienta,))
         
-        # Buscar la fila que coincide con el nombre de la herramienta
-        lista_de_listas = sheet.get_all_values()
-        encabezados = lista_de_listas[0]
-        for fila in lista_de_listas[1:]:
-            if fila[0] == nombre_herramienta:
-                info = dict(zip(encabezados, fila))
-                print(f"Herramienta encontrada: {info['ID_Actor']}")
-                return info
-        return None
+        colnames = [desc[0] for desc in cur.description]
+        fila = cur.fetchone()
+        
+        cur.close()
+        conn.close()
+
+        if fila:
+            info = dict(zip(colnames, fila))
+            print(f"Herramienta encontrada: {info.get('id_actor')}")
+            return info
+        else:
+            print(f"!!! ERROR: Herramienta '{nombre_herramienta}' no encontrada en el Arsenal.")
+            return None
+
     except Exception as e:
-        print(f"!!! ERROR al leer el Arsenal de Google Sheets: {e} !!!")
+        print(f"!!! ERROR al leer el Arsenal de Supabase: {e} !!!")
+        if conn:
+            conn.close()
         return None
 
 # --- FUNCIÓN PRINCIPAL DE CAZA ---
-def cazar_prospectos(herramienta, busqueda, ubicacion, max_resultados):
-    print("--- Iniciando la caza ---")
+def cazar_prospectos(campana_id, herramienta, busqueda, ubicacion, max_resultados):
+    print(f"\n--- Iniciando la caza para la Campaña ID: {campana_id} ---")
     
     info_herramienta = obtener_info_herramienta(herramienta)
     
     if not info_herramienta:
-        print(f"!!! ERROR: No se encontró la herramienta '{herramienta}' en el Arsenal.")
         return
 
-    id_actor = info_herramienta.get('ID_Actor')
+    id_actor = info_herramienta.get('id_actor')
     if not id_actor:
-        print("!!! ERROR: El ID_Actor no está definido para esta herramienta en el Arsenal.")
+        print("!!! ERROR: El 'id_actor' no está definido para esta herramienta en el Arsenal.")
         return
 
     try:
@@ -62,10 +69,9 @@ def cazar_prospectos(herramienta, busqueda, ubicacion, max_resultados):
         }
         
         print(f"Usando el Actor '{id_actor}' para buscar '{busqueda}' en '{ubicacion}'...")
-
         run = apify_client.actor(id_actor).call(run_input=run_input)
         
-        print("--- Caza en Apify completada. Procesando resultados... ---")
+        print("--- Caza en Apify completada. Procesando y guardando resultados... ---")
 
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
@@ -78,8 +84,13 @@ def cazar_prospectos(herramienta, busqueda, ubicacion, max_resultados):
             url_gmaps = item.get("url")
 
             cur.execute(
-                "INSERT INTO prospectos (nombre_negocio, telefono, sitio_web, url_gmaps, estado) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (url_gmaps) DO NOTHING",
-                (nombre, telefono, web, url_gmaps, 'cazado')
+                """
+                INSERT INTO prospectos 
+                (nombre_negocio, telefono, sitio_web, url_gmaps, estado_prospecto, campana_id) 
+                VALUES (%s, %s, %s, %s, %s, %s) 
+                ON CONFLICT (url_gmaps) DO NOTHING
+                """,
+                (nombre, telefono, web, url_gmaps, 'cazado', campana_id)
             )
             
             if cur.rowcount > 0:
@@ -90,17 +101,18 @@ def cazar_prospectos(herramienta, busqueda, ubicacion, max_resultados):
         conn.close()
         
         print(f"\n--- ¡VICTORIA! ---")
-        print(f"Se han guardado {prospectos_guardados} nuevos prospectos en la base de datos.")
+        print(f"Se han guardado {prospectos_guardados} nuevos prospectos para la campaña {campana_id}.")
 
     except Exception as e:
-        print(f"!!! Ocurrió un error catastrófico: {e} !!!")
+        print(f"!!! Ocurrió un error catastrófico durante la caza: {e} !!!")
 
-# --- EJECUCIÓN DEL SCRIPT ---
+# --- EJECUCIÓN DE PRUEBA DEL SCRIPT ---
 if __name__ == "__main__":
     # La orden que vendría del "Orquestador" en el futuro
-    herramienta_a_usar = "Cazador Google Maps"
-    tipo_negocio = "talleres mecánicos"
-    ciudad_pais = "Bogotá, Colombia"
-    cantidad = 10 # Cazar 10 para probar
+    id_de_campana_prueba = 1
+    herramienta_a_usar = "Cazador Principal Gmaps"
+    tipo_negocio = "ferreterías"
+    ciudad_pais = "Caracas, Venezuela"
+    cantidad = 5
 
-    cazar_prospectos(herramienta_a_usar, tipo_negocio, ciudad_pais, cantidad)
+    cazar_prospectos(id_de_campana_prueba, herramienta_a_usar, tipo_negocio, ciudad_pais, cantidad)

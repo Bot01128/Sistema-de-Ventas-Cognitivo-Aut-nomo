@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- MÓDULO DE NAVEGACIÓN POR PESTAÑAS ---
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
+    
     function switchTab(tabId) {
         tabContents.forEach(content => {
             content.style.display = 'none';
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
             activeButton.classList.add('active');
         }
     }
+
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             const tabId = button.getAttribute('data-tab');
@@ -64,16 +66,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     if (prospectsInput) updateCosts();
 
-    // --- MÓDULO DE CONTADOR DE CARACTERES ---
-    const descriptionTextarea = document.getElementById('product-description');
-    const charCountEl = document.getElementById('char-count');
-    if (descriptionTextarea) {
-        descriptionTextarea.addEventListener('input', () => {
-            const remaining = 1000 - descriptionTextarea.value.length;
-            if(charCountEl) charCountEl.textContent = `${remaining} caracteres restantes`;
-        });
-    }
-
     // --- MÓDULO DEL CHAT MEJORADO ---
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
@@ -113,13 +105,35 @@ document.addEventListener('DOMContentLoaded', function() {
             handleSendMessage();
         });
     }
+    
+    // --- MÓDULO DE TELÉFONO INTERNACIONAL ---
+    const phoneInputField = document.querySelector("#numero_whatsapp");
+    if (phoneInputField) {
+        window.intlTelInput(phoneInputField, {
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+            initialCountry: "auto",
+            geoIpLookup: function(callback) {
+                fetch('https://ipinfo.io/json') 
+                .then(response => response.json())
+                .then(data => callback(data.country))
+                .catch(() => callback('us'));
+            }
+        });
+    }
 
-    // --- MÓDULO DEL "ESPÍA INTELIGENTE" ---
-    const lanzarBtn = document.getElementById('lanzar-campana-btn');
-    // ... (Tu lógica de validación completa irá aquí) ...
-
-    // --- LÓGICA RESPONSIVA Y OTRAS UTILIDADES ---
-    // (Aquí iría el código para el chat móvil, etc. si lo hubiéramos añadido)
+    // --- FUNCIONALIDAD PARA LA PESTAÑA DE SUGERENCIAS ---
+    const sendSuggestionBtn = document.getElementById('send-suggestion-btn');
+    const suggestionText = document.getElementById('suggestion-text');
+    if (sendSuggestionBtn) {
+        sendSuggestionBtn.addEventListener('click', () => {
+            if (suggestionText && suggestionText.value.trim() !== '') {
+                alert('¡Gracias! Tu sugerencia ha sido enviada directamente a nuestro equipo. ¡Eres increíble!');
+                suggestionText.value = '';
+            } else {
+                alert('Por favor, escribe tu sugerencia antes de enviarla.');
+            }
+        });
+    }
 
     // --- INICIALIZACIÓN ---
     switchTab('my-campaigns');

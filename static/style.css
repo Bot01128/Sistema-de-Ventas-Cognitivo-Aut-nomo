@@ -40,6 +40,74 @@ small { color: #6c757d; font-size: 12px; }
 .plan-card.selected { border-color: #007bff; box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); transform: translateY(-5px); }
 .plan-card h4 { margin: 0 0 10px 0; }
 .plan-card .price { font-size: 24px; font-weight: bold; margin: 10px 0; }
-@media (max-width: 900px) { .container { flex-direction: column; overflow: auto; } .left-panel { flex-basis: auto; min-height: 400px; } }```
 
-**Guarda este archivo.** Avísame cuando estés listo y te daré el `script.js` completo. Un paso a la vez.
+#lancam {
+    padding: 18px 30px;
+    font-size: 20px;
+    border-radius: 12px;
+    margin-top: 30px;
+    cursor: pointer;
+    background-color: #28a745;
+    color: white;
+    font-weight: bold;
+    transition: all 0.1s ease-in-out;
+    border-style: solid;
+    border-width: 4px;
+    border-top-color: #63d47a;
+    border-left-color: #63d47a;
+    border-bottom-color: #1c7430;
+    border-right-color: #1c7430;
+}
+
+#lancam:hover {
+    background-color: #2ebf4f;
+}
+
+#lancam:active {
+    border-top-color: #1c7430;
+    border-left-color: #1c7430;
+    border-bottom-color: #63d47a;
+    border-right-color: #63d47a;
+    transform: translateY(1px);
+}
+
+.iti {
+    width: 100%;
+}
+
+/* --- ESTILOS NUEVOS PARA EL BOTÓN DE SUGERENCIAS --- */
+#send-suggestion-btn {
+    /* Hereda algunos estilos de .cta-button, pero los personalizamos */
+    padding: 18px 30px;
+    font-size: 20px;
+    border-radius: 12px;
+    
+    background-color: #007bff; /* Color azul base */
+    transition: all 0.1s ease-in-out;
+    border-style: solid;
+    border-width: 4px;
+
+    /* Estado por defecto "SOBRESALIDO" (outset) con paleta azul */
+    border-top-color: #5b9eff;    /* Azul más claro */
+    border-left-color: #5b9eff;   /* Azul más claro */
+    border-bottom-color: #004a99; /* Azul más oscuro */
+    border-right-color: #004a99;  /* Azul más oscuro */
+}
+
+#send-suggestion-btn:hover {
+    background-color: #0088ff; /* Un azul un poco más brillante al pasar el mouse */
+}
+
+#send-suggestion-btn:active {
+    /* Estado al presionar "PLANO/HUNDIDO" (inset) con paleta azul */
+    border-top-color: #004a99;    /* Invertimos: Azul oscuro */
+    border-left-color: #004a99;   /* Invertimos: Azul oscuro */
+    border-bottom-color: #5b9eff; /* Invertimos: Azul claro */
+    border-right-color: #5b9eff;  /* Invertimos: Azul claro */
+    transform: translateY(1px);
+}
+
+@media (max-width: 900px) { 
+    .container { flex-direction: column; overflow: auto; } 
+    .left-panel { flex-basis: auto; min-height: 400px; } 
+}
