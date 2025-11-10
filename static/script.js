@@ -64,16 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     if (prospectsInput) updateCosts();
 
-    // --- MÓDULO DE CONTADOR DE CARACTERES (CORREGIDO) ---
-    const descriptionTextarea = document.getElementById('descripcion_producto'); // ID CORREGIDO
-    const charCountEl = document.getElementById('char-count');
-    if (descriptionTextarea) {
-        descriptionTextarea.addEventListener('input', () => {
-            const remaining = 1000 - descriptionTextarea.value.length;
-            if(charCountEl) charCountEl.textContent = `${remaining} caracteres restantes`;
-        });
-    }
-
     // --- MÓDULO DEL CHAT MEJORADO ---
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
@@ -114,21 +104,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // --- MÓDULO DE TELÉFONO INTERNACIONAL (ACTIVADO) ---
+    // --- MÓDULO DE TELÉFONO INTERNACIONAL ---
     const phoneInputField = document.querySelector("#numero_whatsapp");
     if (phoneInputField) {
         window.intlTelInput(phoneInputField, {
             utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
             initialCountry: "auto",
             geoIpLookup: function(callback) {
-                fetch('https://ipinfo.io/json?token=TU_TOKEN_DE_IPINFO') // Puedes obtener un token gratuito de ipinfo.io
+                // Para evitar costos, puedes usar una IP por defecto o un servicio gratuito sin token.
+                // Si tienes un token de ipinfo.io, ponlo aquí.
+                fetch('https://ipinfo.io/json') 
                 .then(response => response.json())
                 .then(data => callback(data.country))
-                .catch(() => callback('us'));
+                .catch(() => callback('us')); // Falla a 'us' si hay error
             }
         });
     }
 
     // --- INICIALIZACIÓN ---
     switchTab('my-campaigns');
-});
+});```
