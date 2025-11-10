@@ -64,8 +64,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     if (prospectsInput) updateCosts();
 
-    // --- MÓDULO DE CONTADOR DE CARACTERES ---
-    const descriptionTextarea = document.getElementById('product-description');
+    // --- MÓDULO DE CONTADOR DE CARACTERES (CORREGIDO) ---
+    const descriptionTextarea = document.getElementById('descripcion_producto'); // ID CORREGIDO
     const charCountEl = document.getElementById('char-count');
     if (descriptionTextarea) {
         descriptionTextarea.addEventListener('input', () => {
@@ -113,13 +113,21 @@ document.addEventListener('DOMContentLoaded', function() {
             handleSendMessage();
         });
     }
-
-    // --- MÓDULO DEL "ESPÍA INTELIGENTE" ---
-    const lanzarBtn = document.getElementById('lanzar-campana-btn');
-    // ... (Tu lógica de validación completa irá aquí) ...
-
-    // --- LÓGICA RESPONSIVA Y OTRAS UTILIDADES ---
-    // (Aquí iría el código para el chat móvil, etc. si lo hubiéramos añadido)
+    
+    // --- MÓDULO DE TELÉFONO INTERNACIONAL (ACTIVADO) ---
+    const phoneInputField = document.querySelector("#numero_whatsapp");
+    if (phoneInputField) {
+        window.intlTelInput(phoneInputField, {
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+            initialCountry: "auto",
+            geoIpLookup: function(callback) {
+                fetch('https://ipinfo.io/json?token=TU_TOKEN_DE_IPINFO') // Puedes obtener un token gratuito de ipinfo.io
+                .then(response => response.json())
+                .then(data => callback(data.country))
+                .catch(() => callback('us'));
+            }
+        });
+    }
 
     // --- INICIALIZACIÓN ---
     switchTab('my-campaigns');
