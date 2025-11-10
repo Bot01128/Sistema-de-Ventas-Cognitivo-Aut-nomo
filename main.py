@@ -40,6 +40,19 @@ app.jinja_env.globals.update(get_locale=get_locale)
 @app.route('/')
 def dashboard():
     return render_template('dashboard.html')
+    # NUEVA RUTA para nido_template.html
+@app.route('/nido')
+def nido_page():
+    # Esta función le dice a la app que muestre nido_template.html
+    # cuando alguien visite la URL /nido
+    return render_template('nido_template.html')
+
+# NUEVA RUTA para pre_nido.html
+@app.route('/pre-nido')
+def pre_nido_page():
+    # Esta función le dice a la app que muestre pre_nido.html
+    # cuando alguien visite la URL /pre-nido
+    return render_template('pre_nido.html')
 @app.route('/chat', methods=['POST'])
 def chat():
     # ... (código intacto) ...
