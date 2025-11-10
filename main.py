@@ -3,7 +3,6 @@ import psycopg2
 import json
 import google.generativeai as genai
 from flask import Flask, render_template, request, jsonify
-# SE AÑADE 'gettext' PARA QUE EL PROCESADOR DE CONTEXTO FUNCIONE
 from flask_babel import Babel, gettext
 from cerebro_dashboard import create_chatbot
 
@@ -38,40 +37,46 @@ def get_locale():
 
 babel = Babel(app, locale_selector=get_locale)
 
-# ======================= ESTE BLOQUE ESTÁ BIEN Y SE QUEDA =======================
+# ======================= EL BLOQUE DE CONTEXTO CORRECTO =======================
+# Este bloque asegura que TODAS las plantillas tengan acceso a las funciones
+# 'get_locale' (para el idioma) y '_' (para la traducción).
 @app.context_processor
 def inject_global_funcs():
     return dict(get_locale=get_locale, _=gettext)
 # =============================================================================
 
 
-# --- RUTAS (CON LA CIRUGÍA APLICADA) ---
+# =================================================================================
+# SECCIÓN DE RUTAS (REESCRITA DESDE CERO PARA MÁXIMA CLARIDAD Y SIN AMBIGÜEDAD)
+# =================================================================================
+
+# RUTA RAÍZ: Muestra el dashboard principal.
 @app.route('/')
-def dashboard():
+def index():
+    # Llama a la plantilla del dashboard directamente.
     return render_template('dashboard.html')
 
+# RUTA PARA EL DASHBOARD: Muestra el dashboard principal.
 @app.route('/dashboard')
 def dashboard_page():
+    # Llama a la plantilla del dashboard directamente.
     return render_template('dashboard.html')
 
+# RUTA PARA LA PÁGINA DE PROPUESTA (Vendedor Estrella 24/7)
 @app.route('/generar-nido')
 def generar_nido_page():
+    # Llama a la plantilla 'nido_template.html' directamente, sin pasar datos innecesarios.
     return render_template('nido_template.html')
 
-# ======================= INICIO DE LA CIRUGÍA =======================
+# RUTA PARA LA PÁGINA DE CHAT INTERACTIVO
 @app.route('/pre-nido')
 def pre_nido_page():
-    # El problema era que esta función no le pasaba la variable 'textos' a la plantilla.
-    # Ahora creamos un diccionario simple para satisfacer lo que pide el HTML.
-    textos_para_pre_nido = {
-        "titulo_valor": "Bienvenido a la Página de Chat"
-        # Puedes añadir más textos aquí si el HTML los necesita en el futuro
-    }
-    # Y se lo pasamos a la plantilla al renderizarla.
-    return render_template('pre_nido.html', textos=textos_para_pre_nido)
-# ======================= FIN DE LA CIRUGÍA =======================
+    # Llama a la plantilla 'pre_nido.html' directamente, sin pasar datos innecesarios.
+    # El error anterior ocurría porque intentábamos pasar una variable 'textos'
+    # que tu plantilla real (la correcta) no necesita, causando un conflicto.
+    return render_template('pre_nido.html')
 
-
+# RUTA PARA LA API DEL CHAT (INTACTA)
 @app.route('/chat', methods=['POST'])
 def chat():
     if not dashboard_brain: return jsonify({"error": "Chat no disponible."}), 500
@@ -82,8 +87,7 @@ def chat():
         return jsonify({"response": response_text})
     except Exception as e: return jsonify({"error": "Ocurrió un error."}), 500
 
-
-# --- RUTA DE LANZAR CAMPAÑA (INTACTA) ---
+# RUTA PARA LANZAR CAMPAÑAS (INTACTA)
 @app.route('/lanzar-campana', methods=['POST'])
 def lanzar_campana():
     print("\n>>> [RUTA /lanzar-campana] ¡Orden recibida del Dashboard!")
