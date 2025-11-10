@@ -57,7 +57,7 @@ def dashboard_page():
     return render_template('dashboard.html')
 
 # Se añade la ruta para el diseño profesional de Nido
-@app.route('/generar-nido')
+@app.route('/nido')
 def generar_nido_page():
     return render_template('nido_template.html')
 
