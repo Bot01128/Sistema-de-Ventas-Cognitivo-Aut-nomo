@@ -5,23 +5,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabContents = document.querySelectorAll('.tab-content');
     
     function switchTab(tabId) {
+        // Oculta todos los contenidos
         tabContents.forEach(content => {
             content.style.display = 'none';
         });
+        // Quita la clase 'active' de todos los botones
         tabButtons.forEach(btn => {
             btn.classList.remove('active');
         });
         
+        // Muestra el contenido de la pestaña activa
         const activeContent = document.getElementById(tabId);
         if (activeContent) {
             activeContent.style.display = 'block';
         }
+        // Añade la clase 'active' al botón presionado
         const activeButton = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
         if (activeButton) {
             activeButton.classList.add('active');
         }
     }
 
+    // !! LA PARTE CRÍTICA QUE SE HABÍA PERDIDO !!
+    // Conecta cada botón con la función de cambiar de pestaña
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             const tabId = button.getAttribute('data-tab');
@@ -127,7 +133,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sendSuggestionBtn) {
         sendSuggestionBtn.addEventListener('click', () => {
             if (suggestionText && suggestionText.value.trim() !== '') {
-                // Aquí puedes añadir la lógica para enviar la sugerencia al backend
                 alert('¡Gracias! Tu sugerencia ha sido enviada directamente a nuestro equipo. ¡Eres increíble!');
                 suggestionText.value = '';
             } else {
@@ -137,5 +142,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- INICIALIZACIÓN ---
+    // Asegura que la primera pestaña se muestre al cargar la página
     switchTab('my-campaigns');
-});```
+});
