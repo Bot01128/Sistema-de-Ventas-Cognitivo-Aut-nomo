@@ -2,16 +2,31 @@ import os
 import psycopg2
 import json
 import google.generativeai as genai
+# SE IMPORTA 'jinja2' PARA LA SOLUCIÓN
 from flask import Flask, render_template, request, jsonify
 from flask_babel import Babel, gettext
+import jinja2 # <-- IMPORTACIÓN CLAVE
 from cerebro_dashboard import create_chatbot
 
 # --- NO TOCAMOS LAS IMPORTACIONES DE LOS TRABAJADORES POR AHORA ---
 from trabajador_orquestador import orquestar_nueva_caza
 from trabajador_cazador import cazar_prospectos
 
-# --- CONFIGURACIÓN (INTACTA) ---
+# ======================= LA SOLUCIÓN DEFINITIVA =======================
+# Le decimos a Flask que busque plantillas en DOS lugares:
+# 1. En la carpeta 'templates' de siempre.
+# 2. En nuestra nueva carpeta 'persuador'.
+template_loader = jinja2.ChoiceLoader([
+    jinja2.FileSystemLoader('templates'),
+    jinja2.FileSystemLoader('persuador'),
+])
+# Creamos la aplicación Flask con esta nueva configuración.
 app = Flask(__name__)
+app.jinja_loader = template_loader
+# =====================================================================
+
+
+# --- CONFIGURACIÓN (INTACTA) ---
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
@@ -37,46 +52,31 @@ def get_locale():
 
 babel = Babel(app, locale_selector=get_locale)
 
-# ======================= EL BLOQUE DE CONTEXTO CORRECTO =======================
-# Este bloque asegura que TODAS las plantillas tengan acceso a las funciones
-# 'get_locale' (para el idioma) y '_' (para la traducción).
 @app.context_processor
 def inject_global_funcs():
     return dict(get_locale=get_locale, _=gettext)
-# =============================================================================
 
 
-# =================================================================================
-# SECCIÓN DE RUTAS (REESCRITA DESDE CERO PARA MÁXIMA CLARIDAD Y SIN AMBIGÜEDAD)
-# =================================================================================
-
-# RUTA RAÍZ: Muestra el dashboard principal.
+# --- RUTAS (ADAPTADAS A LA NUEVA ESTRUCTURA) ---
 @app.route('/')
 def index():
-    # Llama a la plantilla del dashboard directamente.
     return render_template('dashboard.html')
 
-# RUTA PARA EL DASHBOARD: Muestra el dashboard principal.
 @app.route('/dashboard')
 def dashboard_page():
-    # Llama a la plantilla del dashboard directamente.
     return render_template('dashboard.html')
 
-# RUTA PARA LA PÁGINA DE PROPUESTA (Vendedor Estrella 24/7)
 @app.route('/generar-nido')
 def generar_nido_page():
-    # Llama a la plantilla 'nido_template.html' directamente, sin pasar datos innecesarios.
+    # Sigue funcionando porque Flask busca primero en 'templates'.
     return render_template('nido_template.html')
 
-# RUTA PARA LA PÁGINA DE CHAT INTERACTIVO
 @app.route('/pre-nido')
 def pre_nido_page():
-    # Llama a la plantilla 'pre_nido.html' directamente, sin pasar datos innecesarios.
-    # El error anterior ocurría porque intentábamos pasar una variable 'textos'
-    # que tu plantilla real (la correcta) no necesita, causando un conflicto.
+    # Ahora funciona porque Flask también busca en 'persuador'.
     return render_template('pre_nido.html')
 
-# RUTA PARA LA API DEL CHAT (INTACTA)
+
 @app.route('/chat', methods=['POST'])
 def chat():
     if not dashboard_brain: return jsonify({"error": "Chat no disponible."}), 500
@@ -87,7 +87,8 @@ def chat():
         return jsonify({"response": response_text})
     except Exception as e: return jsonify({"error": "Ocurrió un error."}), 500
 
-# RUTA PARA LANZAR CAMPAÑAS (INTACTA)
+
+# --- RUTA DE LANZAR CAMPAÑA (INTACTA) ---
 @app.route('/lanzar-campana', methods=['POST'])
 def lanzar_campana():
     print("\n>>> [RUTA /lanzar-campana] ¡Orden recibida del Dashboard!")
