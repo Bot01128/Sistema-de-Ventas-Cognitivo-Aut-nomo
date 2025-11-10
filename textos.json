@@ -1,0 +1,10 @@
+{
+  "pre_nido": {
+    "titulo_valor": "Este es el Título para Pre-Nido",
+    "otro_texto": "Aquí va otro texto si lo necesitas."
+  },
+  "nido": {
+    "titulo_valor": "Este es el Título para Nido",
+    "otro_texto": "Contenido para la página nido."
+  }
+}
