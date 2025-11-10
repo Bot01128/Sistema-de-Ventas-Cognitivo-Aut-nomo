@@ -64,8 +64,8 @@ def pre_nido_page():
     # El problema era que esta función no le pasaba la variable 'textos' a la plantilla.
     # Ahora creamos un diccionario simple para satisfacer lo que pide el HTML.
     textos_para_pre_nido = {
-        "titulo_valor": "Bienvenido a la Página de Chat",
-        # Puedes añadir más textos aquí si el HTML los necesita
+        "titulo_valor": "Bienvenido a la Página de Chat"
+        # Puedes añadir más textos aquí si el HTML los necesita en el futuro
     }
     # Y se lo pasamos a la plantilla al renderizarla.
     return render_template('pre_nido.html', textos=textos_para_pre_nido)
