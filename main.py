@@ -3,7 +3,7 @@ import psycopg2
 import json
 import google.generativeai as genai
 from flask import Flask, render_template, request, jsonify
-# SE AÑADE 'gettext' PARA QUE LAS PLANTILLAS LO PUEDAN USAR
+# SE AÑADE 'gettext' PARA QUE EL PROCESADOR DE CONTEXTO FUNCIONE
 from flask_babel import Babel, gettext
 from cerebro_dashboard import create_chatbot
 
@@ -15,7 +15,7 @@ from trabajador_cazador import cazar_prospectos
 app = Flask(__name__)
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
-# ... (El resto de la configuración y la inicialización del chat se queda igual) ...
+
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
 ID_DE_LA_CAMPAÑA_ACTUAL = 1 
@@ -30,7 +30,7 @@ try:
     cur.close()
     conn.close()
 except Exception:
-    pass # Ignoramos errores aquí por ahora
+    pass 
 dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
 
 def get_locale():
@@ -38,30 +38,28 @@ def get_locale():
 
 babel = Babel(app, locale_selector=get_locale)
 
-# ======================= LA SOLUCIÓN MÁS SIMPLE Y SEGURA =======================
-# Este bloque asegura que la función de traducción (_) esté disponible en
-# todas las plantillas, que era la causa del error original.
+# ======================= LA SOLUCIÓN CORRECTA RESTAURADA =======================
+# Este es el bloque que funciona. Le da a TODAS las plantillas acceso a AMBAS
+# funciones necesarias: 'get_locale' para el idioma y '_' para la traducción.
 @app.context_processor
-def inject_gettext():
-    return dict(_=gettext)
+def inject_global_funcs():
+    return dict(get_locale=get_locale, _=gettext)
 # =============================================================================
 
-# --- RUTAS (CON LAS NUEVAS PÁGINAS AÑADIDAS) ---
+
+# --- RUTAS (CORREGIDAS Y COMPLETAS) ---
 @app.route('/')
 def dashboard():
     return render_template('dashboard.html')
 
-# Se añade la ruta específica /dashboard
 @app.route('/dashboard')
 def dashboard_page():
     return render_template('dashboard.html')
 
-# Se añade la ruta para el diseño profesional de Nido
 @app.route('/generar-nido')
 def generar_nido_page():
     return render_template('nido_template.html')
 
-# Se añade la ruta para el diseño de Pre-Nido (Chat)
 @app.route('/pre-nido')
 def pre_nido_page():
     return render_template('pre_nido.html')
@@ -69,7 +67,6 @@ def pre_nido_page():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    # ... (código intacto) ...
     if not dashboard_brain: return jsonify({"error": "Chat no disponible."}), 500
     user_message = request.json.get('message')
     if not user_message: return jsonify({"error": "No hay mensaje."}), 400
@@ -77,7 +74,6 @@ def chat():
         response_text = dashboard_brain.invoke({"question": user_message})
         return jsonify({"response": response_text})
     except Exception as e: return jsonify({"error": "Ocurrió un error."}), 500
-# ... (Otras rutas como /ver-nido se quedan intactas) ...
 
 
 # --- RUTA DE LANZAR CAMPAÑA (INTACTA) ---
@@ -91,7 +87,6 @@ def lanzar_campana():
 
     conn = None
     try:
-        # TAREA ÚNICA: Guardar el trabajo en la cola (el "buzón")
         print(">>> [RUTA /lanzar-campana] Dejando la orden en la 'cola_de_trabajos'...")
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
@@ -100,7 +95,6 @@ def lanzar_campana():
             INSERT INTO cola_de_trabajos (tipo_trabajo, datos_json) 
             VALUES (%s, %s);
         """
-        # Convertimos la orden completa a un string JSON para guardarla
         datos_como_texto_json = json.dumps(orden_del_cliente)
         
         cur.execute(sql_insert, ('cazar_prospectos', datos_como_texto_json))
@@ -108,7 +102,6 @@ def lanzar_campana():
         
         print(">>> [RUTA /lanzar-campana] ¡Orden dejada en el buzón con éxito!")
 
-        # DEVOLVEMOS UNA RESPUESTA INMEDIATA AL USUARIO
         return jsonify({"message": "¡Campaña recibida! Hemos empezado a trabajar en ello. Te notificaremos cuando los prospectos estén listos."})
 
     except Exception as e:
