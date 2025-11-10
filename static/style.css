@@ -25,6 +25,7 @@ h1, h2, h3, h4 { color: #1c1e21; margin-top: 0; }
 .form-section { margin-bottom: 25px; }
 .form-section label { display: block; margin-bottom: 8px; font-weight: 600; color: #495057; }
 .form-section input, textarea { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+/* La clase .cta-button es genérica, mantenemos su estilo base */
 .cta-button { background-color: #28a745; color: white; padding: 15px 25px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px;}
 .checkbox-group { display: flex; align-items: center; margin-bottom: 10px; }
 .checkbox-group label { font-weight: normal; margin-left: 8px; }
@@ -40,28 +41,34 @@ small { color: #6c757d; font-size: 12px; }
 .plan-card.selected { border-color: #007bff; box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); transform: translateY(-5px); }
 .plan-card h4 { margin: 0 0 10px 0; }
 .plan-card .price { font-size: 24px; font-weight: bold; margin: 10px 0; }
-@media (max-width: 900px) { .container { flex-direction: column; overflow: auto; } .left-panel { flex-basis: auto; min-height: 400px; } }```
 
-**Guarda este archivo.** Avísame cuando estés listo y te daré el `script.js` completo. Un paso a la vez.
-/* --- ESTILOS PARA EL NUEVO BOTÓN DE LANZAR CAMPAÑA --- */
-
+/* --- ESTILOS MEJORADOS PARA EL BOTÓN "VIVO" --- */
 #lancam {
-    padding: 18px 30px; /* Hacemos el botón más alto y ancho */
-    font-size: 20px; /* Aumentamos el tamaño del texto */
-    border-radius: 12px; /* Redondeamos más los bordes */
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); /* Sombra sutil que lo levanta */
-    transition: all 0.2s ease-in-out; /* Animación suave para todas las propiedades */
+    padding: 18px 30px;
+    font-size: 20px;
+    border-radius: 12px;
     border: none;
-    margin-top: 30px; /* Más espacio arriba */
-}
-
-#lancam:hover {
-    transform: translateY(-3px) scale(1.02); /* El botón se eleva y se agranda un poco */
-    box-shadow: 0 7px 25px rgba(40, 167, 69, 0.4); /* La sombra se hace más pronunciada */
+    margin-top: 30px;
     cursor: pointer;
+    /* Estado por defecto: "levantado" */
+    transform: translateY(-3px);
+    box-shadow: 0 7px 25px rgba(40, 167, 69, 0.4);
+    transition: all 0.15s ease-out; /* Animación rápida para un efecto responsivo */
+}
+#lancam:hover {
+    /* Al pasar el mouse, brilla un poco más */
+    box-shadow: 0 8px 30px rgba(40, 167, 69, 0.5);
+    transform: translateY(-4px); /* Se levanta un píxel más para dar feedback */
+}
+#lancam:active {
+    /* Estado al presionar: "aplanado" */
+    transform: translateY(1px); /* Lo hundimos en la página */
+    box-shadow: 0 2px 5px rgba(40, 167, 69, 0.3); /* Sombra mínima como si estuviera pegado */
 }
 
-/* --- ESTILOS ADICIONALES PARA EL CAMPO DE TELÉFONO --- */
+/* --- ESTILOS PARA EL CAMPO DE TELÉFONO --- */
 .iti {
     width: 100%;
 }
+
+@media (max-width: 900px) { .container { flex-direction: column; overflow: auto; } .left-panel { flex-basis: auto; min-height: 400px; } }
