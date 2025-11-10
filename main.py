@@ -3,7 +3,8 @@ import psycopg2
 import json
 import google.generativeai as genai
 from flask import Flask, render_template, request, jsonify
-from flask_babel import Babel
+# SE AÑADE 'gettext' A LA IMPORTACIÓN PARA LA SOLUCIÓN
+from flask_babel import Babel, gettext
 from cerebro_dashboard import create_chatbot
 
 # --- NO TOCAMOS LAS IMPORTACIONES DE LOS TRABAJADORES POR AHORA ---
@@ -31,28 +32,47 @@ try:
 except Exception:
     pass # Ignoramos errores aquí por ahora
 dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
+
 def get_locale():
     return request.accept_languages.best_match(['en', 'es'])
+
 babel = Babel(app, locale_selector=get_locale)
-app.jinja_env.globals.update(get_locale=get_locale)
+
+# ======================= LA SOLUCIÓN DEFINITIVA =======================
+# ESTE BLOQUE REEMPLAZA a 'app.jinja_env.globals.update'.
+# Inyecta las funciones de traducción (_ y get_locale) en TODAS las plantillas
+# de forma automática y segura. Es la forma correcta de hacerlo en Flask.
+@app.context_processor
+def inject_global_funcs():
+    return dict(get_locale=get_locale, _=gettext)
+# =====================================================================
+
 
 # --- RUTAS (INTACTAS) ---
 @app.route('/')
 def dashboard():
+    # Por defecto, ahora muestra el dashboard principal
     return render_template('dashboard.html')
-    # NUEVA RUTA para nido_template.html
+
+# Se añade una ruta específica para /dashboard por claridad
+@app.route('/dashboard')
+def dashboard_page():
+    return render_template('dashboard.html')
+
+# RUTA para nido_template.html
 @app.route('/nido')
 def nido_page():
     # Esta función le dice a la app que muestre nido_template.html
     # cuando alguien visite la URL /nido
     return render_template('nido_template.html')
 
-# NUEVA RUTA para pre_nido.html
+# RUTA para pre_nido.html
 @app.route('/pre-nido')
 def pre_nido_page():
     # Esta función le dice a la app que muestre pre_nido.html
     # cuando alguien visite la URL /pre-nido
     return render_template('pre_nido.html')
+
 @app.route('/chat', methods=['POST'])
 def chat():
     # ... (código intacto) ...
@@ -66,8 +86,7 @@ def chat():
 # ... (Otras rutas como /ver-nido se quedan intactas) ...
 
 
-# --- ¡INICIO DE LA MODIFICACIÓN IMPORTANTE! ---
-
+# --- RUTA DE LANZAMIENTO DE CAMPAÑA (INTACTA) ---
 @app.route('/lanzar-campana', methods=['POST'])
 def lanzar_campana():
     print("\n>>> [RUTA /lanzar-campana] ¡Orden recibida del Dashboard!")
@@ -104,9 +123,6 @@ def lanzar_campana():
     finally:
         if conn:
             conn.close()
-
-# --- FIN DE LA MODIFICACIÓN ---
-
 
 # --- BLOQUE DE ARRANQUE (INTACTO) ---
 if __name__ == '__main__':
