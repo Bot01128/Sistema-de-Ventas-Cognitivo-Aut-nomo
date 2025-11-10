@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.7;
+    margin: 0;
+    padding: 40px 20px;
+    background-color: #f8f9fa;
+    color: #343a40;
+}
+
+.container {
+    max-width: 750px;
+    margin: auto;
+    background: #ffffff;
+    padding: 50px;
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.07);
+    border: 1px solid #e9ecef;
+}
+
+h1, h2 {
+    font-weight: 900; /* Hacemos los títulos más impactantes */
+    line-height: 1.3;
+}
+
+h1 {
+    font-size: 2.2em;
+    color: #1a1a1a;
+    margin-bottom: 15px;
+}
+
+.subtitle {
+    font-size: 1.1em;
+    color: #6c757d;
+    margin-top: 0;
+}
+
+h2 {
+    font-size: 1.6em;
+    color: #5a29e4; /* Tu color de marca */
+    margin-top: 40px;
+    border-bottom: 3px solid #5a29e4;
+    padding-bottom: 10px;
+    margin-bottom: 25px;
+}
+
+p {
+    font-size: 1.1em;
+    color: #495057;
+    margin-bottom: 20px;
+}
+
+form {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+input[type="email"] {
+    padding: 18px 20px; /* Hacemos el campo más grande */
+    border: 2px solid #ced4da;
+    border-radius: 8px;
+    font-size: 1.1em;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input[type="email"]:focus {
+    outline: none;
+    border-color: #5a29e4;
+    box-shadow: 0 0 0 3px rgba(90, 41, 228, 0.2);
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-color: #dee2e6;
+    margin: 50px 0;
+}
+
+/* --- EL EFECTO DEL BOTÓN 3D QUE PEDISTE --- */
+.btn-3d {
+    background-color: #5a29e4;
+    color: white;
+    padding: 18px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+
+    /* El truco clásico: BORDES con relieve */
+    border-style: solid;
+    border-width: 4px;
+    
+    /* Estado por defecto "SOBRESALIDO" (luz desde arriba) */
+    border-top-color: #a181ff;   /* Borde superior más claro */
+    border-left-color: #a181ff;  /* Borde izquierdo más claro */
+    border-bottom-color: #3c0cba; /* Borde inferior más oscuro */
+    border-right-color: #3c0cba; /* Borde derecho más oscuro */
+}
+
+.btn-3d:hover {
+    background-color: #6b44e6;
+}
+
+.btn-3d:active {
+    /* Estado al presionar "PLANO/HUNDIDO" (sombra desde arriba) */
+    transform: translateY(2px); /* Lo hundimos un poco */
+    
+    /* Invertimos los colores de los bordes para simular la presión */
+    border-top-color: #3c0cba;   
+    border-left-color: #3c0cba;  
+    border-bottom-color: #a181ff; 
+    border-right-color: #a181ff; 
+}
