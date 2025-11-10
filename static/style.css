@@ -43,3 +43,25 @@ small { color: #6c757d; font-size: 12px; }
 @media (max-width: 900px) { .container { flex-direction: column; overflow: auto; } .left-panel { flex-basis: auto; min-height: 400px; } }```
 
 **Guarda este archivo.** Avísame cuando estés listo y te daré el `script.js` completo. Un paso a la vez.
+/* --- ESTILOS PARA EL NUEVO BOTÓN DE LANZAR CAMPAÑA --- */
+
+#lancam {
+    padding: 18px 30px; /* Hacemos el botón más alto y ancho */
+    font-size: 20px; /* Aumentamos el tamaño del texto */
+    border-radius: 12px; /* Redondeamos más los bordes */
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); /* Sombra sutil que lo levanta */
+    transition: all 0.2s ease-in-out; /* Animación suave para todas las propiedades */
+    border: none;
+    margin-top: 30px; /* Más espacio arriba */
+}
+
+#lancam:hover {
+    transform: translateY(-3px) scale(1.02); /* El botón se eleva y se agranda un poco */
+    box-shadow: 0 7px 25px rgba(40, 167, 69, 0.4); /* La sombra se hace más pronunciada */
+    cursor: pointer;
+}
+
+/* --- ESTILOS ADICIONALES PARA EL CAMPO DE TELÉFONO --- */
+.iti {
+    width: 100%;
+}
