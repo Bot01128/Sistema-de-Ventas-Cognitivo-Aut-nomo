@@ -6,7 +6,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_babel import Babel, gettext
 from cerebro_dashboard import create_chatbot
 
-# --- NO TOCAMOS LAS IMPORTACIONES DE LOS TRABAJadores POR AHORA ---
+# --- NO TOCAMOS LAS IMPORTACIONES DE LOS TRABAJADORES POR AHORA ---
 # from trabajador_orquestador import orquestar_nueva_caza
 # from trabajador_cazador import cazar_prospectos
 
@@ -36,14 +36,6 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
 
-try:
-    with open('textos.json', 'r', encoding='utf-8') as f:
-        textos_globales = json.load(f)
-    print(">>> DIAGNÓSTICO: Archivo textos.json cargado correctamente.")
-except FileNotFoundError:
-    print("!!! ADVERTENCIA: No se encontró el archivo textos.json. Creando uno por defecto.")
-    textos_globales = {"pre_nido": {}, "nido": {}}
-
 ID_DE_LA_CAMPAÑA_ACTUAL = 1 
 descripcion_de_la_campana = "Soy un asistente virtual genérico."
 
@@ -62,7 +54,7 @@ except Exception:
 dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
 
 # =====================================================================
-# SECCIÓN 4: RUTAS DE LA APLICACIÓN (AQUÍ ESTÁ LA CORRECCIÓN FINAL)
+# SECCIÓN 4: RUTAS DE LA APLICACIÓN (VERSIÓN CORREGIDA Y SIMPLIFICADA)
 # =====================================================================
 
 @app.route('/')
@@ -73,23 +65,20 @@ def index():
 def dashboard_page():
     return render_template('dashboard.html')
 
-# ¡¡LA NUEVA RUTA PARA TU DISEÑO PROFESIONAL!!
-@app.route('/generar-nido')
-def generar_nido_page():
-    # Esta ruta muestra tu hermoso diseño del archivo nido_template.html
-    textos_para_la_pagina = textos_globales.get('nido', {})
-    return render_template('nido_template.html', textos=textos_para_la_pagina)
-
-# Dejamos las rutas antiguas por si las usas para otras pruebas
 @app.route('/nido')
 def nido_page():
-    textos_para_la_pagina = textos_globales.get('nido', {})
-    return render_template('nido_template.html', textos=textos_para_la_pagina)
+    # CORRECCIÓN: Simplemente mostramos el template. No necesita datos externos.
+    return render_template('nido_template.html')
 
 @app.route('/pre-nido')
 def pre_nido_page():
-    textos_para_la_pagina = textos_globales.get('pre_nido', {})
-    return render_template('pre_nido.html', textos=textos_para_la_pagina)
+    # CORRECCIÓN: Simplemente mostramos el template. No necesita datos externos.
+    return render_template('pre_nido.html')
+
+@app.route('/generar-nido')
+def generar_nido_page():
+    # CORRECCIÓN: Apuntamos esta ruta también a tu diseño correcto.
+    return render_template('nido_template.html')
 
 
 @app.route('/chat', methods=['POST'])
@@ -107,7 +96,6 @@ def chat():
 
 @app.route('/lanzar-campana', methods=['POST'])
 def lanzar_campana():
-    # Tu código para lanzar campañas está intacto
     orden_del_cliente = request.get_json()
     if not orden_del_cliente:
         return jsonify({"error": "No se recibieron datos de la campaña."}), 400
