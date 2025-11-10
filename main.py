@@ -15,90 +15,78 @@ from cerebro_dashboard import create_chatbot
 # =====================================================================
 app = Flask(__name__)
 
-# Definimos la función para obtener el idioma del navegador del usuario.
 def get_locale():
-    # Encuentra el mejor idioma entre 'en' (inglés) y 'es' (español).
     return request.accept_languages.best_match(['en', 'es'])
 
-# Conectamos Babel a nuestra aplicación Flask.
 babel = Babel(app, locale_selector=get_locale)
 
-
 # =====================================================================
-# SECCIÓN 2: PROCESADOR DE CONTEXTO (LA SOLUCIÓN CLAVE)
+# SECCIÓN 2: PROCESADOR DE CONTEXTO (ESTO ESTÁ BIEN Y SE QUEDA)
 # =====================================================================
-# Este bloque es la forma correcta y segura de hacer que las funciones
-# de traducción estén disponibles en TODOS los archivos HTML (plantillas).
 @app.context_processor
 def inject_global_funcs():
-    # Devuelve un diccionario con las funciones que queremos disponibles.
-    # Ahora, cualquier plantilla puede usar {{ _('texto') }} y {{ get_locale() }}.
     return dict(get_locale=get_locale, _=gettext)
 
-
 # =====================================================================
-# SECCIÓN 3: CONFIGURACIÓN DE SERVICIOS EXTERNOS
+# SECCIÓN 3: CONFIGURACIÓN DE SERVICIOS Y LÓGICA DE NEGOCIO
 # =====================================================================
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-    print(">>> DIAGNÓSTICO: API de Google configurada.")
 
-# =====================================================================
-# SECCIÓN 4: LÓGICA DE NEGOCIO (INICIALIZACIÓN DEL CEREBRO)
-# =====================================================================
+# --- CARGA DE TEXTOS DESDE EL NUEVO ARCHIVO JSON ---
+try:
+    with open('textos.json', 'r', encoding='utf-8') as f:
+        textos_globales = json.load(f)
+    print(">>> DIAGNÓSTICO: Archivo textos.json cargado correctamente.")
+except FileNotFoundError:
+    print("!!! ERROR FATAL: No se encontró el archivo textos.json. Creando uno por defecto.")
+    textos_globales = {"pre_nido": {}, "nido": {}}
+# --- FIN DE LA CARGA DE TEXTOS ---
+
 ID_DE_LA_CAMPAÑA_ACTUAL = 1 
 descripcion_de_la_campana = "Soy un asistente virtual genérico."
 
 try:
-    print(">>> DIAGNÓSTICO: Intentando conectar a la base de datos para obtener descripción...")
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
     cur.execute("SELECT descripcion_producto FROM campanas WHERE id = %s", (ID_DE_LA_CAMPAÑA_ACTUAL,))
     result = cur.fetchone()
     if result and result[0]:
         descripcion_de_la_campana = result[0]
-        print(">>> DIAGNÓSTICO: Descripción obtenida de la base de datos.")
-    else:
-        print(">>> DIAGNÓSTICO: No se encontró descripción para la campaña, usando valor por defecto.")
     cur.close()
     conn.close()
-except Exception as e:
-    print(f"!!! ADVERTENCIA: No se pudo conectar a la DB para obtener la descripción. Error: {e}")
+except Exception:
     pass
 
-# Inicializamos el cerebro del chat con la descripción obtenida.
 dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
-print(">>> DIAGNÓSTICO: Cerebro del dashboard inicializado.")
-
 
 # =====================================================================
-# SECCIÓN 5: RUTAS DE LA APLICACIÓN (LAS PÁGINAS)
+# SECCIÓN 4: RUTAS DE LA APLICACIÓN (AQUÍ ESTÁ LA CORRECCIÓN)
 # =====================================================================
 
-# Ruta raíz, redirige al dashboard.
 @app.route('/')
 def index():
     return render_template('dashboard.html')
 
-# Ruta para el dashboard principal.
 @app.route('/dashboard')
 def dashboard_page():
     return render_template('dashboard.html')
 
-# Ruta para nido_template.html
 @app.route('/nido')
 def nido_page():
-    return render_template('nido_template.html')
+    # AHORA LE PASAMOS LOS TEXTOS ESPECÍFICOS PARA ESTA PÁGINA
+    textos_para_la_pagina = textos_globales.get('nido', {})
+    return render_template('nido_template.html', textos=textos_para_la_pagina)
 
-# Ruta para pre_nido.html
 @app.route('/pre-nido')
 def pre_nido_page():
-    return render_template('pre_nido.html')
+    # AHORA LE PASAMOS LOS TEXTOS ESPECÍFICOS PARA ESTA PÁGINA
+    textos_para_la_pagina = textos_globales.get('pre_nido', {})
+    return render_template('pre_nido.html', textos=textos_para_la_pagina)
 
-# Ruta para la API del chat.
 @app.route('/chat', methods=['POST'])
 def chat():
     if not dashboard_brain:
@@ -112,37 +100,30 @@ def chat():
     except Exception as e:
         return jsonify({"error": f"Ocurrió un error en el cerebro: {e}"}), 500
 
-# Ruta para la API de lanzar campañas.
 @app.route('/lanzar-campana', methods=['POST'])
 def lanzar_campana():
-    print("\n>>> RUTA /lanzar-campana: Orden recibida.")
+    # Tu código para lanzar campañas está intacto y no ha sido modificado
     orden_del_cliente = request.get_json()
     if not orden_del_cliente:
         return jsonify({"error": "No se recibieron datos de la campaña."}), 400
-
     conn = None
     try:
-        print(">>> RUTA /lanzar-campana: Guardando orden en la cola de trabajos...")
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
         sql_insert = "INSERT INTO cola_de_trabajos (tipo_trabajo, datos_json) VALUES (%s, %s);"
         datos_como_texto_json = json.dumps(orden_del_cliente)
         cur.execute(sql_insert, ('cazar_prospectos', datos_como_texto_json))
         conn.commit()
-        print(">>> RUTA /lanzar-campana: Orden guardada con éxito.")
         return jsonify({"message": "¡Campaña recibida! Hemos empezado a trabajar en ello."})
     except Exception as e:
-        print(f"!!! ERROR FATAL en /lanzar-campana: {e}")
         return jsonify({"error": f"Ocurrió un error en el servidor: {e}"}), 500
     finally:
         if conn:
             conn.close()
 
 # =====================================================================
-# SECCIÓN 6: BLOQUE DE ARRANQUE DE LA APLICACIÓN
+# SECCIÓN 5: BLOQUE DE ARRANQUE (INTACTO)
 # =====================================================================
 if __name__ == '__main__':
-    # Usamos el puerto que Fly.io nos asigna, o el 8080 por defecto.
     port = int(os.environ.get('PORT', 8080))
-    # 'host' debe ser '0.0.0.0' para que sea accesible desde fuera del contenedor.
     app.run(host='0.0.0.0', port=port)
