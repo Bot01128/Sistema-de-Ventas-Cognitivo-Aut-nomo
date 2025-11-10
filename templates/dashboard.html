@@ -39,22 +39,65 @@
             <div class="tab-nav">
                 <button class="tab-button active" data-tab="my-campaigns">{{ _('Mis Campañas') }}</button>
                 <button class="tab-button" data-tab="campaign">{{ _('Crear Campaña') }}</button>
-                <!-- PESTAÑA NUEVA AÑADIDA AQUÍ -->
                 <button class="tab-button" data-tab="suggestions">{{ _('Tus Sugerencias') }}</button>
                 <button class="tab-button" data-tab="billing">{{ _('Facturación') }}</button>
             </div>
             <div class="tab-content" id="my-campaigns">
                 <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
                 <table class="campaign-table">
-                    <!-- ... contenido de la tabla sin cambios ... -->
+                    <thead>
+                        <tr>
+                            <th>{{ _('Nombre de la Campaña') }}</th>
+                            <th>{{ _('Fecha') }}</th>
+                            <th>{{ _('Estado') }}</th>
+                            <th>{{ _('Prospectos Encontrados') }}</th>
+                            <th>{{ _('Leads Calificados') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Búsqueda de Spas en Medellín</td><td>13/10/2025</td><td>Completada ✅</td><td>152</td><td>89</td></tr>
+                        <tr><td>Restaurantes Italianos (Miami)</td><td>12/10/2025</td><td>Analizando ⚙️</td><td>100</td><td>45</td></tr>
+                    </tbody>
                 </table>
             </div>
-
             <div class="tab-content" id="campaign" style="display:none;">
-                <!-- ... contenido de crear campaña sin cambios ... -->
+                <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
+                <div class="form-section">
+                    <label>{{ _('1. Selecciona un Plan') }}</label>
+                    <div class="plans-container">
+                        <div class="plan-card" data-plan="arrancador"><h4>{{ _('El Arrancador') }}</h4><div class="price">$149<span>/mes</span></div><small>4 prospectos/día</small></div>
+                        <div class="plan-card" data-plan="profesional"><h4>{{ _('El Profesional') }}</h4><div class="price">$399<span>/mes</span></div><small>15 prospectos/día</small></div>
+                        <div class="plan-card" data-plan="dominador"><h4>{{ _('El Dominador') }}</h4><div class="price">$999<span>/mes</span></div><small>50 prospectos/día</small></div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <label for="prospects-per-day">{{ _('2. O personaliza la cantidad de Prospectos por Día') }}</label>
+                    <input type="number" id="prospects-per-day" value="4" min="4">
+                </div>
+                <div class="form-section">
+                    <label>{{ _('3. Define tu Campaña') }}</label>
+                    <label for="nombre_campana" style="margin-top:10px;">{{ _('Nombre de la Campaña') }}</label>
+                    <input type="text" id="nombre_campana" placeholder="{{ _('Ej: Búsqueda de Restaurantes en Miami') }}">
+                    <label for="que_vendes" style="margin-top:15px;">{{ _('¿Qué vendes?') }}</label>
+                    <input type="text" id="que_vendes" placeholder="{{ _('Ej: Software para restaurantes') }}">
+                    <label for="a_quien_va_dirigido" style="margin-top: 15px;">{{ _('¿A quién va dirigido?') }}</label>
+                    <input type="text" id="a_quien_va_dirigido" placeholder="{{ _('Ej: Restaurantes italianos, Ferreterías') }}">
+                </div>
+                <div class="form-section">
+                    <label>{{ _('4. Describe tu Producto y Contacto') }}</label>
+                    <div class="form-section" style="margin-top:15px;"><label>{{ _('Tipo de Producto') }}</label><div class="checkbox-group"><input type="checkbox" id="tipo_producto_tangible" name="tipo_producto"><label for="tipo_producto_tangible">{{ _('Tangible') }}</label></div><div class="checkbox-group"><input type="checkbox" id="tipo_producto_intangible" name="tipo_producto"><label for="tipo_producto_intangible">{{ _('Intangible') }}</label></div></div>
+                    <div class="form-section"><label for="descripcion_producto">{{ _('Descripción del Producto/Servicio') }}</label><textarea id="descripcion_producto" maxlength="25000" placeholder="{{ _('Describe qué vendes...') }}"></textarea></div>
+                    <div class="form-section"><label for="numero_whatsapp">{{ _('Número de WhatsApp') }}</label><input type="tel" id="numero_whatsapp"></div>
+                    <div class="form-section"><label for="enlace_venta">{{ _('Enlace de Venta') }}</label><input type="text" id="enlace_venta"></div>
+                </div>
+                <div class="form-section" style="background-color: #e9ecef; padding: 20px; border-radius: 8px;">
+                    <h4>{{ _('Resumen Final') }}</h4>
+                    <p>Plan Seleccionado: <strong id="selected-plan">El Arrancador</strong></p>
+                    <p>Prospectos por día: <strong id="daily-prospects">4</strong></p>
+                    <p>Costo Mensual Final: <strong id="total-cost">$149.00</strong></p>
+                </div>
+                <button id="lancam" class="cta-button">{{ _('Lanzar Campaña') }}</button>
             </div>
-
-            <!-- CONTENIDO DE LA NUEVA PESTAÑA AÑADIDO AQUÍ -->
             <div class="tab-content" id="suggestions" style="display:none;">
                 <h2>Tú eres el Arquitecto de Nuestro Futuro</h2>
                 <p style="font-size: 16px; line-height: 1.6; color: #495057;">En AutoNeura, no creemos en construir solos. Creemos que las mejores ideas nacen de la experiencia diaria de visionarios como tú. Tu voz no es solo feedback, es la brújula que guía nuestra innovación.</p>
@@ -65,9 +108,10 @@
                 </div>
                 <button id="send-suggestion-btn" class="cta-button" style="background-color: #007bff;">Enviar mi Sugerencia</button>
             </div>
-
             <div class="tab-content" id="billing" style="display:none;">
-                <!-- ... contenido de facturación sin cambios ... -->
+                <h2>{{ _('Mi Saldo y Facturación') }}</h2>
+                <p>Saldo Actual: <strong>$0.00</strong></p>
+                <button class="cta-button" style="background-color:#007bff;">{{ _('+ Recargar Saldo') }}</button>
             </div>
         </div>
     </div>
