@@ -38,16 +38,14 @@ def get_locale():
 
 babel = Babel(app, locale_selector=get_locale)
 
-# ======================= LA SOLUCIÓN CORRECTA RESTAURADA =======================
-# Este es el bloque que funciona. Le da a TODAS las plantillas acceso a AMBAS
-# funciones necesarias: 'get_locale' para el idioma y '_' para la traducción.
+# ======================= ESTE BLOQUE ESTÁ BIEN Y SE QUEDA =======================
 @app.context_processor
 def inject_global_funcs():
     return dict(get_locale=get_locale, _=gettext)
 # =============================================================================
 
 
-# --- RUTAS (CORREGIDAS Y COMPLETAS) ---
+# --- RUTAS (CON LA CIRUGÍA APLICADA) ---
 @app.route('/')
 def dashboard():
     return render_template('dashboard.html')
@@ -60,9 +58,18 @@ def dashboard_page():
 def generar_nido_page():
     return render_template('nido_template.html')
 
+# ======================= INICIO DE LA CIRUGÍA =======================
 @app.route('/pre-nido')
 def pre_nido_page():
-    return render_template('pre_nido.html')
+    # El problema era que esta función no le pasaba la variable 'textos' a la plantilla.
+    # Ahora creamos un diccionario simple para satisfacer lo que pide el HTML.
+    textos_para_pre_nido = {
+        "titulo_valor": "Bienvenido a la Página de Chat",
+        # Puedes añadir más textos aquí si el HTML los necesita
+    }
+    # Y se lo pasamos a la plantilla al renderizarla.
+    return render_template('pre_nido.html', textos=textos_para_pre_nido)
+# ======================= FIN DE LA CIRUGÍA =======================
 
 
 @app.route('/chat', methods=['POST'])
