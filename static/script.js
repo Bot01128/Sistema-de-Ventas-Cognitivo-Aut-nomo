@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- MÓDULO DE NAVEGACIÓN POR PESTAÑAS ---
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
+    
     function switchTab(tabId) {
         tabContents.forEach(content => {
             content.style.display = 'none';
@@ -20,12 +21,15 @@ document.addEventListener('DOMContentLoaded', function() {
             activeButton.classList.add('active');
         }
     }
+
+    // ESTE ES EL BLOQUE QUE FALTABA Y QUE HE VUELTO A AÑADIR
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             const tabId = button.getAttribute('data-tab');
             switchTab(tabId);
         });
     });
+    // FIN DEL BLOQUE RESTAURADO
 
     // --- MÓDULO DE PLANES Y COSTOS ---
     const planCards = document.querySelectorAll('.plan-card');
@@ -111,16 +115,14 @@ document.addEventListener('DOMContentLoaded', function() {
             utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
             initialCountry: "auto",
             geoIpLookup: function(callback) {
-                // Para evitar costos, puedes usar una IP por defecto o un servicio gratuito sin token.
-                // Si tienes un token de ipinfo.io, ponlo aquí.
                 fetch('https://ipinfo.io/json') 
                 .then(response => response.json())
                 .then(data => callback(data.country))
-                .catch(() => callback('us')); // Falla a 'us' si hay error
+                .catch(() => callback('us'));
             }
         });
     }
 
     // --- INICIALIZACIÓN ---
     switchTab('my-campaigns');
-});```
+});
