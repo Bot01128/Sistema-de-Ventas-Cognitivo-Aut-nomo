@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="{{ get_locale() }}">
+<!-- No usamos get_locale() para eliminar dependencias innecesarias -->
+<html lang="es"> 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Análisis de Oportunidad para tu Negocio</title>
-    <!-- CONEXIÓN AL NUEVO ARCHIVO CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/pre_nido.css') }}">
+    <!-- CORRECCIÓN: Apuntamos directamente a la ruta que crearemos en main.py -->
+    <link rel="stylesheet" href="/persuador/pre_nido.css">
 </head>
 <body>
     <div class="container">
@@ -24,13 +25,12 @@
         <form id="nido-form" action="/generar-nido" method="post">
             <input type="hidden" name="prospecto_id_oculto" value="ID_DEL_PROSPECTO_AQUI">
             <input type="email" name="email_prospecto" placeholder="Introduce tu mejor correo electrónico" required>
-            <!-- AÑADIMOS LA CLASE 'btn-3d' PARA EL EFECTO -->
             <button type="submit" class="btn-3d">Sí, ¡Quiero mi Análisis Gratis!</button>
         </form>
 
     </div>
 
-    <!-- CONEXIÓN AL NUEVO ARCHIVO JAVASCRIPT -->
-    <script src="{{ url_for('static', filename='js/pre_nido.js') }}"></script>
+    <!-- CORRECCIÓN: Apuntamos directamente a la ruta que crearemos en main.py -->
+    <script src="/persuador/pre_nido.js"></script>
 </body>
 </html>
