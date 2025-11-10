@@ -3,109 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análisis de Oportunidad para {{ nombre_negocio }}</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 40px 20px;
-            background-color: #f7f7f9;
-            color: #2c2c2c;
-        }
-        .container {
-            max-width: 750px;
-            margin: auto;
-            background: #ffffff;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e8e8e8;
-        }
-        h1, h2 {
-            color: #1a1a1a;
-            font-weight: 700;
-        }
-        h1 {
-            font-size: 2em;
-            margin-bottom: 10px;
-            line-height: 1.2;
-        }
-        h2 {
-            font-size: 1.5em;
-            color: #5a29e4; /* El color de tu marca */
-            margin-top: 40px;
-            border-bottom: 2px solid #5a29e4;
-            padding-bottom: 10px;
-        }
-        p {
-            font-size: 1.1em;
-            color: #4f4f4f;
-        }
-        .value-section {
-            background-color: #f9f9ff;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 5px solid #5a29e4;
-            margin-bottom: 30px;
-        }
-        form {
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        input[type="email"] {
-            padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 1em;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        button[type="submit"] {
-            background-color: #5a29e4;
-            color: white;
-            padding: 15px 25px;
-            border: none;
-            border-radius: 6px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button[type="submit"]:hover {
-            background-color: #481fb9;
-        }
-        hr {
-            border: 0;
-            height: 1px;
-            background-color: #e0e0e0;
-            margin: 40px 0;
-        }
-    </style>
+    <title>Análisis de Oportunidad para tu Negocio</title>
+    <!-- CONEXIÓN AL NUEVO ARCHIVO CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pre_nido.css') }}">
 </head>
 <body>
     <div class="container">
         
-        <div class="value-section">
-            <h1>{{ textos.titulo_valor }}</h1>
-            <p>{{ textos.texto_valor }}</p>
+        <div class="header-section">
+            <h1>Hemos Encontrado una Oportunidad de Crecimiento para Ti</h1>
+            <p class="subtitle">Nuestro sistema de IA, AutoNeura, ha realizado un análisis preliminar de tu presencia online y ha identificado un área clave para potenciar tu comunicación y tus ventas.</p>
         </div>
         
         <hr>
         
-        <h2>{{ textos.h2_siguiente_nivel }}</h2>
-        <p>{{ textos.p1_diagnostico | safe }}</p> <!-- | safe es para que renderice el <strong> -->
-        <p>{{ textos.p2_gratis }}</p>
+        <h2>El Siguiente Nivel: Un Diagnóstico Personalizado</h2>
+        <p>En el mercado actual, cada cliente no atendido es una venta perdida. Hemos notado patrones en las consultas de tus potenciales clientes que indican un interés inmediato. <strong>AutoNeura puede capturar ese interés y convertirlo en ventas 24/7.</strong></p>
+        <p>Te ofrecemos un análisis detallado y una demostración interactiva, sin costo alguno. Este es un servicio de consultoría valorado en $250, completamente gratis para ti. Solo necesitamos tu correo electrónico para enviarte el acceso a tu "Nido" de ventas personalizado.</p>
         
-        <form action="/generar-nido" method="post">
-            <input type="hidden" name="prospecto_id_oculto" value="{{ prospecto_id }}">
-            <input type="email" name="email_prospecto" placeholder="{{ textos.placeholder_email }}" required>
-            <button type="submit">{{ textos.texto_boton }}</button>
+        <form id="nido-form" action="/generar-nido" method="post">
+            <input type="hidden" name="prospecto_id_oculto" value="ID_DEL_PROSPECTO_AQUI">
+            <input type="email" name="email_prospecto" placeholder="Introduce tu mejor correo electrónico" required>
+            <!-- AÑADIMOS LA CLASE 'btn-3d' PARA EL EFECTO -->
+            <button type="submit" class="btn-3d">Sí, ¡Quiero mi Análisis Gratis!</button>
         </form>
 
     </div>
+
+    <!-- CONEXIÓN AL NUEVO ARCHIVO JAVASCRIPT -->
+    <script src="{{ url_for('static', filename='js/pre_nido.js') }}"></script>
 </body>
 </html>
