@@ -25,7 +25,6 @@ h1, h2, h3, h4 { color: #1c1e21; margin-top: 0; }
 .form-section { margin-bottom: 25px; }
 .form-section label { display: block; margin-bottom: 8px; font-weight: 600; color: #495057; }
 .form-section input, textarea { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-/* La clase .cta-button es genérica, mantenemos su estilo base */
 .cta-button { background-color: #28a745; color: white; padding: 15px 25px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px;}
 .checkbox-group { display: flex; align-items: center; margin-bottom: 10px; }
 .checkbox-group label { font-weight: normal; margin-left: 8px; }
@@ -42,28 +41,38 @@ small { color: #6c757d; font-size: 12px; }
 .plan-card h4 { margin: 0 0 10px 0; }
 .plan-card .price { font-size: 24px; font-weight: bold; margin: 10px 0; }
 
-/* --- ESTILOS MEJORADOS PARA EL BOTÓN "VIVO" --- */
+/* --- ESTILOS MEJORADOS PARA EL BOTÓN "VIVO" (TÉCNICA CLÁSICA) --- */
 #lancam {
     padding: 18px 30px;
     font-size: 20px;
     border-radius: 12px;
-    border: none;
     margin-top: 30px;
     cursor: pointer;
-    /* Estado por defecto: "levantado" */
-    transform: translateY(-3px);
-    box-shadow: 0 7px 25px rgba(40, 167, 69, 0.4);
-    transition: all 0.15s ease-out; /* Animación rápida para un efecto responsivo */
+    background-color: #28a745;
+    color: white;
+    font-weight: bold;
+    transition: all 0.1s ease-in-out;
+    border-style: solid;
+    border-width: 4px;
+    
+    /* Estado por defecto "SOBRESALIDO" (outset) */
+    border-top-color: #63d47a;
+    border-left-color: #63d47a;
+    border-bottom-color: #1c7430;
+    border-right-color: #1c7430;
 }
+
 #lancam:hover {
-    /* Al pasar el mouse, brilla un poco más */
-    box-shadow: 0 8px 30px rgba(40, 167, 69, 0.5);
-    transform: translateY(-4px); /* Se levanta un píxel más para dar feedback */
+    background-color: #2ebf4f;
 }
+
 #lancam:active {
-    /* Estado al presionar: "aplanado" */
-    transform: translateY(1px); /* Lo hundimos en la página */
-    box-shadow: 0 2px 5px rgba(40, 167, 69, 0.3); /* Sombra mínima como si estuviera pegado */
+    /* Estado al presionar "PLANO/HUNDIDO" (inset) */
+    border-top-color: #1c7430;
+    border-left-color: #1c7430;
+    border-bottom-color: #63d47a;
+    border-right-color: #63d47a;
+    transform: translateY(1px);
 }
 
 /* --- ESTILOS PARA EL CAMPO DE TELÉFONO --- */
@@ -71,4 +80,7 @@ small { color: #6c757d; font-size: 12px; }
     width: 100%;
 }
 
-@media (max-width: 900px) { .container { flex-direction: column; overflow: auto; } .left-panel { flex-basis: auto; min-height: 400px; } }
+@media (max-width: 900px) { 
+    .container { flex-direction: column; overflow: auto; } 
+    .left-panel { flex-basis: auto; min-height: 400px; } 
+}
