@@ -75,6 +75,38 @@ small { color: #6c757d; font-size: 12px; }
     width: 100%;
 }
 
+/* --- ESTILOS NUEVOS PARA EL BOTÓN DE SUGERENCIAS --- */
+#send-suggestion-btn {
+    /* Hereda algunos estilos de .cta-button, pero los personalizamos */
+    padding: 18px 30px;
+    font-size: 20px;
+    border-radius: 12px;
+    
+    background-color: #007bff; /* Color azul base */
+    transition: all 0.1s ease-in-out;
+    border-style: solid;
+    border-width: 4px;
+
+    /* Estado por defecto "SOBRESALIDO" (outset) con paleta azul */
+    border-top-color: #5b9eff;    /* Azul más claro */
+    border-left-color: #5b9eff;   /* Azul más claro */
+    border-bottom-color: #004a99; /* Azul más oscuro */
+    border-right-color: #004a99;  /* Azul más oscuro */
+}
+
+#send-suggestion-btn:hover {
+    background-color: #0088ff; /* Un azul un poco más brillante al pasar el mouse */
+}
+
+#send-suggestion-btn:active {
+    /* Estado al presionar "PLANO/HUNDIDO" (inset) con paleta azul */
+    border-top-color: #004a99;    /* Invertimos: Azul oscuro */
+    border-left-color: #004a99;   /* Invertimos: Azul oscuro */
+    border-bottom-color: #5b9eff; /* Invertimos: Azul claro */
+    border-right-color: #5b9eff;  /* Invertimos: Azul claro */
+    transform: translateY(1px);
+}
+
 @media (max-width: 900px) { 
     .container { flex-direction: column; overflow: auto; } 
     .left-panel { flex-basis: auto; min-height: 400px; } 
