@@ -2,114 +2,115 @@ import os
 import psycopg2
 import json
 import google.generativeai as genai
-# SE AÑADE 'send_from_directory' PARA SERVIR ARCHIVOS ESTÁTICOS DESDE 'persuador'
-from flask import Flask, render_template, request, jsonify, send_from_directory
-from flask_babel import Babel, gettext
+from flask import Flask, render_template, request, jsonify
+from flask_babel import Babel
 from cerebro_dashboard import create_chatbot
 
-# --- NO TOCAMOS LAS IMPORTACIONES ---
-from trabajador_orquestador import orquestar_nueva_caza
-from trabajador_cazador import cazar_prospectos
-
-# --- CONFIGURACIÓN (INTACTA) ---
+# --- CONFIGURACIÓN INICIAL ---
 app = Flask(__name__)
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
+# --- CÁMARA DE DIAGNÓSTICO #1 ---
+print("=====================================================")
+print(">>> [DIAGNÓSTICO] INICIANDO APLICACIÓN...")
+if DATABASE_URL:
+    print(">>> [DIAGNÓSTICO] DATABASE_URL encontrada. Comienza con:", DATABASE_URL[:30]) 
+else:
+    print("!!! ERROR [DIAGNÓSTICO]: ¡DATABASE_URL NO FUE ENCONTRADA EN LAS VARIABLES DE ENTORNO!")
+print("=====================================================")
+
+
+# Configurar la IA de Google globalmente
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
+    print(">>> [main.py] IA de Google configurada.!!!")
+else:
+    print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
+
+# --- INICIO DE LA NUEVA LÓGICA ---
 ID_DE_LA_CAMPAÑA_ACTUAL = 1 
-descripcion_de_la_campana = "Soy un asistente virtual genérico."
+descripcion_de_la_campana = "Soy un asistente virtual genérico, hubo un error al cargar la descripción."
 try:
+    print(f">>> [main.py] Buscando descripción para la campaña ID: {ID_DE_LA_CAMPAÑA_ACTUAL}...")
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
     cur.execute("SELECT descripcion_producto FROM campanas WHERE id = %s", (ID_DE_LA_CAMPAÑA_ACTUAL,))
     result = cur.fetchone()
     if result and result[0]:
         descripcion_de_la_campana = result[0]
+        print(">>> [DIAGNÓSTICO] ¡ÉXITO! Se encontró la descripción en Supabase.")
+    else:
+        print("!!! ERROR [DIAGNÓSTICO]: La conexión a Supabase funcionó, PERO NO SE ENCONTRÓ la campaña con ID 1.")
     cur.close()
     conn.close()
-except Exception:
-    pass 
+except Exception as e:
+    print(f"!!! ERROR FATAL [DIAGNÓSTICO]: ¡LA CONEXIÓN A SUPABASE FALLÓ! El error fue:")
+    print(e)
 dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
+if dashboard_brain:
+    print(">>> [main.py] Cerebro con personalidad de campaña inicializado.")
+else:
+    print("!!! ERROR [main.py]: El cerebro no pudo ser inicializado.")
 
+# --- CONFIGURACIÓN DE IDIOMA ---
 def get_locale():
+    if not request.accept_languages:
+        return 'es'
     return request.accept_languages.best_match(['en', 'es'])
-
 babel = Babel(app, locale_selector=get_locale)
-
-@app.context_processor
-def inject_global_funcs():
-    return dict(get_locale=get_locale, _=gettext)
-
+app.jinja_env.globals.update(get_locale=get_locale)
 
 # --- RUTAS DE LA APLICACIÓN ---
-
 @app.route('/')
-def index():
+def dashboard():
     return render_template('dashboard.html')
-
-@app.route('/dashboard')
-def dashboard_page():
-    return render_template('dashboard.html')
-
-@app.route('/generar-nido')
-def generar_nido_page():
-    return render_template('nido_template.html')
-
-# ======================= LA SOLUCIÓN DEFINITIVA =======================
-# RUTA PARA LA PÁGINA DE CHAT INTERACTIVO (AHORA SIMPLIFICADA)
-@app.route('/pre-nido')
-def pre_nido_page():
-    # Simplemente muestra el archivo HTML. No necesita nada más.
-    return render_template('persuador/pre_nido.html')
-
-# NUEVA RUTA ESPECIAL PARA SERVIR CSS Y JS DESDE LA CARPETA 'persuador'
-@app.route('/persuador/<path:filename>')
-def serve_persuador_files(filename):
-    # Esta función intercepta cualquier petición a /persuador/...
-    # y sirve el archivo correspondiente desde el directorio 'persuador'.
-    return send_from_directory('persuador', filename)
-# =====================================================================
-
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    # ... código intacto ...
-    if not dashboard_brain: return jsonify({"error": "Chat no disponible."}), 500
+    if not dashboard_brain:
+        return jsonify({"error": "El servicio de chat no está disponible."}), 500
     user_message = request.json.get('message')
-    if not user_message: return jsonify({"error": "No hay mensaje."}), 400
+    if not user_message:
+        return jsonify({"error": "No se recibió ningún mensaje en la solicitud."}), 400
     try:
         response_text = dashboard_brain.invoke({"question": user_message})
         return jsonify({"response": response_text})
-    except Exception as e: return jsonify({"error": "Ocurrió un error."}), 500
-
-@app.route('/lanzar-campana', methods=['POST'])
-def lanzar_campana():
-    # ... código intacto ...
-    print("\n>>> [RUTA /lanzar-campana] ¡Orden recibida del Dashboard!")
-    orden_del_cliente = request.get_json()
-    if not orden_del_cliente:
-        return jsonify({"error": "No se recibieron datos de la campaña."}), 400
-    conn = None
-    try:
-        print(">>> [RUTA /lanzar-campana] Dejando la orden en la 'cola_de_trabajos'...")
-        conn = psycopg2.connect(DATABASE_URL)
-        cur = conn.cursor()
-        sql_insert = "INSERT INTO cola_de_trabajos (tipo_trabajo, datos_json) VALUES (%s, %s);"
-        datos_como_texto_json = json.dumps(orden_del_cliente)
-        cur.execute(sql_insert, ('cazar_prospectos', datos_como_texto_json))
-        conn.commit()
-        print(">>> [RUTA /lanzar-campana] ¡Orden dejada en el buzón con éxito!")
-        return jsonify({"message": "¡Campaña recibida! Hemos empezado a trabajar en ello. Te notificaremos cuando los prospectos estén listos."})
     except Exception as e:
-        print(f"!!! ERROR FATAL en /lanzar-campana: {e}")
-        return jsonify({"error": f"Ocurrió un error en el servidor al encolar el trabajo: {e}"}), 500
-    finally:
-        if conn:
-            conn.close()
+        return jsonify({"error": "Ocurrió un error inesperado al procesar el mensaje."}), 500
 
-# --- BLOQUE DE ARRANQUE (INTACTO) ---
+# --- RUTAS ACTUALIZADAS DEL "PERSUASOR" ---
+@app.route('/pre-nido/<uuid:id_unico>')
+def mostrar_pre_nido(id_unico):
+    nombre_del_negocio_prospecto = "Ferretería El Tornillo Feliz"
+    textos_para_la_pagina = { "titulo_valor": f"Una Oportunidad Única para {nombre_del_negocio_prospecto}", "texto_valor": "Hemos identificado áreas clave...", "h2_siguiente_nivel": "Lleva tu Negocio al Siguiente Nivel", "p1_diagnostico": "Basado en nuestro análisis...", "p2_gratis": "Este diagnóstico es gratis...", "placeholder_email": "Escribe tu correo...", "texto_boton": "¡Quiero mi Diagnóstico!" }
+    return render_template('persuador/persuasor.html', 
+                           prospecto_id=str(id_unico), 
+                           nombre_negocio=nombre_del_negocio_prospecto,
+                           textos=textos_para_la_pagina)
+
+@app.route('/generar-nido', methods=['POST'])
+def generar_nido_y_enviar_enlace():
+    datos_para_el_nido = { "nombre_negocio": "Ferretería El Tornillo Feliz", "titulo_personalizado": "Tu Nuevo Vendedor Estrella Trabaja 24/7", "texto_diagnostico": "Hemos notado que...", "ejemplo_pregunta_1": "¿Tienen tornillos...?", "ejemplo_respuesta_1": "¡Claro que sí!...", "ejemplo_pregunta_2": "¿Y hasta qué hora...?", "ejemplo_respuesta_2": "Los sábados...", "texto_contenido_de_valor": "Además de responder..." }
+    return render_template('nido_template.html', **datos_para_el_nido)
+
+# --- RUTAS DE PRUEBA ACTUALIZADAS ---
+@app.route('/ver-pre-nido')
+def ver_pre_nido():
+    id_unico_de_prueba = "11111111-1111-1111-1111-111111111111"
+    nombre_del_negocio_prospecto = "Negocio de Prueba"
+    textos_para_la_pagina = { "titulo_valor": f"Oportunidad para {nombre_del_negocio_prospecto}", "texto_valor": "...", "h2_siguiente_nivel": "...", "p1_diagnostico": "...", "p2_gratis": "...", "placeholder_email": "...", "texto_boton": "Obtener" }
+    return render_template('persuador/persuasor.html', 
+                           prospecto_id=id_unico_de_prueba, 
+                           nombre_negocio=nombre_del_negocio_prospecto,
+                           textos=textos_para_la_pagina)
+
+@app.route('/ver-nido')
+def ver_nido():
+    datos_para_el_nido = { "nombre_negocio": "Negocio de Prueba", "titulo_personalizado": "...", "texto_diagnostico": "...", "ejemplo_pregunta_1": "...", "ejemplo_respuesta_1": "...", "ejemplo_pregunta_2": "...", "ejemplo_respuesta_2": "...", "texto_contenido_de_valor": "..." }
+    return render_template('nido_template.html')
+
+# --- BLOQUE DE ARRANQUE ---
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     app.run(host='0.0.0.0', port=port)
