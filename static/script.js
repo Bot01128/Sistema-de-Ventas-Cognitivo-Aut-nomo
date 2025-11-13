@@ -1,28 +1,36 @@
-// Espera a que todo el contenido del HTML se cargue antes de ejecutar el script.
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- MANEJO DE LAS PESTAÑAS DEL DASHBOARD ---
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    // Función para mostrar la pestaña activa y ocultar las demás
+    const switchTab = (activeButton) => {
+        const tabId = activeButton.getAttribute('data-tab');
+        const activeTabContent = document.getElementById(tabId);
+
+        // Oculta todos los contenidos
+        tabContents.forEach(content => content.style.display = 'none');
+        // Muestra solo el activo
+        if (activeTabContent) {
+            activeTabContent.style.display = 'block';
+        }
+
+        // Actualiza el estado visual de los botones
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        activeButton.classList.add('active');
+    };
+
+    // Añade el evento click a cada botón
     tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // Quita la clase 'active' de todos los botones
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            // Añade 'active' solo al botón clickeado
-            button.classList.add('active');
-
-            // Oculta todo el contenido
-            tabContents.forEach(content => content.style.display = 'none');
-
-            // Muestra solo el contenido asociado al botón clickeado
-            const tabId = button.getAttribute('data-tab');
-            const activeTabContent = document.getElementById(tabId);
-            if (activeTabContent) {
-                activeTabContent.style.display = 'block';
-            }
-        });
+        button.addEventListener('click', () => switchTab(button));
     });
+
+    // Asegura que al cargar la página, solo se vea el contenido de la pestaña activa
+    const initialActiveButton = document.querySelector('.tab-button.active');
+    if (initialActiveButton) {
+        switchTab(initialActiveButton);
+    }
 
     // --- MANEJO DEL CHAT DE LA IA ---
     const chatForm = document.getElementById('chat-form');
@@ -35,12 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const userMessage = userInput.value.trim();
             if (!userMessage) return;
 
-            // Muestra el mensaje del usuario
             appendMessage(userMessage, 'user');
             userInput.value = '';
 
             try {
-                // Envía el mensaje al servidor
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -50,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!response.ok) throw new Error('Server response not ok');
                 
                 const data = await response.json();
-                // Muestra la respuesta del bot
                 appendMessage(data.response, 'assistant');
 
             } catch (error) {
@@ -64,16 +69,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const messageElement = document.createElement('p');
         messageElement.classList.add(type === 'user' ? 'msg-user' : 'msg-assistant');
         messageElement.innerText = message;
-        chatMessages.appendChild(messageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        if(chatMessages) {
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
     }
 
     // --- LÓGICA DEL FORMULARIO DE CAMPAÑA (INTACTA) ---
-    // (Aquí va toda la lógica de los planes, cálculo de costos, etc. Se queda igual)
     const phoneInput = document.querySelector("#numero_whatsapp");
     if (phoneInput) {
         window.intlTelInput(phoneInput, { utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js" });
     }
     
-    // (El resto de tu lógica de formulario se mantiene)
+    // (Aquí iría el resto de la lógica de tu formulario si la tienes en este archivo)
+
 });
