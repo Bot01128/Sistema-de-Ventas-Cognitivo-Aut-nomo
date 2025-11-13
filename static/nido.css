@@ -107,11 +107,16 @@ h1, h2 {
     background-color: #481fb9;
 }
 
-/* --- ESTILOS PARA LA NUEVA SECCIÓN DE PROPAGANDA --- */
+/* --- ESTILOS PARA LA SECCIÓN DE PROPAGANDA (AJUSTADOS POR DISEÑO) --- */
 .autoneura-promo-section {
-    text-align: center; 
-    padding-top: 20px; 
-    border-bottom: none; 
+    text-align: center;
+    
+    /* Cambios para mejorar la separación visual y el contraste espacial */
+    padding-top: 40px;      /* Aumentamos el espacio interno superior */
+    margin-top: 40px;       /* Añadimos margen para empujar la sección hacia abajo */
+    border-top: 1px solid #eee; /* Añadimos la línea divisoria sutil */
+
+    border-bottom: none;    /* Mantenemos esta regla para que no tenga doble borde */
 }
 .autoneura-promo-section h2 {
     font-size: 1.8em; 
