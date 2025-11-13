@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- TEXTO MARCADO PARA TRADUCCIÓN -->
+    <title>{{ _('Análisis de Oportunidad para tu Negocio') }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='persuasor.css') }}">
+</head>
+<body>
+    <div class="container">
+        
+        <div class="header-section">
+            <!-- TEXTO MARCADO PARA TRADUCCIÓN -->
+            <h1>{{ _('Hemos Encontrado una Oportunidad de Crecimiento para Ti') }}</h1>
+            <!-- TEXTO MARCADO PARA TRADUCCIÓN -->
+            <p class="subtitle">{{ _('Nuestro sistema de IA, AutoNeura, ha realizado un análisis preliminar de tu presencia online y ha identificado un área clave para potenciar tu comunicación y tus ventas.') }}</p>
+        </div>
+        
+        <hr>
+        
+        <!-- TEXTO MARCADO PARA TRADUCCIÓN -->
+        <h2>{{ _('El Siguiente Nivel: Un Diagnóstico Personalizado') }}</h2>
+        <!-- TEXTO MARCADO PARA TRADUCCIÓN -->
+        <p>{{ _('En el mercado actual, cada cliente no atendido es una venta perdida. Hemos notado patrones en las consultas de tus potenciales clientes que indican un interés inmediato.') }} <strong>{{ _('AutoNeura puede capturar ese interés y convertirlo en ventas 24/7.') }}</strong></p>
+        <!-- TEXTO MARCADO PARA TRADUCCIÓN -->
+        <p>{{ _('Te ofrecemos un análisis detallado y una demostración interactiva, sin costo alguno. Este es un servicio de consultoría valorado en $250, completamente gratis para ti. Solo necesitamos tu correo electrónico para enviarte el acceso a tu "Nido" de ventas personalizado.') }}</p>
+        
+        <form id="nido-form" action="/generar-nido" method="post">
+            <input type="hidden" name="prospecto_id_oculto" value="ID_DEL_PROSPECTO_AQUI">
+            <!-- TEXTO MARCADO PARA TRADUCCIÓN (en el placeholder) -->
+            <input type="email" name="email_prospecto" placeholder="{{ _('Introduce tu mejor correo electrónico') }}" required>
+            <!-- TEXTO MARCADO PARA TRADUCCIÓN -->
+            <button type="submit" class="btn-3d">{{ _('Sí, ¡Quiero mi Análisis Gratis!') }}</button>
+        </form>
+
+        <!-- =============== SECCIÓN DE PROPAGANDA MARCADA PARA TRADUCCIÓN =============== -->
+        <div class="autoneura-promo-section">
+            <hr class="promo-divider">
+            <!-- TEXTO MARCADO PARA TRADUCCIÓN -->
+            <h3>{{ _('¿Cansado de perder clientes potenciales?') }}</h3>
+            <!-- TEXTO MARCADO PARA TRADUCCIÓN -->
+            <p>{{ _('Potencia tus propias ventas con Inteligencia Artificial. AutoNeura crea asistentes virtuales que convierten 24/7, los 365 días del año.') }}</p>
+            <!-- TEXTO MARCADO PARA TRADUCCIÓN -->
+            <a href="/" class="btn-3d btn-promo">{{ _('Crear campaña con Inteligencia Artificial AutoNeura') }}</a>
+        </div>
+
+    </div>
+    <script src="{{ url_for('static', filename='persuasor.js') }}"></script>
+</body>
+</html>
