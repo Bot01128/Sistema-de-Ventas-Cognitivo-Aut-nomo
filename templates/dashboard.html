@@ -36,31 +36,17 @@
             </div>
         </div>
         <div class="right-panel">
+            <!-- === INICIO DEL CAMBIO === -->
             <div class="tab-nav">
-                <button class="tab-button active" data-tab="my-campaigns">{{ _('Mis Campañas') }}</button>
-                <button class="tab-button" data-tab="campaign">{{ _('Crear Campaña') }}</button>
-                <button class="tab-button" data-tab="suggestions">{{ _('Tus Sugerencias') }}</button>
+                <!-- Se eliminaron "Mis Campañas" y "Tus Sugerencias" -->
+                <button class="tab-button active" data-tab="campaign">{{ _('Crear Campaña') }}</button>
                 <button class="tab-button" data-tab="billing">{{ _('Facturación') }}</button>
             </div>
-            <div class="tab-content" id="my-campaigns">
-                <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
-                <table class="campaign-table">
-                    <thead>
-                        <tr>
-                            <th>{{ _('Nombre de la Campaña') }}</th>
-                            <th>{{ _('Fecha') }}</th>
-                            <th>{{ _('Estado') }}</th>
-                            <th>{{ _('Prospectos Encontrados') }}</th>
-                            <th>{{ _('Leads Calificados') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Búsqueda de Spas en Medellín</td><td>13/10/2025</td><td>Completada ✅</td><td>152</td><td>89</td></tr>
-                        <tr><td>Restaurantes Italianos (Miami)</td><td>12/10/2025</td><td>Analizando ⚙️</td><td>100</td><td>45</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="tab-content" id="campaign" style="display:none;">
+
+            <!-- La sección "Mis Campañas" fue eliminada -->
+
+            <!-- La sección "Crear Campaña" ahora es la visible por defecto -->
+            <div class="tab-content" id="campaign">
                 <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
                 <div class="form-section">
                     <label>{{ _('1. Selecciona un Plan') }}</label>
@@ -98,21 +84,15 @@
                 </div>
                 <button id="lancam" class="cta-button">{{ _('Lanzar Campaña') }}</button>
             </div>
-            <div class="tab-content" id="suggestions" style="display:none;">
-                <h2>Tú eres el Arquitecto de Nuestro Futuro</h2>
-                <p style="font-size: 16px; line-height: 1.6; color: #495057;">En AutoNeura, no creemos en construir solos. Creemos que las mejores ideas nacen de la experiencia diaria de visionarios como tú. Tu voz no es solo feedback, es la brújula que guía nuestra innovación.</p>
-                <p style="font-size: 16px; line-height: 1.6; color: #495057;">¿Qué funcionalidad revolucionaría tu trabajo? ¿Qué pequeño ajuste haría tu día a día más fácil? No hay ideas pequeñas ni sugerencias irrelevantes. Cada palabra que escribas aquí será leída directamente por nuestro equipo de desarrollo. Ayúdanos a construir la herramienta que siempre soñaste.</p>
-                <div class="form-section">
-                    <label for="suggestion-text" style="margin-top: 20px;">Mi idea para AutoNeura es...</label>
-                    <textarea id="suggestion-text" placeholder="Describe aquí esa función increíble o esa mejora que tienes en mente..." style="height: 200px;"></textarea>
-                </div>
-                <button id="send-suggestion-btn" class="cta-button">Enviar mi Sugerencia</button>
-            </div>
+
+            <!-- La sección "Sugerencias" fue eliminada -->
+
             <div class="tab-content" id="billing" style="display:none;">
                 <h2>{{ _('Mi Saldo y Facturación') }}</h2>
                 <p>Saldo Actual: <strong>$0.00</strong></p>
                 <button class="cta-button" style="background-color:#007bff;">{{ _('+ Recargar Saldo') }}</button>
             </div>
+            <!-- === FIN DEL CAMBIO === -->
         </div>
     </div>
   
