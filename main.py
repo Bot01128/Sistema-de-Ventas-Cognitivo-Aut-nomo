@@ -1,93 +1,119 @@
-<!DOCTYPE html>
-<html lang="{{ get_locale() }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ _('AutoNeura AI - Dashboard') }}</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="top-bar">
-        <div class="logo"><h2>AutoNeura AI</h2></div>
-        <div class="user-info">
-            <span><strong>{{ _('Saldo:') }}</strong> $0.00</span>
-            <button class="recharge-btn">{{ _('+ Recargar Saldo') }}</button>
-        </div>
-    </div>
-    <div class="container">
-        <div class="left-panel">
-            <div class="chat-header">
-                <h2>Inteligencia Artificial AutoNeura</h2>
-            </div>
-            <div class="chat-window">
-                <div class="chat-messages" id="chat-messages">
-                    <p class="msg-assistant">{{ _("¡Hola! Soy la Inteligencia Artificial AutoNeura, Estoy exclusivamente para generar ventas a través de todos los medios por internet y trabajo 24/7 los 365 días del año nunca descanso busco analizo y proceso seguimientos a los prospectos de clientes de tus productos. No tendrás gastos por procesos si no por resultados, no pagas los miles de Prospectos que nosotros buscaremos en redes sociales como Facebook, Instagram, TIKTOK, X, etc. Como sucede con otros ADS que cobran por interacciones como: Clics, impresiones o vistas, no por ventas directas ni resultados garantizados. Te garantizo que soy tu mejor socio estratégico de Inteligencia Artificial aunque tú te quedes con toda la ganancia y yo me quedare con la satisfacción de haberte ayudado. Mi misión es simple: Te Conseguiré clientes utilizando técnicas Psicológicas y de Marketing que superan a todos los humanos juntos para encontrar prospectos, contactarlos, hacerle seguimientos hasta que le den comprar. Mi trabajo es tan efectivo que si, después de mi seguimiento avanzado, ningún prospecto hace clic en tu botón de compra: te daré un mes de mi servicio completamente gratis.") }}</p>
-                    <p class="msg-assistant">{{ _("¿Tienes alguna pregunta?") }}</p>
-                </div>
-                <form id="chat-form" class="chat-input">
-                    <input type="text" id="user-input" placeholder="{{ _('Escribe tu pregunta...') }}">
-                    <button id="send-btn" type="submit">{{ _('Enviar') }}</button>
-                </form>
-            </div>
-        </div>
-        <div class="right-panel">
-            <div class="tab-nav">
-                <button class="tab-button active" data-tab="campaign">{{ _('Crear Campaña') }}</button>
-                <button class="tab-button" data-tab="billing">{{ _('Facturación') }}</button>
-            </div>
+import os
+import psycopg2
+import json
+import google.generativeai as genai
+import uuid
+from flask import Flask, render_template, request, jsonify
+from flask_babel import Babel
+from cerebro_dashboard import create_chatbot
 
-            <!-- Contenido de Crear Campaña (COMPLETO Y RESTAURADO) -->
-            <div class="tab-content" id="campaign" style="display: block;">
-                <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
-                <div class="form-section">
-                    <label>{{ _('1. Selecciona un Plan') }}</label>
-                    <div class="plans-container">
-                        <div class="plan-card" data-plan="arrancador"><h4>{{ _('El Arrancador') }}</h4><div class="price">$149<span>/mes</span></div><small>4 prospectos/día</small></div>
-                        <div class="plan-card" data-plan="profesional"><h4>{{ _('El Profesional') }}</h4><div class="price">$399<span>/mes</span></div><small>15 prospectos/día</small></div>
-                        <div class="plan-card" data-plan="dominador"><h4>{{ _('El Dominador') }}</h4><div class="price">$999<span>/mes</span></div><small>50 prospectos/día</small></div>
-                    </div>
-                </div>
-                <div class="form-section">
-                    <label for="prospects-per-day">{{ _('2. O personaliza la cantidad de Prospectos por Día') }}</label>
-                    <input type="number" id="prospects-per-day" value="4" min="4">
-                </div>
-                <div class="form-section">
-                    <label>{{ _('3. Define tu Campaña') }}</label>
-                    <label for="nombre_campana" style="margin-top:10px;">{{ _('Nombre de la Campaña') }}</label>
-                    <input type="text" id="nombre_campana" placeholder="{{ _('Ej: Búsqueda de Restaurantes en Miami') }}">
-                    <label for="que_vendes" style="margin-top:15px;">{{ _('¿Qué vendes?') }}</label>
-                    <input type="text" id="que_vendes" placeholder="{{ _('Ej: Software para restaurantes') }}">
-                    <label for="a_quien_va_dirigido" style="margin-top: 15px;">{{ _('¿A quién va dirigido?') }}</label>
-                    <input type="text" id="a_quien_va_dirigido" placeholder="{{ _('Ej: Restaurantes italianos, Ferreterías') }}">
-                </div>
-                <div class="form-section">
-                    <label>{{ _('4. Describe tu Producto y Contacto') }}</label>
-                    <div class="form-section" style="margin-top:15px;"><label>{{ _('Tipo de Producto') }}</label><div class="checkbox-group"><input type="checkbox" id="tipo_producto_tangible" name="tipo_producto"><label for="tipo_producto_tangible">{{ _('Tangible') }}</label></div><div class="checkbox-group"><input type="checkbox" id="tipo_producto_intangible" name="tipo_producto"><label for="tipo_producto_intangible">{{ _('Intangible') }}</label></div></div>
-                    <div class="form-section"><label for="descripcion_producto">{{ _('Descripción del Producto/Servicio') }}</label><textarea id="descripcion_producto" maxlength="25000" placeholder="{{ _('Describe qué vendes...') }}"></textarea></div>
-                    <div class="form-section"><label for="numero_whatsapp">{{ _('Número de WhatsApp') }}</label><input type="tel" id="numero_whatsapp"></div>
-                    <div class="form-section"><label for="enlace_venta">{{ _('Enlace de Venta') }}</label><input type="text" id="enlace_venta"></div>
-                </div>
-                <div class="form-section" style="background-color: #e9ecef; padding: 20px; border-radius: 8px;">
-                    <h4>{{ _('Resumen Final') }}</h4>
-                    <p>Plan Seleccionado: <strong id="selected-plan">El Arrancador</strong></p>
-                    <p>Prospectos por día: <strong id="daily-prospects">4</strong></p>
-                    <p>Costo Mensual Final: <strong id="total-cost">$149.00</strong></p>
-                </div>
-                <button id="lancam" class="cta-button">{{ _('Lanzar Campaña') }}</button>
-            </div>
+# --- CONFIGURACIÓN INICIAL ---
+app = Flask(__name__)
 
-            <!-- Contenido de Facturación -->
-            <div class="tab-content" id="billing" style="display: none;">
-                <h2>{{ _('Mi Saldo y Facturación') }}</h2>
-                <p>Saldo Actual: <strong>$0.00</strong></p>
-                <!-- BOTÓN CORREGIDO CON LA NUEVA CLASE -->
-                <button class="cta-button btn-blue-3d">{{ _('+ Recargar Saldo') }}</button>
-            </div>
-        </div>
-    </div>
-  
-   <script src="{{ url_for('static', filename='script.js') }}"></script>
-</body>
-</html>
+# --- BLOQUE DE CONFIGURACIÓN DE IDIOMAS ---
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.join(basedir, 'translations')
+
+def get_locale():
+    if not request.accept_languages:
+        return 'es'
+    return request.accept_languages.best_match(['en', 'es'])
+
+babel = Babel(app, locale_selector=get_locale)
+
+@app.context_processor
+def inject_get_locale():
+    return dict(get_locale=get_locale)
+
+# --- INICIALIZACIÓN DE LA APLICACIÓN Y BASE DE DATOS ---
+DATABASE_URL = os.environ.get("DATABASE_URL")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+
+print("=====================================================")
+print(">>> [DIAGNÓSTICO] INICIANDO APLICACIÓN...")
+if DATABASE_URL:
+    print(">>> [DIAGNÓSTICO] DATABASE_URL encontrada. Comienza con:", DATABASE_URL[:30])
+else:
+    print("!!! ERROR [DIAGNÓSTICO]: ¡DATABASE_URL NO FUE ENCONTRADA EN LAS VARIABLES DE ENTORNO!")
+print("=====================================================")
+if GOOGLE_API_KEY:
+    genai.configure(api_key=GOOGLE_API_KEY)
+    print(">>> [main.py] IA de Google configurada.!!!")
+else:
+    print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
+
+ID_DE_LA_CAMPAÑA_ACTUAL = 1
+descripcion_de_la_campana = "Soy un asistente virtual genérico, hubo un error al cargar la descripción."
+try:
+    print(f">>> [main.py] Buscando descripción para la campaña ID: {ID_DE_LA_CAMPAÑA_ACTUAL}...")
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("SELECT descripcion_producto FROM campanas WHERE id = %s", (ID_DE_LA_CAMPAÑA_ACTUAL,))
+    result = cur.fetchone()
+    if result and result[0]:
+        descripcion_de_la_campana = result[0]
+        print(">>> [DIAGNÓSTICO] ¡ÉXITO! Se encontró la descripción en Supabase.")
+    else:
+        print("!!! ERROR [DIAGNÓSTICO]: La conexión a Supabase funcionó, PERO NO SE ENCONTRÓ la campaña con ID 1.")
+    cur.close()
+    conn.close()
+except Exception as e:
+    print(f"!!! ERROR FATAL [DIAGNÓSTICO]: ¡LA CONEXIÓN A SUPABASE FALLÓ! El error fue:")
+    print(e)
+
+dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
+if dashboard_brain:
+    print(">>> [main.py] Cerebro con personalidad de campaña inicializado.")
+else:
+    print("!!! ERROR [main.py]: El cerebro no pudo ser inicializado.")
+
+# --- RUTAS DE LA APLICACIÓN ---
+@app.route('/')
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    if not dashboard_brain:
+        return jsonify({"error": "Chat no disponible."}), 500
+    user_message = request.json.get('message')
+    if not user_message:
+        return jsonify({"error": "No hay mensaje."}), 400
+    try:
+        response_text = dashboard_brain.invoke({"question": user_message})
+        return jsonify({"response": response_text})
+    except Exception as e:
+        return jsonify({"error": "Ocurrió un error."}), 500
+
+# --- RUTAS DEL PERSUASOR ---
+@app.route('/pre-nido/<uuid:id_unico>')
+def mostrar_pre_nido(id_unico):
+    nombre_negocio_db = "Empresa Real"
+    textos_db = {}
+    return render_template('persuasor.html',
+                           prospecto_id=str(id_unico),
+                           nombre_negocio=nombre_negocio_db,
+                           textos=textos_db)
+
+@app.route('/generar-nido', methods=['POST'])
+def generar_nido_y_enviar_enlace():
+    return render_template('nido_template.html')
+
+# --- RUTAS DE PRUEBA ---
+@app.route('/ver-pre-nido')
+def ver_pre_nido():
+    id_de_prueba = str(uuid.uuid4())
+    nombre_de_prueba = "Ferretería El Tornillo Feliz (Prueba)"
+    return render_template('persuasor.html',
+                           prospecto_id=id_de_prueba,
+                           nombre_negocio=nombre_de_prueba,
+                           textos={})
+
+@app.route('/ver-nido')
+def ver_nido():
+    return render_template('nido_template.html')
+
+# --- BLOQUE DE ARRANQUE ---
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)
