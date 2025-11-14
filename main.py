@@ -10,31 +10,22 @@ from cerebro_dashboard import create_chatbot
 # --- CONFIGURACIÓN INICIAL ---
 app = Flask(__name__)
 
-# --- BLOQUE DE CONFIGURACIÓN DE IDIOMAS (TU VERSIÓN MEJORADA Y CORRECTA) ---
-
-# 1. Obtenemos la ruta absoluta al directorio del proyecto.
+# --- BLOQUE DE CONFIGURACIÓN DE IDIOMAS ---
 basedir = os.path.abspath(os.path.dirname(__file__))
-# 2. Le indicamos a Babel dónde encontrar las traducciones.
 app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.join(basedir, 'translations')
 
-# 3. Función para detectar el mejor idioma del navegador del usuario.
 def get_locale():
-    # Si no se detecta idioma, se usa 'es' por defecto.
     if not request.accept_languages:
         return 'es'
     return request.accept_languages.best_match(['en', 'es'])
 
-# 4. Inicializamos Babel con nuestra función detectora.
 babel = Babel(app, locale_selector=get_locale)
 
-# 5. Este es el método profesional para hacer la función 'get_locale'
-#    accesible en todos tus archivos HTML (templates).
 @app.context_processor
 def inject_get_locale():
     return dict(get_locale=get_locale)
 
 # --- INICIALIZACIÓN DE LA APLICACIÓN Y BASE DE DATOS ---
-
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
@@ -77,7 +68,6 @@ else:
     print("!!! ERROR [main.py]: El cerebro no pudo ser inicializado.")
 
 # --- RUTAS DE LA APLICACIÓN ---
-
 @app.route('/')
 def dashboard():
     return render_template('dashboard.html')
@@ -95,8 +85,7 @@ def chat():
     except Exception as e:
         return jsonify({"error": "Ocurrió un error."}), 500
 
-# --- RUTAS DEL PERSUASOR (CON LAS RUTAS A TEMPLATES CORRECTAS) ---
-
+# --- RUTAS DEL PERSUASOR ---
 @app.route('/pre-nido/<uuid:id_unico>')
 def mostrar_pre_nido(id_unico):
     nombre_negocio_db = "Empresa Real"
@@ -110,8 +99,7 @@ def mostrar_pre_nido(id_unico):
 def generar_nido_y_enviar_enlace():
     return render_template('nido_template.html')
 
-# --- RUTAS DE PRUEBA (CON LAS RUTAS A TEMPLATES CORRECTAS) ---
-
+# --- RUTAS DE PRUEBA ---
 @app.route('/ver-pre-nido')
 def ver_pre_nido():
     id_de_prueba = str(uuid.uuid4())
@@ -126,7 +114,6 @@ def ver_nido():
     return render_template('nido_template.html')
 
 # --- BLOQUE DE ARRANQUE ---
-
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     app.run(host='0.0.0.0', port=port)
