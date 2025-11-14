@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ _('AutoNeura AI - Portal de Cliente') }}</title>
-    <!-- CONEXIÓN A LIBRERÍA DE TELÉFONO -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
-    <!-- CONEXIÓN AL NUEVO ARCHIVO CSS DEL CLIENTE -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='client_style.css') }}">
+    <!-- CONEXIÓN AL CSS FUNCIONAL -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="top-bar">
@@ -25,10 +24,8 @@
             </div>
             <div class="chat-window">
                 <div class="chat-messages" id="chat-messages">
-                    <!-- === INICIO DEL CAMBIO 1: TEXTO COMPLETO DE LA IA RESTAURADO === -->
-                    <p class="msg-assistant">{{ _("¡Hola! Soy la Inteligencia Artificial AutoNeura, Estoy exclusivamente para generar ventas a través de todos los medios por internet y trabajo 24/7 los 365 días del año nunca descanso busco analizo y proceso seguimientos a los prospectos de clientes de tus productos. No tendrás gastos por procesos si no por resultados, no pagas los miles de Prospectos que nosotros buscaremos en redes sociales como Facebook, Instagram, TIKTOK, X, etc. Como sucede con otros ADS que cobran por interacciones como: Clics, impresiones o vistas, no por ventas directas ni resultados garantizados. Te garantizo que soy tu mejor socio estratégico de Inteligencia Artificial aunque tú te quedes con toda la ganancia y yo me quedare con la satisfacción de haberte ayudado. Mi misión es simple: Te Conseguiré clientes utilizando técnicas Psicológicas y de Marketing que superan a todos los humanos juntos para encontrar prospectos, contactarlos, hacerle seguimientos hasta que le den comprar. Mi trabajo es tan efectivo que si, después de mi seguimiento avanzado, ningún prospecto hace clic en tu botón de compra: te daré un mes de mi servicio completamente gratis.") }}</p>
+                    <p class="msg-assistant">{{ _("¡Hola! Soy la Inteligencia Artificial AutoNeura...") }}</p>
                     <p class="msg-assistant">{{ _("¿Tienes alguna pregunta?") }}</p>
-                    <!-- === FIN DEL CAMBIO 1 === -->
                 </div>
                 <form id="chat-form" class="chat-input">
                     <input type="text" id="user-input" placeholder="{{ _('Escribe tu pregunta...') }}">
@@ -46,27 +43,18 @@
                 <button class="tab-button" data-tab="suggestions">{{ _('Tus Sugerencias') }}</button>
             </div>
 
-            <!-- 1. MIS CAMPAÑAS (INTACTO) -->
             <div class="tab-content" id="my-campaigns" style="display: block;">
                 <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
                 <table class="campaign-table">
                     <thead>
-                        <tr>
-                            <th>{{ _('Nombre de la Campaña') }}</th>
-                            <th>{{ _('Fecha') }}</th>
-                            <th>{{ _('Estado') }}</th>
-                            <th>{{ _('Prospectos Encontrados') }}</th>
-                            <th>{{ _('Leads Calificados') }}</th>
-                        </tr>
+                        <tr><th>...</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>Búsqueda de Spas en Medellín</td><td>13/10/2025</td><td>Completada ✅</td><td>152</td><td>89</td></tr>
-                        <tr><td>Restaurantes Italianos (Miami)</td><td>12/10/2025</td><td>Analizando ⚙️</td><td>100</td><td>45</td></tr>
+                        <tr><td>...</td></tr>
                     </tbody>
                 </table>
             </div>
 
-            <!-- === INICIO DEL CAMBIO 2: FORMULARIO COMPLETO AÑADIDO A "CREAR CAMPAÑA" === -->
             <div class="tab-content" id="create-campaign" style="display: none;">
                 <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
                 <div class="form-section">
@@ -83,80 +71,37 @@
                 </div>
                 <div class="form-section">
                     <label>{{ _('3. Define tu Campaña') }}</label>
-                    <label for="nombre_campana" style="margin-top:10px;">{{ _('Nombre de la Campaña') }}</label>
-                    <input type="text" id="nombre_campana" placeholder="{{ _('Ej: Búsqueda de Restaurantes en Miami') }}">
-                    <label for="que_vendes" style="margin-top:15px;">{{ _('¿Qué vendes?') }}</label>
-                    <input type="text" id="que_vendes" placeholder="{{ _('Ej: Software para restaurantes') }}">
-                    <label for="a_quien_va_dirigido" style="margin-top: 15px;">{{ _('¿A quién va dirigido?') }}</label>
-                    <input type="text" id="a_quien_va_dirigido" placeholder="{{ _('Ej: Restaurantes italianos, Ferreterías') }}">
+                    <input type="text" id="nombre_campana" placeholder="{{ _('Nombre de la Campaña') }}">
                 </div>
                 <div class="form-section">
                     <label>{{ _('4. Describe tu Producto y Contacto') }}</label>
-                    <div class="form-section" style="margin-top:15px;"><label>{{ _('Tipo de Producto') }}</label><div class="checkbox-group"><input type="checkbox" id="tipo_producto_tangible" name="tipo_producto"><label for="tipo_producto_tangible">{{ _('Tangible') }}</label></div><div class="checkbox-group"><input type="checkbox" id="tipo_producto_intangible" name="tipo_producto"><label for="tipo_producto_intangible">{{ _('Intangible') }}</label></div></div>
-                    <div class="form-section"><label for="descripcion_producto">{{ _('Descripción del Producto/Servicio') }}</label><textarea id="descripcion_producto" maxlength="25000" placeholder="{{ _('Describe qué vendes...') }}"></textarea></div>
-                    <div class="form-section"><label for="numero_whatsapp">{{ _('Número de WhatsApp') }}</label><input type="tel" id="numero_whatsapp"></div>
-                    <div class="form-section"><label for="enlace_venta">{{ _('Enlace de Venta') }}</label><input type="text" id="enlace_venta"></div>
+                    <textarea id="descripcion_producto" placeholder="{{ _('Describe qué vendes...') }}"></textarea>
                 </div>
                 <div id="summary-box" class="form-section summary-box">
                     <h4>{{ _('Resumen Final') }}</h4>
                     <p>Plan Seleccionado: <strong id="selected-plan">El Arrancador</strong></p>
                     <p>Prospectos por día: <strong id="daily-prospects">4</strong></p>
                     <p>Costo Mensual Final: <strong id="total-cost">$149.00</strong></p>
-                    <hr class="summary-divider">
-                    <p>Saldo en tu Cuenta: <strong id="current-balance">$0.00</strong></p>
-                    <p id="recharge-line" class="recharge-needed">Mínimo a Recargar: <strong id="recharge-amount">$149.00</strong></p>
-                    <p id="remaining-line" class="balance-ok" style="display:none;">Saldo Restante: <strong id="remaining-balance">$0.00</strong></p>
                 </div>
-                <div id="action-buttons-container">
-                    <button id="lancam" class="cta-button">{{ _('Lanzar Campaña') }}</button>
-                    <button id="recarga-ya" class="cta-button btn-blue-3d" style="display:none;">Recargar y Continuar</button>
-                </div>
+                <button id="lancam" class="cta-button">{{ _('Lanzar Campaña') }}</button>
             </div>
-            <!-- === FIN DEL CAMBIO 2 === -->
 
-            <!-- 3. FLUJO DE PROSPECTOS (INTACTO) -->
             <div class="tab-content" id="prospect-flow" style="display: none;">
                 <h2>{{ _('Flujo de Prospectos') }}</h2>
-                <div class="flow-container">
-                    <div class="flow-column"><h4>🕵️‍♂️ Cazados</h4><div class="prospect-card">Ferretería Central</div><div class="prospect-card">Tornillos y Más</div></div>
-                    <div class="flow-column"><h4>🔬 En Análisis</h4><div class="prospect-card">Aceros Industriales</div></div>
-                    <div class="flow-column"><h4>🧠 Inteligencia Lista</h4><div class="prospect-card">Depósito El Constructor</div></div>
-                    <div class="flow-column"><h4>🚀 Listo para Contactar</h4><div class="prospect-card">Maquinaria Pesada SAS</div></div>
-                </div>
             </div>
-
-            <!-- 4. CONVERSACIONES (INTACTO) -->
             <div class="tab-content" id="conversations" style="display: none;">
                 <h2>{{ _('Conversaciones') }}</h2>
-                <div class="conversations-container">
-                    <div class="conversations-list">
-                        <div class="chat-item active"><strong>Ferretería El Tornillo Feliz</strong><small>IA: ...perfecto para su proyecto.</small></div>
-                        <div class="chat-item"><strong>Restaurante Luigi's</strong><small>Humano: ¡Claro! Te envío la cotización...</small></div>
-                    </div>
-                    <div class="active-chat">
-                        <div class="chat-header-display"><h4>Ferretería El Tornillo Feliz 🤖</h4></div>
-                        <div class="chat-messages-display"><p class="msg-assistant">Hola, gracias por contactar...</p></div>
-                        <div class="chat-input-area-display"><input type="text" placeholder="Intervenir en la conversación..." disabled><button disabled>Enviar</button></div>
-                    </div>
-                </div>
             </div>
-
-            <!-- 5. FACTURACIÓN (INTACTO) -->
             <div class="tab-content" id="billing" style="display: none;">
                 <h2>{{ _('Mi Saldo y Facturación') }}</h2>
-                <p>Saldo Actual: <strong>$0.00</strong></p>
-                <button class="cta-button btn-blue-3d">{{ _('+ Recargar Saldo') }}</button>
             </div>
-            
-            <!-- 6. TUS SUGERENCIAS (INTACTO) -->
             <div class="tab-content" id="suggestions" style="display: none;">
-                 <h2>Tú eres el Arquitecto de Nuestro Futuro</h2>
-                 <textarea placeholder="Describe aquí esa función increíble..."></textarea>
-                 <button class="cta-button btn-blue-3d">Enviar mi Sugerencia</button>
+                <h2>{{ _('Tus Sugerencias') }}</h2>
             </div>
         </div>
     </div>
   
-   <script src="{{ url_for('static', filename='client_script.js') }}"></script>
+   <!-- CONEXIÓN AL SCRIPT FUNCIONAL -->
+   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
