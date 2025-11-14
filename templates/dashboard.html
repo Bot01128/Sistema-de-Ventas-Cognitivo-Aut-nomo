@@ -38,7 +38,6 @@
                 <button class="tab-button" data-tab="billing">{{ _('Facturación') }}</button>
             </div>
 
-            <!-- Contenido de Crear Campaña (COMPLETO Y RESTAURADO) -->
             <div class="tab-content" id="campaign" style="display: block;">
                 <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
                 <div class="form-section">
@@ -69,20 +68,29 @@
                     <div class="form-section"><label for="numero_whatsapp">{{ _('Número de WhatsApp') }}</label><input type="tel" id="numero_whatsapp"></div>
                     <div class="form-section"><label for="enlace_venta">{{ _('Enlace de Venta') }}</label><input type="text" id="enlace_venta"></div>
                 </div>
-                <div class="form-section" style="background-color: #e9ecef; padding: 20px; border-radius: 8px;">
+
+                <!-- === INICIO DEL CAMBIO HTML === -->
+                <div id="summary-box" class="form-section summary-box">
                     <h4>{{ _('Resumen Final') }}</h4>
                     <p>Plan Seleccionado: <strong id="selected-plan">El Arrancador</strong></p>
                     <p>Prospectos por día: <strong id="daily-prospects">4</strong></p>
                     <p>Costo Mensual Final: <strong id="total-cost">$149.00</strong></p>
+                    <hr class="summary-divider">
+                    <p>Saldo en tu Cuenta: <strong id="current-balance">$0.00</strong></p>
+                    <p id="recharge-line" class="recharge-needed">Mínimo a Recargar: <strong id="recharge-amount">$149.00</strong></p>
+                    <p id="remaining-line" class="balance-ok" style="display:none;">Saldo Restante: <strong id="remaining-balance">$0.00</strong></p>
                 </div>
-                <button id="lancam" class="cta-button">{{ _('Lanzar Campaña') }}</button>
+                <div id="action-buttons-container">
+                    <button id="lancam" class="cta-button">{{ _('Lanzar Campaña') }}</button>
+                    <button id="recarga-ya" class="cta-button btn-blue-3d" style="display:none;">Recargar y Continuar</button>
+                </div>
+                <!-- === FIN DEL CAMBIO HTML === -->
+
             </div>
 
-            <!-- Contenido de Facturación -->
             <div class="tab-content" id="billing" style="display: none;">
                 <h2>{{ _('Mi Saldo y Facturación') }}</h2>
                 <p>Saldo Actual: <strong>$0.00</strong></p>
-                <!-- BOTÓN CORREGIDO CON LA NUEVA CLASE -->
                 <button class="cta-button btn-blue-3d">{{ _('+ Recargar Saldo') }}</button>
             </div>
         </div>
