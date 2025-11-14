@@ -72,6 +72,12 @@ else:
 def dashboard():
     return render_template('dashboard.html')
 
+# === INICIO DEL ÚNICO CAMBIO: NUEVA RUTA ANEXADA ===
+@app.route('/cliente')
+def client_dashboard():
+    return render_template('client_dashboard.html')
+# === FIN DEL ÚNICO CAMBIO ===
+
 @app.route('/chat', methods=['POST'])
 def chat():
     if not dashboard_brain:
