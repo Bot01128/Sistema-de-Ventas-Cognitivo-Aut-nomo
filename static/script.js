@@ -1,140 +1,148 @@
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // --- MÓDULO DE NAVEGACIÓN POR PESTAÑAS ---
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- MANEJO DE PESTAÑAS ---
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
-    
-    function switchTab(tabId) {
-        tabContents.forEach(content => {
-            content.style.display = 'none';
-        });
-        tabButtons.forEach(btn => {
-            btn.classList.remove('active');
-        });
-        
-        const activeContent = document.getElementById(tabId);
-        if (activeContent) {
-            activeContent.style.display = 'block';
-        }
-        const activeButton = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
-        if (activeButton) {
+
+    if (tabButtons.length > 0 && tabContents.length > 0) {
+        const switchTab = (activeButton) => {
+            const tabId = activeButton.getAttribute('data-tab');
+            const activeTabContent = document.getElementById(tabId);
+            
+            tabContents.forEach(content => content.style.display = 'none');
+            if (activeTabContent) activeTabContent.style.display = 'block';
+            
+            tabButtons.forEach(btn => btn.classList.remove('active'));
             activeButton.classList.add('active');
+        };
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => switchTab(button));
+        });
+
+        const initialActiveButton = document.querySelector('.tab-button.active');
+        if (initialActiveButton) {
+            switchTab(initialActiveButton);
         }
     }
 
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const tabId = button.getAttribute('data-tab');
-            switchTab(tabId);
-        });
-    });
+    // --- MANEJO DEL CHAT ---
+    const chatForm = document.getElementById('chat-form');
+    if (chatForm) {
+        const userInput = document.getElementById('user-input');
+        const chatMessages = document.getElementById('chat-messages');
 
-    // --- MÓDULO DE PLANES Y COSTOS ---
+        const appendMessage = (message, type) => {
+            if (!chatMessages) return;
+            const messageElement = document.createElement('p');
+            messageElement.classList.add(type === 'user' ? 'msg-user' : 'msg-assistant');
+            messageElement.innerText = message;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+
+        chatForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const userMessage = userInput.value.trim();
+            if (!userMessage) return;
+            appendMessage(userMessage, 'user');
+            userInput.value = '';
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userMessage })
+                });
+                if (!response.ok) throw new Error('Server response not ok');
+                const data = await response.json();
+                appendMessage(data.response, 'assistant');
+            } catch (error) {
+                console.error('Error en el chat:', error);
+                appendMessage('Lo siento, estoy teniendo problemas de conexión.', 'assistant');
+            }
+        });
+    }
+
+    // --- LÓGICA DEL FORMULARIO DE CAMPAÑA ---
     const planCards = document.querySelectorAll('.plan-card');
     const prospectsInput = document.getElementById('prospects-per-day');
-    const selectedPlanEl = document.getElementById('selected-plan');
-    const dailyProspectsEl = document.getElementById('daily-prospects');
-    const totalCostEl = document.getElementById('total-cost');
-    const plans = {
-        arrancador: { name: 'El Arrancador', basePrice: 149, baseProspects: 4, pricePerExtra: 30 },
-        profesional: { name: 'El Profesional', basePrice: 399, baseProspects: 15, pricePerExtra: 27 },
-        dominador: { name: 'El Dominador', basePrice: 999, baseProspects: 50, pricePerExtra: 20 }
-    };
-    let currentPlanKey = 'arrancador';
-    function updateCosts() {
-        if (!prospectsInput) return;
-        let dailyCount = parseInt(prospectsInput.value) || 4;
-        if (dailyCount < 4) { dailyCount = 4; prospectsInput.value = 4; }
-        if (dailyCount >= 4 && dailyCount < 15) currentPlanKey = 'arrancador';
-        else if (dailyCount >= 15 && dailyCount < 50) currentPlanKey = 'profesional';
-        else currentPlanKey = 'dominador';
-        const plan = plans[currentPlanKey];
-        const extraProspects = dailyCount - plan.baseProspects;
-        const finalCost = plan.basePrice + (extraProspects > 0 ? extraProspects * plan.pricePerExtra : 0);
-        planCards.forEach(card => card.classList.toggle('selected', card.dataset.plan === currentPlanKey));
-        if(selectedPlanEl) selectedPlanEl.textContent = plan.name;
-        if(dailyProspectsEl) dailyProspectsEl.textContent = dailyCount;
-        if(totalCostEl) totalCostEl.textContent = `$${finalCost.toFixed(2)}`;
-    }
-    if (prospectsInput) prospectsInput.addEventListener('input', updateCosts);
-    planCards.forEach(card => {
-        card.addEventListener('click', () => {
-            const planKey = card.dataset.plan;
-            if (prospectsInput) prospectsInput.value = plans[planKey].baseProspects;
-            updateCosts();
-        });
-    });
-    if (prospectsInput) updateCosts();
+    const selectedPlanElement = document.getElementById('selected-plan');
+    const dailyProspectsElement = document.getElementById('daily-prospects');
+    const totalCostElement = document.getElementById('total-cost');
+    
+    // Solo ejecuta la lógica del formulario si todos los elementos existen
+    if (planCards.length > 0 && prospectsInput && selectedPlanElement && dailyProspectsElement && totalCostElement) {
+        
+        const plans = {
+            arrancador: { name: 'El Arrancador', baseProspects: 4, baseCost: 149, extraCost: 37.25, limit: 14 },
+            profesional: { name: 'El Profesional', baseProspects: 15, baseCost: 399, extraCost: 26.60, limit: 49 },
+            dominador: { name: 'El Dominador', baseProspects: 50, baseCost: 999, extraCost: 20.00, limit: Infinity }
+        };
 
-    // --- MÓDULO DEL CHAT MEJORADO ---
-    const chatForm = document.getElementById('chat-form');
-    const userInput = document.getElementById('user-input');
-    const chatMessages = document.getElementById('chat-messages');
-    function addMessage(text, sender) {
-        if(!chatMessages) return;
-        const p = document.createElement('p');
-        p.textContent = text;
-        p.className = sender === 'user' ? 'msg-user' : 'msg-assistant';
-        chatMessages.appendChild(p);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-    async function handleSendMessage() {
-        if (!userInput) return;
-        const message = userInput.value.trim();
-        if (!message) return;
-        addMessage(message, 'user');
-        userInput.value = '';
-        try {
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ message: message })
+        const updateSummaryUI = (planName, prospects, cost) => {
+            selectedPlanElement.textContent = planName;
+            dailyProspectsElement.textContent = prospects;
+            totalCostElement.textContent = `$${cost.toFixed(2)}`;
+        };
+
+        const updateSelectedCardVisuals = (planKey) => {
+            planCards.forEach(card => card.classList.remove('selected'));
+            if (planKey) {
+                const cardToSelect = document.querySelector(`.plan-card[data-plan="${planKey}"]`);
+                if (cardToSelect) cardToSelect.classList.add('selected');
+            }
+        };
+
+        const handleFormUpdate = () => {
+            const prospectsCount = parseInt(prospectsInput.value, 10);
+
+            if (isNaN(prospectsCount) || prospectsCount < 4) {
+                updateSelectedCardVisuals(null);
+                updateSummaryUI('Inválido', prospectsCount || 0, 0);
+                return;
+            }
+
+            let activePlanKey;
+            if (prospectsCount <= plans.arrancador.limit) {
+                activePlanKey = 'arrancador';
+            } else if (prospectsCount <= plans.profesional.limit) {
+                activePlanKey = 'profesional';
+            } else {
+                activePlanKey = 'dominador';
+            }
+            
+            const currentPlan = plans[activePlanKey];
+            updateSelectedCardVisuals(activePlanKey);
+
+            const extraProspects = prospectsCount - currentPlan.baseProspects;
+            const totalCost = currentPlan.baseCost + (extraProspects * currentPlan.extraCost);
+            const planName = (prospectsCount === currentPlan.baseProspects) ? currentPlan.name : 'Personalizado';
+            
+            updateSummaryUI(planName, prospectsCount, totalCost);
+        };
+
+        planCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const planKey = card.getAttribute('data-plan');
+                const plan = plans[planKey];
+                if (plan) {
+                    prospectsInput.value = plan.baseProspects;
+                    handleFormUpdate();
+                }
             });
-            if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
-            const data = await response.json();
-            if (data.error) { addMessage(`Error: ${data.error}`, 'assistant'); } 
-            else { addMessage(data.response, 'assistant'); }
-        } catch (error) {
-            console.error("Error en fetch del chat:", error);
-            addMessage('Lo siento, ocurrió un error de conexión.', 'assistant');
+        });
+
+        prospectsInput.addEventListener('input', handleFormUpdate);
+
+        const defaultPlanCard = document.querySelector('.plan-card[data-plan="arrancador"]');
+        if (defaultPlanCard) {
+            defaultPlanCard.click();
         }
     }
-    if (chatForm) {
-        chatForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            handleSendMessage();
-        });
-    }
     
-    // --- MÓDULO DE TELÉFONO INTERNACIONAL ---
-    const phoneInputField = document.querySelector("#numero_whatsapp");
-    if (phoneInputField) {
-        window.intlTelInput(phoneInputField, {
-            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
-            initialCountry: "auto",
-            geoIpLookup: function(callback) {
-                fetch('https://ipinfo.io/json') 
-                .then(response => response.json())
-                .then(data => callback(data.country))
-                .catch(() => callback('us'));
-            }
-        });
+    // --- LÓGICA PARA EL TELÉFONO ---
+    const phoneInput = document.querySelector("#numero_whatsapp");
+    if (phoneInput) {
+        window.intlTelInput(phoneInput, { utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js" });
     }
-
-    // --- FUNCIONALIDAD PARA LA PESTAÑA DE SUGERENCIAS ---
-    const sendSuggestionBtn = document.getElementById('send-suggestion-btn');
-    const suggestionText = document.getElementById('suggestion-text');
-    if (sendSuggestionBtn) {
-        sendSuggestionBtn.addEventListener('click', () => {
-            if (suggestionText && suggestionText.value.trim() !== '') {
-                alert('¡Gracias! Tu sugerencia ha sido enviada directamente a nuestro equipo. ¡Eres increíble!');
-                suggestionText.value = '';
-            } else {
-                alert('Por favor, escribe tu sugerencia antes de enviarla.');
-            }
-        });
-    }
-
-    // --- INICIALIZACIÓN ---
-    switchTab('my-campaigns');
 });
