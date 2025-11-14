@@ -16,16 +16,47 @@ document.addEventListener('DOMContentLoaded', () => {
             button.addEventListener('click', () => switchTab(button));
         });
         const initialActiveButton = document.querySelector('.tab-button.active');
-        if (initialActiveButton) switchTab(initialActiveButton);
+        if (initialActiveButton) {
+            switchTab(initialActiveButton);
+        }
     }
 
     // --- MANEJO DEL CHAT ---
     const chatForm = document.getElementById('chat-form');
     if (chatForm) {
-        // ... (código del chat sin cambios) ...
+        const userInput = document.getElementById('user-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const appendMessage = (message, type) => {
+            if (!chatMessages) return;
+            const messageElement = document.createElement('p');
+            messageElement.classList.add(type === 'user' ? 'msg-user' : 'msg-assistant');
+            messageElement.innerText = message;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+        chatForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const userMessage = userInput.value.trim();
+            if (!userMessage) return;
+            appendMessage(userMessage, 'user');
+            userInput.value = '';
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userMessage })
+                });
+                if (!response.ok) throw new Error('Server response not ok');
+                const data = await response.json();
+                appendMessage(data.response, 'assistant');
+            } catch (error) {
+                console.error('Error en el chat:', error);
+                appendMessage('Lo siento, estoy teniendo problemas de conexión.', 'assistant');
+            }
+        });
     }
 
-    // --- LÓGICA DEL PANEL INTELIGENTE Y FORMULARIO ---
+    // --- LÓGICA DEL FORMULARIO DE CAMPAÑA Y PANEL INTELIGENTE ---
     const planCards = document.querySelectorAll('.plan-card');
     const prospectsInput = document.getElementById('prospects-per-day');
     const selectedPlanElement = document.getElementById('selected-plan');
@@ -38,9 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const remainingBalanceElement = document.getElementById('remaining-balance');
     const summaryBox = document.getElementById('summary-box');
     const launchButton = document.getElementById('lancam');
-    const rechargeButton = document.getElementById('recarga-ya');
     
     if (planCards.length > 0 && prospectsInput && totalCostElement) {
+        
         const userBalance = 0.00; 
         if (currentBalanceElement) currentBalanceElement.textContent = `$${userBalance.toFixed(2)}`;
 
@@ -108,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // --- LÓGICA PARA EL TELÉFONO ---
     const phoneInput = document.querySelector("#numero_whatsapp");
     if (phoneInput) {
         window.intlTelInput(phoneInput, { utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js" });
