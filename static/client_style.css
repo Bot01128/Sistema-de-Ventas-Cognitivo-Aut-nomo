@@ -1,4 +1,3 @@
-/* ESTILOS COPIADOS DEL style.css ORIGINAL (INTACTOS) */
 body, html { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; height: 100%; }
 .top-bar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 40px; border-bottom: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 .user-info span { margin-right: 20px; color: #495057; }
@@ -36,122 +35,63 @@ h1, h2, h3, h4 { color: #1c1e21; margin-top: 0; }
 .form-section label { display: block; margin-bottom: 8px; font-weight: 600; color: #495057; }
 .form-section input, textarea { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
 .cta-button { background-color: #28a745; color: white; padding: 15px 25px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px;}
-textarea { resize: vertical; min-height: 150px; }
+.checkbox-group { display: flex; align-items: center; margin-bottom: 10px; }
+.checkbox-group label { font-weight: normal; margin-left: 8px; }
+.checkbox-group input { width: auto; }
+textarea { resize: none; height: 150px; }
+small { color: #6c757d; font-size: 12px; }
 .campaign-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; background-color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 .campaign-table th, .campaign-table td { border: 1px solid #ddd; padding: 12px 15px; text-align: left; }
 .campaign-table thead th { background-color: #f8f9fa; font-weight: 600; color: #495057; }
 .campaign-table tbody tr:hover { background-color: #e9ecef; cursor: pointer; }
-.btn-blue-3d {
+.plans-container { display: flex; gap: 20px; margin-bottom: 30px; }
+.plan-card { flex: 1; border: 2px solid #ddd; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s ease-in-out; }
+.plan-card.selected { border-color: #007bff; box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); transform: translateY(-5px); }
+.plan-card h4 { margin: 0 0 10px 0; }
+.plan-card .price { font-size: 24px; font-weight: bold; margin: 10px 0; }
+
+#lancam {
+    padding: 18px 30px; font-size: 20px; border-radius: 12px; margin-top: 30px; cursor: pointer;
+    background-color: #28a745; color: white; font-weight: bold; transition: all 0.1s ease-in-out;
+    border-style: solid; border-width: 4px; border-top-color: #63d47a; border-left-color: #63d47a;
+    border-bottom-color: #1c7430; border-right-color: #1c7430;
+}
+#lancam:hover { background-color: #2ebf4f; }
+#lancam:active {
+    border-top-color: #1c7430; border-left-color: #1c7430;
+    border-bottom-color: #63d47a; border-right-color: #63d47a;
+    transform: translateY(1px);
+}
+
+.iti { width: 100%; }
+
+.btn-blue-3d, #send-suggestion-btn {
     background-color: #007bff; transition: all 0.1s ease-in-out; border-style: solid;
     border-width: 4px; border-top-color: #5b9eff; border-left-color: #5b9eff;
     border-bottom-color: #004a99; border-right-color: #004a99; padding: 18px 30px;
     font-size: 20px; border-radius: 12px; margin-top: 10px;
 }
-.btn-blue-3d:hover { background-color: #0088ff; }
-.btn-blue-3d:active {
+.btn-blue-3d:hover, #send-suggestion-btn:hover { background-color: #0088ff; }
+.btn-blue-3d:active, #send-suggestion-btn:active {
     border-top-color: #004a99; border-left-color: #004a99;
-    border-bottom-color: #5b9eff; border-right-color: #5b9eff; transform: translateY(1px);
+    border-bottom-color: #5b9eff; border-right-color: #5b9eff;
+    transform: translateY(1px);
 }
 
-/* === INICIO DE ESTILOS NUEVOS PARA EL DASHBOARD DEL CLIENTE === */
-/* Estilos para la pestaña "Flujo de Prospectos" */
-.flow-container {
-    display: flex;
-    gap: 20px;
-    overflow-x: auto; /* Permite scroll horizontal en pantallas pequeñas */
-    padding-bottom: 15px;
+.summary-box {
+    background-color: #f8f9fa; padding: 20px; border-radius: 8px;
+    border: 2px solid #e9ecef; transition: border-color 0.3s;
 }
-.flow-column {
-    flex: 1;
-    min-width: 250px;
-    background-color: #e9ecef;
-    border-radius: 8px;
-    padding: 15px;
-}
-.flow-column h4 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #ced4da;
-}
-.prospect-card {
-    background-color: #fff;
-    padding: 15px;
-    border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    margin-bottom: 10px;
-    cursor: pointer;
-}
-.prospect-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+.summary-divider { border: 0; border-top: 1px solid #ddd; margin: 15px 0; }
+.summary-box p { display: flex; justify-content: space-between; font-size: 16px; margin: 8px 0; }
+.recharge-needed strong { color: #dc3545; font-weight: bold; }
+.balance-ok strong { color: #28a745; font-weight: bold; }
+.cta-button:disabled {
+    background-color: #adb5bd; cursor: not-allowed;
+    border-bottom-color: #6c757d; border-right-color: #6c757d;
 }
 
-/* Estilos para la pestaña "Conversaciones" */
-.conversations-container {
-    display: flex;
-    height: 600px; /* Altura fija para el contenedor de chat */
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-}
-.conversations-list {
-    flex-basis: 300px;
-    border-right: 1px solid #ddd;
-    overflow-y: auto;
-    background-color: #f8f9fa;
-}
-.chat-item {
-    padding: 15px;
-    border-bottom: 1px solid #ddd;
-    cursor: pointer;
-}
-.chat-item:hover, .chat-item.active {
-    background-color: #e9ecef;
-}
-.chat-item small {
-    display: block;
-    color: #6c757d;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.active-chat {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-.chat-header-display {
-    padding: 15px;
-    border-bottom: 1px solid #ddd;
-    background-color: #f8f9fa;
-}
-.chat-messages-display {
-    flex-grow: 1;
-    padding: 20px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-.chat-input-area-display {
-    display: flex;
-    border-top: 1px solid #ddd;
-}
-.chat-input-area-display input {
-    flex-grow: 1;
-    border: none;
-    padding: 15px;
-    outline: none;
-}
-.chat-input-area-display button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 0 20px;
-    cursor: pointer;
-}
-.chat-input-area-display button:disabled {
-    background-color: #adb5bd;
-    cursor: not-allowed;
+@media (max-width: 900px) { 
+    .container { flex-direction: column; overflow: auto; } 
+    .left-panel { flex-basis: auto; min-height: 400px; } 
 }
