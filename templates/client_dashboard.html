@@ -43,6 +43,24 @@
             </div>
 
             <div class="tab-content" id="my-campaigns" style="display: block;">
+                <div class="kpi-container">
+                    <div class="kpi-card">
+                        <span class="kpi-title">Prospectos Totales</span>
+                        <span class="kpi-value">252</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">Leads Calificados</span>
+                        <span class="kpi-value">134</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">Tasa de Conversión</span>
+                        <span class="kpi-value rate-success">53%</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">Mejor Campaña</span>
+                        <span class="kpi-value-small">Búsqueda de Spas</span>
+                    </div>
+                </div>
                 <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
                 <table class="campaign-table">
                     <thead>
@@ -105,6 +123,12 @@
 
             <div class="tab-content" id="prospect-flow" style="display: none;">
                 <h2>{{ _('Flujo de Prospectos') }}</h2>
+                <div class="flow-container">
+                    <div class="flow-column"><h4>🕵️‍♂️ Cazados</h4><div class="prospect-card">Ferretería Central</div><div class="prospect-card">Tornillos y Más</div></div>
+                    <div class="flow-column"><h4>🔬 En Análisis</h4><div class="prospect-card">Aceros Industriales</div></div>
+                    <div class="flow-column"><h4>🧠 Inteligencia Lista</h4><div class="prospect-card">Depósito El Constructor</div></div>
+                    <div class="flow-column"><h4>🚀 Listo para Contactar</h4><div class="prospect-card">Maquinaria Pesada SAS</div></div>
+                </div>
             </div>
 
             <div class="tab-content" id="conversations" style="display: none;">
@@ -167,9 +191,15 @@
 
             <div class="tab-content" id="billing" style="display: none;">
                 <h2>{{ _('Mi Saldo y Facturación') }}</h2>
+                <p>Saldo Actual: <strong>$0.00</strong></p>
+                <button class="cta-button btn-blue-3d">{{ _('+ Recargar Saldo') }}</button>
             </div>
+            
             <div class="tab-content" id="suggestions" style="display: none;">
-                <h2>{{ _('Tus Sugerencias') }}</h2>
+                 <h2>Tú eres el Arquitecto de Nuestro Futuro</h2>
+                 <p>Tu voz es la brújula que guía nuestra innovación. ¿Qué funcionalidad revolucionaría tu trabajo?</p>
+                 <textarea placeholder="Describe aquí esa función increíble..."></textarea>
+                 <button class="cta-button btn-blue-3d">Enviar mi Sugerencia</button>
             </div>
         </div>
     </div>
