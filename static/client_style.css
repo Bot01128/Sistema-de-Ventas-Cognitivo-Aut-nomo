@@ -40,6 +40,10 @@ h1, h2, h3, h4 { color: #1c1e21; margin-top: 0; }
 .checkbox-group input { width: auto; }
 textarea { resize: none; height: 150px; }
 small { color: #6c757d; font-size: 12px; }
+.campaign-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; background-color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.campaign-table th, .campaign-table td { border: 1px solid #ddd; padding: 12px 15px; text-align: left; }
+.campaign-table thead th { background-color: #f8f9fa; font-weight: 600; color: #495057; }
+.campaign-table tbody tr:hover { background-color: #e9ecef; cursor: pointer; }
 .plans-container { display: flex; gap: 20px; margin-bottom: 30px; }
 .plan-card { flex: 1; border: 2px solid #ddd; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s ease-in-out; }
 .plan-card.selected { border-color: #007bff; box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); transform: translateY(-5px); }
@@ -82,7 +86,50 @@ small { color: #6c757d; font-size: 12px; }
     background-color: #adb5bd; cursor: not-allowed;
     border-bottom-color: #6c757d; border-right-color: #6c757d;
 }
+
+/* === INICIO DE ESTILOS NUEVOS PARA EL TABLERO DE MANDO (KPIs) === */
+.kpi-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 40px;
+}
+.kpi-card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.kpi-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 8px;
+}
+.kpi-value {
+    font-size: 32px;
+    font-weight: bold;
+    color: #007bff;
+}
+.kpi-value.rate-success {
+    color: #28a745;
+}
+.kpi-value-small {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1c1e21;
+    text-align: center;
+}
+/* === FIN DE ESTILOS NUEVOS === */
+
 @media (max-width: 900px) { 
     .container { flex-direction: column; overflow: auto; } 
     .left-panel { flex-basis: auto; min-height: 400px; } 
+    /* Adaptar KPIs a pantallas pequeñas */
+    .kpi-container { grid-template-columns: repeat(2, 1fr); }
 }
