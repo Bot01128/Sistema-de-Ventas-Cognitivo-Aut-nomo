@@ -96,7 +96,6 @@ small { color: #6c757d; font-size: 12px; }
 .kpi-value.rate-success { color: #28a745; }
 .kpi-value-small { font-size: 18px; font-weight: bold; color: #1c1e21; text-align: center; }
 
-/* === INICIO DE ESTILOS PARA "CONVERSACIONES" === */
 .conversation-queue-container { margin-bottom: 30px; }
 .conversation-queue-container h4 { margin-bottom: 15px; }
 .conversation-queue { display: flex; gap: 15px; padding-bottom: 15px; overflow-x: auto; }
@@ -120,7 +119,6 @@ small { color: #6c757d; font-size: 12px; }
     width: 100%; padding: 15px; font-size: 16px; font-weight: bold; cursor: pointer;
     background-color: #28a745; color: white; border: none; border-radius: 6px;
 }
-/* === FIN DE ESTILOS PARA "CONVERSACIONES" === */
 
 @media (max-width: 900px) { 
     .container { flex-direction: column; overflow: auto; } 
