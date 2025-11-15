@@ -6,7 +6,6 @@
     <title>{{ _('AutoNeura AI - Portal de Cliente') }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
-    <!-- CONEXIÓN AL CSS DEL CLIENTE -->
     <link rel="stylesheet" href="{{ url_for('static', filename='client_style.css') }}">
 </head>
 <body>
@@ -43,17 +42,32 @@
                 <button class="tab-button" data-tab="suggestions">{{ _('Tus Sugerencias') }}</button>
             </div>
 
-            <!-- 1. MIS CAMPAÑAS (Restaurado) -->
+            <!-- 1. PESTAÑA MIS CAMPAÑAS (CON KPIs) -->
             <div class="tab-content" id="my-campaigns" style="display: block;">
+                <div class="kpi-container">
+                    <div class="kpi-card">
+                        <span class="kpi-title">Prospectos Totales</span>
+                        <span class="kpi-value">252</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">Leads Calificados</span>
+                        <span class="kpi-value">134</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">Tasa de Conversión</span>
+                        <span class="kpi-value rate-success">53%</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">Mejor Campaña</span>
+                        <span class="kpi-value-small">Búsqueda de Spas</span>
+                    </div>
+                </div>
                 <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
                 <table class="campaign-table">
                     <thead>
                         <tr>
-                            <th>{{ _('Nombre de la Campaña') }}</th>
-                            <th>{{ _('Fecha') }}</th>
-                            <th>{{ _('Estado') }}</th>
-                            <th>{{ _('Prospectos Encontrados') }}</th>
-                            <th>{{ _('Leads Calificados') }}</th>
+                            <th>{{ _('Nombre de la Campaña') }}</th><th>{{ _('Fecha') }}</th><th>{{ _('Estado') }}</th>
+                            <th>{{ _('Prospectos Encontrados') }}</th><th>{{ _('Leads Calificados') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -63,7 +77,7 @@
                 </table>
             </div>
 
-            <!-- 2. CREAR CAMPAÑA (Restaurado) -->
+            <!-- 2. PESTAÑA CREAR CAMPAÑA (CONTENIDO RESTAURADO) -->
             <div class="tab-content" id="create-campaign" style="display: none;">
                 <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
                 <div class="form-section">
@@ -109,7 +123,7 @@
                 </div>
             </div>
 
-            <!-- 3. FLUJO DE PROSPECTOS (Restaurado) -->
+            <!-- 3. FLUJO DE PROSPECTOS (CONTENIDO RESTAURADO) -->
             <div class="tab-content" id="prospect-flow" style="display: none;">
                 <h2>{{ _('Flujo de Prospectos') }}</h2>
                 <div class="flow-container">
@@ -120,7 +134,7 @@
                 </div>
             </div>
 
-            <!-- 4. CONVERSACIONES (Restaurado) -->
+            <!-- 4. CONVERSACIONES (CONTENIDO RESTAURADO) -->
             <div class="tab-content" id="conversations" style="display: none;">
                 <h2>{{ _('Conversaciones') }}</h2>
                 <div class="conversations-container">
@@ -136,14 +150,14 @@
                 </div>
             </div>
 
-            <!-- 5. FACTURACIÓN (Restaurado) -->
+            <!-- 5. FACTURACIÓN (CONTENIDO RESTAURADO) -->
             <div class="tab-content" id="billing" style="display: none;">
                 <h2>{{ _('Mi Saldo y Facturación') }}</h2>
                 <p>Saldo Actual: <strong>$0.00</strong></p>
                 <button class="cta-button btn-blue-3d">{{ _('+ Recargar Saldo') }}</button>
             </div>
             
-            <!-- 6. TUS SUGERENCIAS (Restaurado) -->
+            <!-- 6. TUS SUGERENCIAS (CONTENIDO RESTAURADO) -->
             <div class="tab-content" id="suggestions" style="display: none;">
                  <h2>Tú eres el Arquitecto de Nuestro Futuro</h2>
                  <p>Tu voz es la brújula que guía nuestra innovación. ¿Qué funcionalidad revolucionaría tu trabajo?</p>

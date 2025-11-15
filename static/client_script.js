@@ -105,18 +105,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (userBalance >= totalCost) {
                 const remaining = userBalance - totalCost;
-                remainingBalanceElement.textContent = `$${remaining.toFixed(2)}`;
-                rechargeLine.style.display = 'none';
-                remainingLine.style.display = 'flex';
-                summaryBox.style.borderColor = '#28a745';
-                launchButton.disabled = false;
+                if(remainingBalanceElement) remainingBalanceElement.textContent = `$${remaining.toFixed(2)}`;
+                if(rechargeLine) rechargeLine.style.display = 'none';
+                if(remainingLine) remainingLine.style.display = 'flex';
+                if(summaryBox) summaryBox.style.borderColor = '#28a745';
+                if(launchButton) launchButton.disabled = false;
             } else {
                 const needed = totalCost - userBalance;
-                rechargeAmountElement.textContent = `$${needed.toFixed(2)}`;
-                rechargeLine.style.display = 'flex';
-                remainingLine.style.display = 'none';
-                summaryBox.style.borderColor = '#ffc107';
-                launchButton.disabled = true;
+                if(rechargeAmountElement) rechargeAmountElement.textContent = `$${needed.toFixed(2)}`;
+                if(rechargeLine) rechargeLine.style.display = 'flex';
+                if(remainingLine) remainingLine.style.display = 'none';
+                if(summaryBox) summaryBox.style.borderColor = '#ffc107';
+                if(launchButton) launchButton.disabled = true;
             }
         };
 
