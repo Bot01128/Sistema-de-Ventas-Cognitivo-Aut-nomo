@@ -14,7 +14,7 @@ body, html { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFo
 .container { display: flex; height: calc(100% - 61px); }
 .left-panel { flex: 0 0 450px; background-color: #ffffff; padding: 30px; display: flex; flex-direction: column; border-right: 1px solid #ddd; }
 .right-panel { flex-grow: 1; background-color: #f8f9fa; padding: 40px; overflow-y: auto; }
-h1, h2, h3, h4 { color: #1c1e21; margin-top: 0; }
+h1, h2, h3, h4, h5 { color: #1c1e21; margin-top: 0; }
 .chat-header h2 { font-size: 24px; }
 .chat-window { flex-grow: 1; border-radius: 8px; margin-top: 20px; display: flex; flex-direction: column; overflow: hidden; }
 .chat-messages { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 15px; }
@@ -86,50 +86,44 @@ small { color: #6c757d; font-size: 12px; }
     background-color: #adb5bd; cursor: not-allowed;
     border-bottom-color: #6c757d; border-right-color: #6c757d;
 }
-
-/* === INICIO DE ESTILOS NUEVOS PARA EL TABLERO DE MANDO (KPIs) === */
-.kpi-container {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    margin-bottom: 40px;
-}
+.kpi-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
 .kpi-card {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    border: 1px solid #ddd;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid #ddd; display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
-.kpi-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #6c757d;
-    margin-bottom: 8px;
+.kpi-title { font-size: 14px; font-weight: 600; color: #6c757d; margin-bottom: 8px; }
+.kpi-value { font-size: 32px; font-weight: bold; color: #007bff; }
+.kpi-value.rate-success { color: #28a745; }
+.kpi-value-small { font-size: 18px; font-weight: bold; color: #1c1e21; text-align: center; }
+
+/* === INICIO DE ESTILOS PARA "CONVERSACIONES" === */
+.conversation-queue-container { margin-bottom: 30px; }
+.conversation-queue-container h4 { margin-bottom: 15px; }
+.conversation-queue { display: flex; gap: 15px; padding-bottom: 15px; overflow-x: auto; }
+.conversation-card {
+    flex: 0 0 280px; padding: 15px; background-color: #fff; border: 1px solid #ddd;
+    border-left: 5px solid #6c757d; border-radius: 8px; cursor: pointer; transition: all 0.2s ease-in-out;
 }
-.kpi-value {
-    font-size: 32px;
-    font-weight: bold;
-    color: #007bff;
+.conversation-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.conversation-card.active { border-color: #007bff; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2); }
+.conversation-card h5 { margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.status-icon { margin-right: 8px; }
+.last-message { font-size: 14px; color: #495057; margin-bottom: 10px; height: 40px; overflow: hidden; }
+.waiting-time { font-weight: bold; }
+.waiting-time.urgent { color: #dc3545; }
+.chat-display-area { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+.chat-content-panel { display: none; flex-direction: column; height: 500px; }
+.chat-header-display { padding: 15px; border-bottom: 1px solid #ddd; background-color: #f8f9fa; }
+.chat-messages-display { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.chat-input-area-display { display: flex; border-top: 1px solid #ddd; padding: 10px; background-color: #f8f9fa; }
+.take-control-btn {
+    width: 100%; padding: 15px; font-size: 16px; font-weight: bold; cursor: pointer;
+    background-color: #28a745; color: white; border: none; border-radius: 6px;
 }
-.kpi-value.rate-success {
-    color: #28a745;
-}
-.kpi-value-small {
-    font-size: 18px;
-    font-weight: bold;
-    color: #1c1e21;
-    text-align: center;
-}
-/* === FIN DE ESTILOS NUEVOS === */
+/* === FIN DE ESTILOS PARA "CONVERSACIONES" === */
 
 @media (max-width: 900px) { 
     .container { flex-direction: column; overflow: auto; } 
     .left-panel { flex-basis: auto; min-height: 400px; } 
-    /* Adaptar KPIs a pantallas pequeñas */
     .kpi-container { grid-template-columns: repeat(2, 1fr); }
 }
