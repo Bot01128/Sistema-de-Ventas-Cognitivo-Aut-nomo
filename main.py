@@ -42,7 +42,8 @@ if GOOGLE_API_KEY:
 else:
     print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
 
-ID_DE_LA_CAMPANA_ACTUAL = 1
+# --- CARGA DE LA PERSONALIDAD PARA EL CHAT ---
+ID_DE_LA_CAMPAÑA_ACTUAL = 1 # Esta línea es crucial y estaba faltando o mal escrita
 descripcion_de_la_campana = "Soy un asistente virtual generico, hubo un error al cargar la descripcion."
 try:
     print(f">>> [main.py] Buscando descripcion para la campana ID: {ID_DE_LA_CAMPAÑA_ACTUAL}...")
