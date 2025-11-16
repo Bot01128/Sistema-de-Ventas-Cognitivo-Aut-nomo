@@ -3,7 +3,7 @@ import psycopg2
 import json
 import google.generativeai as genai
 from flask import Flask, render_template, request, jsonify
-from flask_babel import Babel, gettext
+from flask_babel import Babel
 from cerebro_dashboard import create_chatbot
 
 # --- NO TOCAMOS LAS IMPORTACIONES DE LOS TRABAJADORES POR AHORA ---
@@ -14,7 +14,7 @@ from trabajador_cazador import cazar_prospectos
 app = Flask(__name__)
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
-
+# ... (El resto de la configuración y la inicialización del chat se queda igual) ...
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
 ID_DE_LA_CAMPAÑA_ACTUAL = 1 
@@ -29,56 +29,33 @@ try:
     cur.close()
     conn.close()
 except Exception:
-    pass 
+    pass # Ignoramos errores aquí por ahora
 dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
-
 def get_locale():
     return request.accept_languages.best_match(['en', 'es'])
-
 babel = Babel(app, locale_selector=get_locale)
+app.jinja_env.globals.update(get_locale=get_locale)
 
-# ======================= EL BLOQUE DE CONTEXTO CORRECTO =======================
-# Este bloque asegura que TODAS las plantillas tengan acceso a las funciones
-# 'get_locale' (para el idioma) y '_' (para la traducción).
-@app.context_processor
-def inject_global_funcs():
-    return dict(get_locale=get_locale, _=gettext)
-# =============================================================================
-
-
-# =================================================================================
-# SECCIÓN DE RUTAS (REESCRITA DESDE CERO PARA MÁXIMA CLARIDAD Y SIN AMBIGÜEDAD)
-# =================================================================================
-
-# RUTA RAÍZ: Muestra el dashboard principal.
+# --- RUTAS (INTACTAS) ---
 @app.route('/')
-def index():
-    # Llama a la plantilla del dashboard directamente.
+def dashboard():
     return render_template('dashboard.html')
-
-# RUTA PARA EL DASHBOARD: Muestra el dashboard principal.
-@app.route('/dashboard')
-def dashboard_page():
-    # Llama a la plantilla del dashboard directamente.
-    return render_template('dashboard.html')
-
-# RUTA PARA LA PÁGINA DE PROPUESTA (Vendedor Estrella 24/7)
-@app.route('/generar-nido')
-def generar_nido_page():
-    # Llama a la plantilla 'nido_template.html' directamente, sin pasar datos innecesarios.
+    # NUEVA RUTA para nido_template.html
+@app.route('/nido')
+def nido_page():
+    # Esta función le dice a la app que muestre nido_template.html
+    # cuando alguien visite la URL /nido
     return render_template('nido_template.html')
 
-# RUTA PARA LA PÁGINA DE CHAT INTERACTIVO
+# NUEVA RUTA para pre_nido.html
 @app.route('/pre-nido')
 def pre_nido_page():
-    # Llama a la plantilla 'pre_nido.html' directamente, sin pasar datos innecesarios.
-    # El error anterior ocurría porque intentábamos pasar una variable 'textos'
-    # que tu plantilla real (la correcta) no necesita, causando un conflicto.
+    # Esta función le dice a la app que muestre pre_nido.html
+    # cuando alguien visite la URL /pre-nido
     return render_template('pre_nido.html')
-
-# RUTA PARA LA API DEL CHAT (INTACTA)
 @app.route('/chat', methods=['POST'])
 def chat():
+    # ... (código intacto) ...
     if not dashboard_brain: return jsonify({"error": "Chat no disponible."}), 500
     user_message = request.json.get('message')
     if not user_message: return jsonify({"error": "No hay mensaje."}), 400
@@ -86,8 +63,11 @@ def chat():
         response_text = dashboard_brain.invoke({"question": user_message})
         return jsonify({"response": response_text})
     except Exception as e: return jsonify({"error": "Ocurrió un error."}), 500
+# ... (Otras rutas como /ver-nido se quedan intactas) ...
 
-# RUTA PARA LANZAR CAMPAÑAS (INTACTA)
+
+# --- ¡INICIO DE LA MODIFICACIÓN IMPORTANTE! ---
+
 @app.route('/lanzar-campana', methods=['POST'])
 def lanzar_campana():
     print("\n>>> [RUTA /lanzar-campana] ¡Orden recibida del Dashboard!")
@@ -98,6 +78,7 @@ def lanzar_campana():
 
     conn = None
     try:
+        # TAREA ÚNICA: Guardar el trabajo en la cola (el "buzón")
         print(">>> [RUTA /lanzar-campana] Dejando la orden en la 'cola_de_trabajos'...")
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
@@ -106,6 +87,7 @@ def lanzar_campana():
             INSERT INTO cola_de_trabajos (tipo_trabajo, datos_json) 
             VALUES (%s, %s);
         """
+        # Convertimos la orden completa a un string JSON para guardarla
         datos_como_texto_json = json.dumps(orden_del_cliente)
         
         cur.execute(sql_insert, ('cazar_prospectos', datos_como_texto_json))
@@ -113,6 +95,7 @@ def lanzar_campana():
         
         print(">>> [RUTA /lanzar-campana] ¡Orden dejada en el buzón con éxito!")
 
+        # DEVOLVEMOS UNA RESPUESTA INMEDIATA AL USUARIO
         return jsonify({"message": "¡Campaña recibida! Hemos empezado a trabajar en ello. Te notificaremos cuando los prospectos estén listos."})
 
     except Exception as e:
@@ -121,6 +104,9 @@ def lanzar_campana():
     finally:
         if conn:
             conn.close()
+
+# --- FIN DE LA MODIFICACIÓN ---
+
 
 # --- BLOQUE DE ARRANQUE (INTACTO) ---
 if __name__ == '__main__':
