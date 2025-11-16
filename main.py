@@ -7,75 +7,75 @@ from flask import Flask, render_template, request, jsonify
 from flask_babel import Babel
 from cerebro_dashboard import create_chatbot
 
-# --- CONFIGURACIÃ“N INICIAL ---
+# --- CONFIGURACIÓN INICIAL ---
 app = Flask(__name__)
 
-# --- BLOQUE DE CONFIGURACIÃ“N DE IDIOMAS (VERSIÃ“N FINAL Y CORRECTA) ---
-
-# 1. Le damos la direcciÃ³n GPS exacta a la carpeta de traducciones
+# --- BLOQUE DE CONFIGURACIÓN DE IDIOMAS ---
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.join(basedir, 'translations')
 
-# 2. Definimos la funciÃ³n para detectar el idioma
 def get_locale():
+    if not request.accept_languages:
+        return 'es'
     return request.accept_languages.best_match(['en', 'es'])
 
-# 3. Inicializamos Babel usando el mÃ©todo compatible
 babel = Babel(app, locale_selector=get_locale)
 
-# 4. Â¡Â¡Â¡====== ESTA ES LA CORRECCIÃ“N MÃGICA Y PROFESIONAL ======!!!
-# Usamos un "Context Processor" para darle de forma segura la herramienta 
-# get_locale() a TODOS los archivos HTML. Este es el mÃ©todo correcto.
 @app.context_processor
 def inject_get_locale():
     return dict(get_locale=get_locale)
-# Â¡Â¡Â¡=============================================================!!!
 
-
-# --- (EL RESTO DE TU CÃ“DIGO ESTÃ 100% INTACTO) ---
+# --- INICIALIZACIÓN DE LA APLICACIÓN Y BASE DE DATOS ---
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
 print("=====================================================")
-print(">>> [DIAGNÃ“STICO] INICIANDO APLICACIÃ“N...")
+print(">>> [DIAGNÓSTICO] INICIANDO APLICACIÓN...")
 if DATABASE_URL:
-    print(">>> [DIAGNÃ“STICO] DATABASE_URL encontrada. Comienza con:", DATABASE_URL[:30])
+    print(">>> [DIAGNÓSTICO] DATABASE_URL encontrada. Comienza con:", DATABASE_URL[:30])
 else:
-    print("!!! ERROR [DIAGNÃ“STICO]: Â¡DATABASE_URL NO FUE ENCONTRADA EN LAS VARIABLES DE ENTORNO!")
+    print("!!! ERROR [DIAGNÓSTICO]: ¡DATABASE_URL NO FUE ENCONTRADA EN LAS VARIABLES DE ENTORNO!")
 print("=====================================================")
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
     print(">>> [main.py] IA de Google configurada.!!!")
 else:
     print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
-ID_DE_LA_CAMPAÃ‘A_ACTUAL = 1
-descripcion_de_la_campana = "Soy un asistente virtual genÃ©rico, hubo un error al cargar la descripciÃ³n."
+
+ID_DE_LA_CAMPAÑA_ACTUAL = 1
+descripcion_de_la_campana = "Soy un asistente virtual genérico, hubo un error al cargar la descripción."
 try:
-    print(f">>> [main.py] Buscando descripciÃ³n para la campaÃ±a ID: {ID_DE_LA_CAMPAÃ‘A_ACTUAL}...")
+    print(f">>> [main.py] Buscando descripción para la campaña ID: {ID_DE_LA_CAMPAÑA_ACTUAL}...")
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
-    cur.execute("SELECT descripcion_producto FROM campanas WHERE id = %s", (ID_DE_LA_CAMPAÃ‘A_ACTUAL,))
+    cur.execute("SELECT descripcion_producto FROM campanas WHERE id = %s", (ID_DE_LA_CAMPAÑA_ACTUAL,))
     result = cur.fetchone()
     if result and result[0]:
         descripcion_de_la_campana = result[0]
-        print(">>> [DIAGNÃ“STICO] Â¡Ã‰XITO! Se encontrÃ³ la descripciÃ³n en Supabase.")
+        print(">>> [DIAGNÓSTICO] ¡ÉXITO! Se encontró la descripción en Supabase.")
     else:
-        print("!!! ERROR [DIAGNÃ“STICO]: La conexiÃ³n a Supabase funcionÃ³, PERO NO SE ENCONTRÃ“ la campaÃ±a con ID 1.")
+        print("!!! ERROR [DIAGNÓSTICO]: La conexión a Supabase funcionó, PERO NO SE ENCONTRÓ la campaña con ID 1.")
     cur.close()
     conn.close()
 except Exception as e:
-    print(f"!!! ERROR FATAL [DIAGNÃ“STICO]: Â¡LA CONEXIÃ“N A SUPABASE FALLÃ“! El error fue:")
+    print(f"!!! ERROR FATAL [DIAGNÓSTICO]: ¡LA CONEXIÓN A SUPABASE FALLÓ! El error fue:")
     print(e)
+
 dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
 if dashboard_brain:
-    print(">>> [main.py] Cerebro con personalidad de campaÃ±a inicializado.")
+    print(">>> [main.py] Cerebro con personalidad de campaña inicializado.")
 else:
     print("!!! ERROR [main.py]: El cerebro no pudo ser inicializado.")
 
-# --- RUTAS DE LA APLICACIÃ“N (INTACTAS) ---
+# --- RUTAS DE LA APLICACIÓN ---
 @app.route('/')
 def dashboard():
     return render_template('dashboard.html')
+
+# Ruta para el dashboard del cliente
+@app.route('/cliente')
+def client_dashboard():
+    return render_template('client_dashboard.html')
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -88,9 +88,9 @@ def chat():
         response_text = dashboard_brain.invoke({"question": user_message})
         return jsonify({"response": response_text})
     except Exception as e:
-        return jsonify({"error": "OcurriÃ³ un error."}), 500
+        return jsonify({"error": "Ocurrió un error."}), 500
 
-# --- RUTAS DEL PERSUASOR (INTACTAS) ---
+# --- RUTAS DEL PERSUASOR ---
 @app.route('/pre-nido/<uuid:id_unico>')
 def mostrar_pre_nido(id_unico):
     nombre_negocio_db = "Empresa Real"
@@ -104,11 +104,11 @@ def mostrar_pre_nido(id_unico):
 def generar_nido_y_enviar_enlace():
     return render_template('nido_template.html')
 
-# --- RUTAS DE PRUEBA (INTACTAS) ---
+# --- RUTAS DE PRUEBA ---
 @app.route('/ver-pre-nido')
 def ver_pre_nido():
     id_de_prueba = str(uuid.uuid4())
-    nombre_de_prueba = "FerreterÃ­a El Tornillo Feliz (Prueba)"
+    nombre_de_prueba = "Ferretería El Tornillo Feliz (Prueba)"
     return render_template('persuasor.html',
                            prospecto_id=id_de_prueba,
                            nombre_negocio=nombre_de_prueba,
@@ -118,7 +118,7 @@ def ver_pre_nido():
 def ver_nido():
     return render_template('nido_template.html')
 
-# --- BLOQUE DE ARRANQUE (INTACTO) ---
+# --- BLOQUE DE ARRANQUE ---
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     app.run(host='0.0.0.0', port=port)
