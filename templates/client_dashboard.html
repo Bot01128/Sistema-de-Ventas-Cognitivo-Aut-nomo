@@ -14,6 +14,11 @@
         <div class="user-info">
             <span><strong>{{ _('Saldo:') }}</strong> $0.00</span>
             <button class="recharge-btn">{{ _('+ Recargar Saldo') }}</button>
+            
+            <!-- === INICIO DE LA ÚNICA MODIFICACIÓN === -->
+            <button id="logout-btn" class="recharge-btn" style="background-color: #6c757d; border-color: #5a6268;">Cerrar Sesión</button>
+            <!-- === FIN DE LA ÚNICA MODIFICACIÓN === -->
+            
         </div>
     </div>
     <div class="container">
@@ -156,32 +161,21 @@
                 <div class="chat-display-area">
                     <div id="chat-1" class="chat-content-panel">
                         <div class="chat-header-display"><h4>Ferretería El Tornillo Feliz</h4></div>
-                        <div class="chat-messages-display">
-                            <p class="msg-assistant">Hola, gracias por contactar...</p>
-                            <p class="msg-user">¿Tienen tornillos de anclaje?</p>
-                            <p class="msg-assistant">Sí, es nuestra especialidad...</p>
-                            <p class="msg-user">Perfecto, ¿puedo hablar con un asesor para cerrar la compra?</p>
-                        </div>
+                        <div class="chat-messages-display"><p class="msg-assistant">Hola, gracias por contactar...</p><p class="msg-user">¿Tienen tornillos de anclaje?</p><p class="msg-assistant">Sí, es nuestra especialidad...</p><p class="msg-user">Perfecto, ¿puedo hablar con un asesor para cerrar la compra?</p></div>
                         <div class="chat-input-area-display">
                             <button class="take-control-btn">Tomar Control y Responder</button>
                         </div>
                     </div>
                     <div id="chat-2" class="chat-content-panel">
                         <div class="chat-header-display"><h4>Restaurante Luigi's</h4></div>
-                        <div class="chat-messages-display">
-                            <p class="msg-assistant">Hola Luigi's, vi sus reseñas...</p>
-                            <p class="msg-user">Me interesa mucho, ¿cuál es el costo del plan profesional?</p>
-                        </div>
+                        <div class="chat-messages-display"><p class="msg-assistant">Hola Luigi's, vi sus reseñas...</p><p class="msg-user">Me interesa mucho, ¿cuál es el costo del plan profesional?</p></div>
                         <div class="chat-input-area-display">
                              <button class="take-control-btn">Tomar Control y Responder</button>
                         </div>
                     </div>
                      <div id="chat-3" class="chat-content-panel">
                         <div class="chat-header-display"><h4>Spas de Lujo S.A.</h4></div>
-                        <div class="chat-messages-display">
-                            <p class="msg-assistant">Nuestro plan profesional es ideal...</p>
-                            <p class="msg-user">Gracias por la información.</p>
-                        </div>
+                        <div class="chat-messages-display"><p class="msg-assistant">Nuestro plan profesional es ideal...</p><p class="msg-user">Gracias por la información.</p></div>
                         <div class="chat-input-area-display">
                              <input type="text" placeholder="Conversación manejada por IA" disabled>
                         </div>
