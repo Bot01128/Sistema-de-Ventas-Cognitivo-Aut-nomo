@@ -6,6 +6,9 @@ import uuid
 from flask import Flask, render_template, request, jsonify
 from flask_babel import Babel
 from cerebro_dashboard import create_chatbot
+# Mantenemos las importaciones de los trabajadores, aunque no se usen en las rutas web
+from trabajador_orquestador import orquestar_nueva_caza
+from trabajador_cazador import cazar_prospectos
 
 # --- CONFIGURACION INICIAL ---
 app = Flask(__name__)
@@ -43,7 +46,7 @@ else:
     print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
 
 # --- CARGA DE LA PERSONALIDAD PARA EL CHAT ---
-ID_DE_LA_CAMPAÑA_ACTUAL = 1 
+ID_DE_LA_CAMPAÑA_ACTUAL = 1
 descripcion_de_la_campana = "Soy un asistente virtual generico, hubo un error al cargar la descripcion."
 try:
     print(f">>> [main.py] Buscando descripcion para la campana ID: {ID_DE_LA_CAMPAÑA_ACTUAL}...")
@@ -76,11 +79,9 @@ def dashboard():
 def client_dashboard():
     return render_template('client_dashboard.html')
 
-# === INICIO DE LA ÚNICA MODIFICACIÓN: RUTA DE LOGIN AÑADIDA ===
 @app.route('/login')
 def login():
     return render_template('login.html')
-# === FIN DE LA ÚNICA MODIFICACIÓN ===
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -108,6 +109,37 @@ def mostrar_pre_nido(id_unico):
 @app.route('/generar-nido', methods=['POST'])
 def generar_nido_y_enviar_enlace():
     return render_template('nido_template.html')
+
+# --- RUTA PARA LANZAR CAMPAÑA DESDE EL DASHBOARD ---
+@app.route('/lanzar-campana', methods=['POST'])
+def lanzar_campana():
+    print("\n>>> [RUTA /lanzar-campana] Orden recibida del Dashboard!")
+    
+    orden_del_cliente = request.get_json()
+    if not orden_del_cliente:
+        return jsonify({"error": "No se recibieron datos de la campaña."}), 400
+
+    conn = None
+    try:
+        print(">>> [RUTA /lanzar-campana] Dejando la orden en la 'cola_de_trabajos'...")
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        
+        sql_insert = "INSERT INTO cola_de_trabajos (tipo_trabajo, datos_json) VALUES (%s, %s);"
+        datos_como_texto_json = json.dumps(orden_del_cliente)
+        
+        cur.execute(sql_insert, ('cazar_prospectos', datos_como_texto_json))
+        conn.commit()
+        
+        print(">>> [RUTA /lanzar-campana] Orden dejada en el buzon con exito!")
+        return jsonify({"message": "Campaña recibida! Hemos empezado a trabajar en ello."})
+
+    except Exception as e:
+        print(f"!!! ERROR FATAL en /lanzar-campana: {e}")
+        return jsonify({"error": f"Ocurrio un error en el servidor: {e}"}), 500
+    finally:
+        if conn:
+            conn.close()
 
 # --- RUTAS DE PRUEBA ---
 @app.route('/ver-pre-nido')
