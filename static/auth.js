@@ -4,52 +4,56 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// --- FUNCIÓN PRINCIPAL DE ARRANQUE ---
-const mainAuth = async () => {
-    // Primero, intentamos obtener la sesión del usuario actual
+// --- FUNCIÓN DE GESTIÓN DE SESIÓN Y PROTECCIÓN DE RUTAS ---
+const handleAuth = async () => {
+    // 1. Obtiene la sesión actual. Esta función espera a que Supabase esté listo.
     const { data: { session } } = await supabase.auth.getSession();
     
-    // Verificamos en qué página estamos
+    // 2. Define en qué página estamos.
     const isLoginPage = window.location.pathname.endsWith('/login');
     const isCallbackPage = window.location.pathname.endsWith('/callback');
 
-    // Si estamos en la página de callback, no hacemos nada, dejamos que su propio script actúe.
+    // 3. Si estamos en la página de callback, detenemos la ejecución aquí.
     if (isCallbackPage) {
-        return;
+        return; 
     }
 
-    // --- LÓGICA DE ENRUTAMIENTO ---
+    // 4. Lógica de redirección, ahora sí, garantizada.
     if (!session && !isLoginPage) {
-        // CASO 1: No hay sesión y NO estamos en la página de login.
-        // ACCIÓN: Forzar redirección a la página de login.
+        // Si NO hay sesión y NO estamos en la página de login, es un intruso.
+        // Lo enviamos a la puerta de entrada.
         window.location.href = '/login';
     } else if (session && isLoginPage) {
-        // CASO 2: Sí hay sesión y estamos intentando acceder a la página de login.
-        // ACCIÓN: Ya está logueado, lo redirigimos a su dashboard.
+        // Si SÍ hay sesión y está intentando volver a la página de login,
+        // lo mandamos directamente a su dashboard.
         window.location.href = '/cliente';
-    }
-
-    // --- LÓGICA DE LOS BOTONES (Solo se activa si los botones existen) ---
-    const googleLoginButton = document.getElementById('google-login-btn');
-    if (googleLoginButton) {
-        googleLoginButton.addEventListener('click', async () => {
-            await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: window.location.origin + '/callback'
-                }
-            });
-        });
-    }
-
-    const logoutButton = document.getElementById('logout-btn');
-    if (logoutButton) {
-        logoutButton.addEventListener('click', async () => {
-            await supabase.auth.signOut();
-            window.location.href = '/login';
-        });
     }
 };
 
-// Ejecutamos la función principal al cargar el script
-mainAuth();
+// --- INICIALIZACIÓN DE LA LÓGICA EN LA PÁGINA ---
+
+// Lógica para la página de Login
+const googleLoginButton = document.getElementById('google-login-btn');
+if (googleLoginButton) {
+    googleLoginButton.addEventListener('click', async () => {
+        await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin + '/callback'
+            }
+        });
+    });
+}
+
+// Lógica para el botón de Logout
+const logoutButton = document.getElementById('logout-btn');
+if (logoutButton) {
+    logoutButton.addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        window.location.href = '/login';
+    });
+}
+
+// --- EJECUCIÓN DEL GUARDIA DE SEGURIDAD ---
+// Ejecutamos nuestra función principal de autenticación.
+handleAuth();
