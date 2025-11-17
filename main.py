@@ -43,7 +43,7 @@ else:
     print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
 
 # --- CARGA DE LA PERSONALIDAD PARA EL CHAT ---
-ID_DE_LA_CAMPAÑA_ACTUAL = 1 # Esta línea es crucial y estaba faltando o mal escrita
+ID_DE_LA_CAMPAÑA_ACTUAL = 1 
 descripcion_de_la_campana = "Soy un asistente virtual generico, hubo un error al cargar la descripcion."
 try:
     print(f">>> [main.py] Buscando descripcion para la campana ID: {ID_DE_LA_CAMPAÑA_ACTUAL}...")
@@ -75,6 +75,12 @@ def dashboard():
 @app.route('/cliente')
 def client_dashboard():
     return render_template('client_dashboard.html')
+
+# === INICIO DE LA ÚNICA MODIFICACIÓN: RUTA DE LOGIN AÑADIDA ===
+@app.route('/login')
+def login():
+    return render_template('login.html')
+# === FIN DE LA ÚNICA MODIFICACIÓN ===
 
 @app.route('/chat', methods=['POST'])
 def chat():
