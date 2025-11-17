@@ -5,13 +5,13 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- FUNCIÓN PRINCIPAL DE ARRANQUE ---
-const main = async () => {
+const mainAuth = async () => {
     // Primero, intentamos obtener la sesión del usuario actual
     const { data: { session } } = await supabase.auth.getSession();
     
     // Verificamos en qué página estamos
-    const isLoginPage = window.location.pathname === '/login';
-    const isCallbackPage = window.location.pathname === '/callback';
+    const isLoginPage = window.location.pathname.endsWith('/login');
+    const isCallbackPage = window.location.pathname.endsWith('/callback');
 
     // Si estamos en la página de callback, no hacemos nada, dejamos que su propio script actúe.
     if (isCallbackPage) {
@@ -25,11 +25,9 @@ const main = async () => {
         window.location.href = '/login';
     } else if (session && isLoginPage) {
         // CASO 2: Sí hay sesión y estamos intentando acceder a la página de login.
-        // ACCIÓN: Ya no es necesario, lo redirigimos a su dashboard.
+        // ACCIÓN: Ya está logueado, lo redirigimos a su dashboard.
         window.location.href = '/cliente';
     }
-    // CASO 3: Si hay sesión y estamos en una página protegida, o no hay sesión y estamos en login,
-    // no hacemos nada y dejamos que la página cargue normalmente.
 
     // --- LÓGICA DE LOS BOTONES (Solo se activa si los botones existen) ---
     const googleLoginButton = document.getElementById('google-login-btn');
@@ -54,4 +52,4 @@ const main = async () => {
 };
 
 // Ejecutamos la función principal al cargar el script
-main();
+mainAuth();
