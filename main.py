@@ -69,17 +69,16 @@ else:
 
 # --- RUTAS DE LA APLICACION ---
 
-# === INICIO DE LA MODIFICACIÓN: RUTA RAÍZ INTELIGENTE ===
+# === INICIO DE LA CORRECCIÓN ===
+# Ahora la ruta principal redirige a la página de login.
 @app.route('/')
 def home():
-    # Esta es la página principal. En el futuro, aquí comprobaremos la sesión del usuario.
-    # Por ahora, simplemente redirige a la página de login como punto de entrada.
     return redirect(url_for('login'))
-# === FIN DE LA MODIFICACIÓN ===
+# === FIN DE LA CORRECCIÓN ===
 
-@app.route('/dashboard-ventas')
+# La página de ventas ahora vive en su propia ruta, por si la necesitamos.
+@app.route('/ventas')
 def sales_dashboard():
-    # Dejamos esta ruta por si queremos tener una página de ventas pública en el futuro
     return render_template('dashboard.html')
 
 @app.route('/cliente')
@@ -103,7 +102,7 @@ def chat():
     except Exception as e:
         return jsonify({"error": "Ocurrio un error."}), 500
 
-# --- (El resto de tus rutas de /pre-nido, /ver-nido, etc. se quedan intactas) ---
+# --- (El resto de las rutas se quedan intactas) ---
 @app.route('/pre-nido/<uuid:id_unico>')
 def mostrar_pre_nido(id_unico):
     nombre_negocio_db = "Empresa Real"
