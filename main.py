@@ -9,38 +9,82 @@ from cerebro_dashboard import create_chatbot
 
 # --- CONFIGURACION INICIAL ---
 app = Flask(__name__)
-# ... (configuración de idioma sin cambios) ...
 
-# --- INICIALIZACION DE LA APLICACION ---
+# --- BLOQUE DE CONFIGURACION DE IDIOMAS ---
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.join(basedir, 'translations')
+
+def get_locale():
+    if not request.accept_languages:
+        return 'es'
+    return request.accept_languages.best_match(['en', 'es'])
+
+babel = Babel(app, locale_selector=get_locale)
+
+@app.context_processor
+def inject_get_locale():
+    return dict(get_locale=get_locale)
+
+# --- INICIALIZACION DE LA APLICACION Y BASE DE DATOS ---
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
-# ... (código de diagnóstico y carga de personalidad sin cambios) ...
+print("=====================================================")
+print(">>> [DIAGNOSTICO] INICIANDO APLICACION...")
+if DATABASE_URL:
+    print(">>> [DIAGNOSTICO] DATABASE_URL encontrada.")
+else:
+    print("!!! ERROR [DIAGNOSTICO]: DATABASE_URL NO FUE ENCONTRADA!")
+print("=====================================================")
+if GOOGLE_API_KEY:
+    genai.configure(api_key=GOOGLE_API_KEY)
+    print(">>> [main.py] IA de Google configurada.")
+else:
+    print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
 
-# --- RUTAS DE LA APLICACION (CON LÓGICA DE ENRUTAMIENTO) ---
+# --- CARGA DE LA PERSONALIDAD PARA EL CHAT ---
+ID_DE_LA_CAMPAÑA_ACTUAL = 1 
+descripcion_de_la_campana = "Soy un asistente virtual generico, hubo un error al cargar la descripcion."
+try:
+    print(f">>> [main.py] Buscando descripcion para la campana ID: {ID_DE_LA_CAMPAÑA_ACTUAL}...")
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("SELECT descripcion_producto FROM campanas WHERE id = %s", (ID_DE_LA_CAMPAÑA_ACTUAL,))
+    result = cur.fetchone()
+    if result and result[0]:
+        descripcion_de_la_campana = result[0]
+        print(">>> [DIAGNOSTICO] EXITO! Se encontro la descripcion en Supabase.")
+    else:
+        print("!!! ERROR [DIAGNOSTICO]: Conexion exitosa, PERO NO SE ENCONTRO la campana con ID 1.")
+    cur.close()
+    conn.close()
+except Exception as e:
+    print(f"!!! ERROR FATAL [DIAGNOSTICO]: LA CONEXION A SUPABASE FALLO! El error fue: {e}")
 
-# Esta es ahora la ruta principal que decide a dónde va el usuario
+dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
+if dashboard_brain:
+    print(">>> [main.py] Cerebro con personalidad de campana inicializado.")
+else:
+    print("!!! ERROR [main.py]: El cerebro no pudo ser inicializado.")
+
+# --- RUTAS DE LA APLICACION ---
+
+# === INICIO DE LA MODIFICACIÓN: RUTA RAÍZ INTELIGENTE ===
 @app.route('/')
 def home():
-    # En el futuro, aquí pondremos la lógica para leer la sesión del usuario.
-    # Por ahora, para probar, lo dejamos simple.
-    # Si un usuario visita la raíz, lo enviamos a la página de login.
+    # Esta es la página principal. En el futuro, aquí comprobaremos la sesión del usuario.
+    # Por ahora, simplemente redirige a la página de login como punto de entrada.
     return redirect(url_for('login'))
+# === FIN DE LA MODIFICACIÓN ===
 
 @app.route('/dashboard-ventas')
 def sales_dashboard():
-    # Esta será la página para visitantes (lo que antes era '/')
+    # Dejamos esta ruta por si queremos tener una página de ventas pública en el futuro
     return render_template('dashboard.html')
 
 @app.route('/cliente')
 def client_dashboard():
     return render_template('client_dashboard.html')
-
-@app.route('/admin')
-def admin_dashboard():
-    # Aquí irá el futuro "Panel del Arquitecto"
-    # Por ahora, muestra una página simple.
-    return "<h1>Panel del Arquitecto (En Construcción)</h1>"
 
 @app.route('/login')
 def login():
@@ -48,11 +92,43 @@ def login():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    # ... (código del chat intacto) ...
-    return jsonify({"error": "Ocurrio un error."}), 500
+    if not dashboard_brain:
+        return jsonify({"error": "Chat no disponible."}), 500
+    user_message = request.json.get('message')
+    if not user_message:
+        return jsonify({"error": "No hay mensaje."}), 400
+    try:
+        response_text = dashboard_brain.invoke({"question": user_message})
+        return jsonify({"response": response_text})
+    except Exception as e:
+        return jsonify({"error": "Ocurrio un error."}), 500
 
-# --- (RESTO DE LAS RUTAS SIN CAMBIOS) ---
-# ... (todas tus rutas de /pre-nido, /ver-nido, etc. van aquí intactas) ...
+# --- (El resto de tus rutas de /pre-nido, /ver-nido, etc. se quedan intactas) ---
+@app.route('/pre-nido/<uuid:id_unico>')
+def mostrar_pre_nido(id_unico):
+    nombre_negocio_db = "Empresa Real"
+    textos_db = {}
+    return render_template('persuasor.html',
+                           prospecto_id=str(id_unico),
+                           nombre_negocio=nombre_negocio_db,
+                           textos=textos_db)
+
+@app.route('/generar-nido', methods=['POST'])
+def generar_nido_y_enviar_enlace():
+    return render_template('nido_template.html')
+
+@app.route('/ver-pre-nido')
+def ver_pre_nido():
+    id_de_prueba = str(uuid.uuid4())
+    nombre_de_prueba = "Ferreteria El Tornillo Feliz (Prueba)"
+    return render_template('persuasor.html',
+                           prospecto_id=id_de_prueba,
+                           nombre_negocio=nombre_de_prueba,
+                           textos={})
+
+@app.route('/ver-nido')
+def ver_nido():
+    return render_template('nido_template.html')
 
 # --- BLOQUE DE ARRANQUE ---
 if __name__ == '__main__':
