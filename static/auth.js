@@ -1,8 +1,6 @@
-// --- CONFIGURACIÓN DE SUPABASE (NECESITAREMOS ESTAS LLAVES) ---
+// --- CONFIGURACIÓN DE SUPABASE (CON LA CLAVE REAL Y ACTUALIZADA) ---
 const SUPABASE_URL = 'https://fxduwnictssgxqndokly.supabase.co'; 
-// Esta es tu URL pública de Supabase.
-const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY'; 
-// ¡IMPORTANTE! Reemplaza esto con tu clave "anon" de Supabase.
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4ZHV3bmljdHNzZ3hxbmRva2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMzc3NDgsImV4cCI6MjA3NzYxMzc0OH0.1uqbiNroOCvAsn08Ps7JZpXV9K-rUyLfukOL5w4X_eg';
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -13,6 +11,10 @@ if (googleLoginButton) {
     googleLoginButton.addEventListener('click', async () => {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
+            options: {
+                // Redirige al usuario al dashboard del cliente después de un login exitoso
+                redirectTo: window.location.origin + '/cliente'
+            }
         });
 
         if (error) {
@@ -21,21 +23,3 @@ if (googleLoginButton) {
         }
     });
 }
-```**Acción Requerida:** Para que este código funcione, necesitas reemplazar `'TU_SUPABASE_ANON_KEY'` por tu clave real. Aquí te digo cómo encontrarla:
-*   Ve a tu proyecto en **Supabase**.
-*   Haz clic en el icono de **engranaje (Settings)**.
-*   En el menú, haz clic en **`API`**.
-*   En la sección "Project API keys", verás una clave llamada `anon` `public`. **Copia esa clave** y pégala en el archivo `auth.js`.
-
----
-
-### **3. El Python: `main.py`**
-
-**Instrucción:** Abre tu archivo `main.py` y añade esta nueva ruta `/login`. Puedes ponerla junto a las otras rutas de la aplicación.
-
-```python
-# AÑADE ESTA NUEVA RUTA EN main.py
-
-@app.route('/login')
-def login():
-    return render_template('login.html')
