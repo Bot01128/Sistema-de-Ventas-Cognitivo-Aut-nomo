@@ -42,7 +42,6 @@
                 <button class="tab-button" data-tab="suggestions">{{ _('Tus Sugerencias') }}</button>
             </div>
 
-            <!-- 1. PESTAÑA MIS CAMPAÑAS (CON KPIs) -->
             <div class="tab-content" id="my-campaigns" style="display: block;">
                 <div class="kpi-container">
                     <div class="kpi-card">
@@ -77,7 +76,6 @@
                 </table>
             </div>
 
-            <!-- 2. PESTAÑA CREAR CAMPAÑA (CONTENIDO RESTAURADO) -->
             <div class="tab-content" id="create-campaign" style="display: none;">
                 <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
                 <div class="form-section">
@@ -123,7 +121,6 @@
                 </div>
             </div>
 
-            <!-- 3. FLUJO DE PROSPECTOS (CONTENIDO RESTAURADO) -->
             <div class="tab-content" id="prospect-flow" style="display: none;">
                 <h2>{{ _('Flujo de Prospectos') }}</h2>
                 <div class="flow-container">
@@ -134,30 +131,70 @@
                 </div>
             </div>
 
-            <!-- 4. CONVERSACIONES (CONTENIDO RESTAURADO) -->
             <div class="tab-content" id="conversations" style="display: none;">
                 <h2>{{ _('Conversaciones') }}</h2>
-                <div class="conversations-container">
-                    <div class="conversations-list">
-                        <div class="chat-item active"><strong>Ferretería El Tornillo Feliz</strong><small>IA: ...perfecto para su proyecto.</small></div>
-                        <div class="chat-item"><strong>Restaurante Luigi's</strong><small>Humano: ¡Claro! Te envío la cotización...</small></div>
+                <div class="conversation-queue-container">
+                    <h4>Cola de Atención</h4>
+                    <div class="conversation-queue">
+                        <div class="conversation-card active" data-conversation-id="chat-1">
+                            <h5><span class="status-icon">👤</span> Ferretería El Tornillo Feliz</h5>
+                            <p class="last-message">"Perfecto, ¿puedo hablar con un asesor para cerrar la compra?"</p>
+                            <small class="waiting-time urgent">Esperando: 45 min</small>
+                        </div>
+                        <div class="conversation-card" data-conversation-id="chat-2">
+                            <h5><span class="status-icon">⭐️</span> Restaurante Luigi's</h5>
+                            <p class="last-message">"Me interesa mucho, ¿cuál es el costo del plan profesional?"</p>
+                            <small class="waiting-time">Esperando: 8 min</small>
+                        </div>
+                        <div class="conversation-card" data-conversation-id="chat-3">
+                            <h5><span class="status-icon">🤖</span> Spas de Lujo S.A.</h5>
+                            <p class="last-message">"Gracias por la información."</p>
+                            <small class="waiting-time">Respondido por IA</small>
+                        </div>
                     </div>
-                    <div class="active-chat">
-                        <div class="chat-header-display"><h4>Ferretería El Tornillo Feliz 🤖</h4></div>
-                        <div class="chat-messages-display"><p class="msg-assistant">Hola, gracias por contactar...</p></div>
-                        <div class="chat-input-area-display"><input type="text" placeholder="Intervenir en la conversación..." disabled><button disabled>Enviar</button></div>
+                </div>
+                <div class="chat-display-area">
+                    <div id="chat-1" class="chat-content-panel">
+                        <div class="chat-header-display"><h4>Ferretería El Tornillo Feliz</h4></div>
+                        <div class="chat-messages-display">
+                            <p class="msg-assistant">Hola, gracias por contactar...</p>
+                            <p class="msg-user">¿Tienen tornillos de anclaje?</p>
+                            <p class="msg-assistant">Sí, es nuestra especialidad...</p>
+                            <p class="msg-user">Perfecto, ¿puedo hablar con un asesor para cerrar la compra?</p>
+                        </div>
+                        <div class="chat-input-area-display">
+                            <button class="take-control-btn">Tomar Control y Responder</button>
+                        </div>
+                    </div>
+                    <div id="chat-2" class="chat-content-panel">
+                        <div class="chat-header-display"><h4>Restaurante Luigi's</h4></div>
+                        <div class="chat-messages-display">
+                            <p class="msg-assistant">Hola Luigi's, vi sus reseñas...</p>
+                            <p class="msg-user">Me interesa mucho, ¿cuál es el costo del plan profesional?</p>
+                        </div>
+                        <div class="chat-input-area-display">
+                             <button class="take-control-btn">Tomar Control y Responder</button>
+                        </div>
+                    </div>
+                     <div id="chat-3" class="chat-content-panel">
+                        <div class="chat-header-display"><h4>Spas de Lujo S.A.</h4></div>
+                        <div class="chat-messages-display">
+                            <p class="msg-assistant">Nuestro plan profesional es ideal...</p>
+                            <p class="msg-user">Gracias por la información.</p>
+                        </div>
+                        <div class="chat-input-area-display">
+                             <input type="text" placeholder="Conversación manejada por IA" disabled>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 5. FACTURACIÓN (CONTENIDO RESTAURADO) -->
             <div class="tab-content" id="billing" style="display: none;">
                 <h2>{{ _('Mi Saldo y Facturación') }}</h2>
                 <p>Saldo Actual: <strong>$0.00</strong></p>
                 <button class="cta-button btn-blue-3d">{{ _('+ Recargar Saldo') }}</button>
             </div>
             
-            <!-- 6. TUS SUGERENCIAS (CONTENIDO RESTAURADO) -->
             <div class="tab-content" id="suggestions" style="display: none;">
                  <h2>Tú eres el Arquitecto de Nuestro Futuro</h2>
                  <p>Tu voz es la brújula que guía nuestra innovación. ¿Qué funcionalidad revolucionaría tu trabajo?</p>
