@@ -4,56 +4,52 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// --- FUNCIÓN DE GESTIÓN DE SESIÓN Y PROTECCIÓN DE RUTAS ---
-const handleAuth = async () => {
-    // 1. Obtiene la sesión actual. Esta función espera a que Supabase esté listo.
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    // 2. Define en qué página estamos.
-    const isLoginPage = window.location.pathname.endsWith('/login');
-    const isCallbackPage = window.location.pathname.endsWith('/callback');
-
-    // 3. Si estamos en la página de callback, detenemos la ejecución aquí.
-    if (isCallbackPage) {
-        return; 
-    }
-
-    // 4. Lógica de redirección, ahora sí, garantizada.
-    if (!session && !isLoginPage) {
-        // Si NO hay sesión y NO estamos en la página de login, es un intruso.
-        // Lo enviamos a la puerta de entrada.
-        window.location.href = '/login';
-    } else if (session && isLoginPage) {
-        // Si SÍ hay sesión y está intentando volver a la página de login,
-        // lo mandamos directamente a su dashboard.
-        window.location.href = '/cliente';
-    }
-};
-
-// --- INICIALIZACIÓN DE LA LÓGICA EN LA PÁGINA ---
-
-// Lógica para la página de Login
+// --- LÓGICA DE LA PÁGINA DE LOGIN ---
+// Solo se ejecuta si encontramos el botón de login
 const googleLoginButton = document.getElementById('google-login-btn');
 if (googleLoginButton) {
     googleLoginButton.addEventListener('click', async () => {
         await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
+                // Después de que Google autorice, lo enviamos a /callback
                 redirectTo: window.location.origin + '/callback'
             }
         });
     });
 }
 
-// Lógica para el botón de Logout
+// --- LÓGICA DEL BOTÓN DE LOGOUT ---
+// Solo se ejecuta si encontramos el botón de logout
 const logoutButton = document.getElementById('logout-btn');
 if (logoutButton) {
     logoutButton.addEventListener('click', async () => {
         await supabase.auth.signOut();
+        // Después de cerrar sesión, siempre lo enviamos a /login
         window.location.href = '/login';
     });
 }
 
-// --- EJECUCIÓN DEL GUARDIA DE SEGURIDAD ---
-// Ejecutamos nuestra función principal de autenticación.
-handleAuth();
+// --- EL GUARDIA DE SEGURIDAD (LA PARTE MÁS IMPORTANTE) ---
+// Esta función se ejecuta en TODAS las páginas que incluyan este script.
+const protectPage = async () => {
+    // Verificamos si estamos en una página pública que no necesita protección
+    const isPublicPage = window.location.pathname === '/login' || window.location.pathname === '/callback';
+    
+    // Si estamos en una página pública, no hacemos nada más.
+    if (isPublicPage) {
+        return;
+    }
+
+    // Si estamos en cualquier OTRA página, verificamos la sesión
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+        // Si NO hay sesión, es un intruso. Lo enviamos a la página de login.
+        window.location.href = '/login';
+    }
+    // Si hay sesión, no hacemos nada y dejamos que el usuario vea la página.
+};
+
+// Ejecutamos al guardia de seguridad en cuanto se carga la página.
+protectPage();
