@@ -37,8 +37,8 @@ if GOOGLE_API_KEY:
 else:
     print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
 
-# --- CARGA DE LA PERSONALIDAD PARA EL CHAT ---
-ID_DE_LA_CAMPAÑA_ACTUAL = 1
+# --- CARGA DE LA PERSONALIDAD PARA EL CHAT (RESTAURADO) ---
+ID_DE_LA_CAMPAÑA_ACTUAL = 1 
 descripcion_de_la_campana = "Soy un asistente virtual generico, hubo un error al cargar la descripcion."
 try:
     print(f">>> [main.py] Buscando descripcion para la campana ID: {ID_DE_LA_CAMPAÑA_ACTUAL}...")
@@ -66,10 +66,8 @@ else:
 
 @app.route('/')
 def home():
-    # Por ahora, la ruta raíz siempre redirige al login.
     return redirect(url_for('login'))
 
-# Esta es la página a la que Supabase nos devuelve. Su único trabajo es procesar el login.
 @app.route('/callback')
 def callback():
     return render_template('callback.html')
