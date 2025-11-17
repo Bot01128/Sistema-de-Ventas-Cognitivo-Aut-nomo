@@ -11,7 +11,7 @@ if (googleLoginButton) {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                // DESPUÉS DEL LOGIN, LO ENVIAMOS A LA RUTA RAÍZ PARA QUE EL SERVIDOR DECIDA
+                // === CAMBIO IMPORTANTE: Redirige a la ruta raíz para que el servidor decida ===
                 redirectTo: window.location.origin 
             }
         });
@@ -22,13 +22,12 @@ if (googleLoginButton) {
     });
 }
 
-// --- LÓGICA DEL BOTÓN DE LOGOUT (PARA LOS DASHBOARDS) ---
+// --- LÓGICA DEL BOTÓN DE LOGOUT ---
 const logoutButton = document.getElementById('logout-btn');
 if (logoutButton) {
     logoutButton.addEventListener('click', async () => {
         const { error } = await supabase.auth.signOut();
         if (!error) {
-            // Si el logout es exitoso, lo enviamos de vuelta a la página de login
             window.location.href = '/login';
         } else {
             console.error('Error al cerrar sesión:', error.message);
@@ -37,10 +36,10 @@ if (logoutButton) {
 }
 
 // --- PROTECCIÓN DE RUTAS ---
-// Comprueba el estado de la sesión en cada carga de página
+// (Por ahora, mantenemos esta lógica simple. La mejoraremos en la siguiente fase)
 supabase.auth.onAuthStateChange((event, session) => {
-    // Si no hay sesión y no estamos en la página de login, redirigir a login
     if (!session && window.location.pathname !== '/login') {
-        window.location.href = '/login';
+        // Si no hay sesión y no estamos ya en la página de login, lo mandamos para allá.
+        // window.location.href = '/login'; // Desactivado temporalmente para no causar bucles
     }
 });
