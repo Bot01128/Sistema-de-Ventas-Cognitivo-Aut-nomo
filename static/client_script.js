@@ -7,7 +7,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // --- FUNCIÓN PRINCIPAL DE ARRANQUE ---
 const main = async () => {
 
-    // --- MÓDULO DE SEGURIDAD (EL GUARDIA) ---
+    // --- MÓDULO 1: SEGURIDAD (EL GUARDIA) ---
     const { data: { session } } = await supabase.auth.getSession();
     const isPublicPage = window.location.pathname.endsWith('/login') || window.location.pathname.endsWith('/callback');
     if (!isPublicPage && !session) {
@@ -15,7 +15,7 @@ const main = async () => {
         return; 
     }
 
-    // --- MÓDULO DE PESTAÑAS ---
+    // --- MÓDULO 2: MANEJO DE PESTAÑAS ---
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
     if (tabButtons.length > 0 && tabContents.length > 0) {
@@ -37,7 +37,7 @@ const main = async () => {
         }
     }
 
-    // --- MÓDULO DEL CHAT DE LA IA ---
+    // --- MÓDULO 3: MANEJO DEL CHAT DE LA IA ---
     const chatForm = document.getElementById('chat-form');
     if (chatForm) {
         const userInput = document.getElementById('user-input');
@@ -72,7 +72,7 @@ const main = async () => {
         });
     }
     
-    // --- MÓDULO DEL FORMULARIO DE CAMPAÑA ---
+    // --- MÓDULO 4: FORMULARIO DE CAMPAÑA ---
     const createCampaignTab = document.getElementById('create-campaign');
     if (createCampaignTab) {
         const planCards = createCampaignTab.querySelectorAll('.plan-card');
@@ -92,35 +92,28 @@ const main = async () => {
         if (planCards.length > 0 && prospectsInput) {
             const userBalance = 0.00;
             if(currentBalanceElement) currentBalanceElement.textContent = `$${userBalance.toFixed(2)}`;
-
             const plans = {
                 arrancador: { name: 'El Arrancador', baseProspects: 4, baseCost: 149, extraCost: 37.25, limit: 14 },
                 profesional: { name: 'El Profesional', baseProspects: 15, baseCost: 399, extraCost: 26.60, limit: 49 },
                 dominador: { name: 'El Dominador', baseProspects: 50, baseCost: 999, extraCost: 20.00, limit: Infinity }
             };
-
             const handleFormUpdate = () => {
                 const prospectsCount = parseInt(prospectsInput.value, 10);
                 if (isNaN(prospectsCount) || prospectsCount < 4) return;
-
                 let activePlanKey;
                 if (prospectsCount <= plans.arrancador.limit) { activePlanKey = 'arrancador'; } 
                 else if (prospectsCount <= plans.profesional.limit) { activePlanKey = 'profesional'; } 
                 else { activePlanKey = 'dominador'; }
-                
                 const currentPlan = plans[activePlanKey];
                 planCards.forEach(card => card.classList.remove('selected'));
                 const cardToSelect = createCampaignTab.querySelector(`.plan-card[data-plan="${activePlanKey}"]`);
                 if (cardToSelect) cardToSelect.classList.add('selected');
-
                 const extraProspects = prospectsCount - currentPlan.baseProspects;
                 const totalCost = currentPlan.baseCost + (extraProspects * currentPlan.extraCost);
                 const planName = (prospectsCount === currentPlan.baseProspects) ? currentPlan.name : 'Personalizado';
-                
                 if(selectedPlanElement) selectedPlanElement.textContent = planName;
                 if(dailyProspectsElement) dailyProspectsElement.textContent = prospectsCount;
                 if(totalCostElement) totalCostElement.textContent = `$${totalCost.toFixed(2)}`;
-                
                 if (launchButton && summaryBox && rechargeLine && remainingLine) {
                     if (userBalance >= totalCost) {
                         const remaining = userBalance - totalCost;
@@ -139,7 +132,6 @@ const main = async () => {
                     }
                 }
             };
-
             planCards.forEach(card => {
                 card.addEventListener('click', () => {
                     const planKey = card.getAttribute('data-plan');
@@ -150,21 +142,16 @@ const main = async () => {
                     }
                 });
             });
-
             prospectsInput.addEventListener('input', handleFormUpdate);
-
             const defaultPlanCard = createCampaignTab.querySelector('.plan-card[data-plan="arrancador"]');
-            if (defaultPlanCard) {
-                defaultPlanCard.click();
-            }
-
+            if (defaultPlanCard) { defaultPlanCard.click(); }
             if (phoneInput) {
                 window.intlTelInput(phoneInput, { utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js" });
             }
         }
     }
     
-    // --- MÓDULO DE LOGOUT ---
+    // --- MÓDULO 5: LOGOUT ---
     const logoutButton = document.getElementById('logout-btn');
     if (logoutButton) {
         logoutButton.addEventListener('click', async () => {
@@ -173,7 +160,7 @@ const main = async () => {
         });
     }
 
-    // --- MÓDULO PESTAÑA "CONVERSACIONES" ---
+    // --- MÓDULO 6: PESTAÑA "CONVERSACIONES" ---
     const conversationsTab = document.getElementById('conversations');
     if (conversationsTab) {
         const conversationCards = conversationsTab.querySelectorAll('.conversation-card');
@@ -199,9 +186,6 @@ const main = async () => {
     }
 };
 
-// Ejecutar todo
-main();
-
 // --- LÓGICA EXCLUSIVA DE LA PÁGINA DE LOGIN ---
 const googleLoginButton = document.getElementById('google-login-btn');
 if (googleLoginButton) {
@@ -213,4 +197,7 @@ if (googleLoginButton) {
             }
         });
     });
-}```
+} else {
+    // Si no es la página de login, ejecuta el guardia de seguridad y el resto de la lógica.
+    main();
+}
