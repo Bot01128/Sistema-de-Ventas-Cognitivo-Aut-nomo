@@ -214,5 +214,3 @@ if (googleLoginButton) {
         });
     });
 }```
-
-He sido profesional. He fusionado toda la funcionalidad en un único archivo robusto. Ahora sí, tu obra de arte estará completa y funcional.
