@@ -1,13 +1,13 @@
 // --- CONFIGURACIÓN DE SUPABASE ---
 const SUPABASE_URL = 'https://fxduwnictssgxqndokly.supabase.co'; 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4ZHV3bmljdHNzZ3hxbmRva2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMzc3NDgsImV4cCI6MjA3NzYxMzc0OH0.1uqbiNroOCvAsn08Ps7JZpXV9K-rUyLfukOL5w4X_eg';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI-NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4ZHV3bmljdHNzZ3hxbmRva2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMzc3NDgsImV4cCI6MjA3NzYxMzc0OH0.1uqbiNroOCvAsn08Ps7JZpXV9K-rUyLfukOL5w4X_eg';
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- FUNCIÓN PRINCIPAL DE ARRANQUE ---
 const main = async () => {
-    
-    // --- MÓDULO DE SEGURIDAD (EL GUARDIA) ---
+
+    // --- MÓDULO 1: SEGURIDAD (EL GUARDIA) ---
     const { data: { session } } = await supabase.auth.getSession();
     const isPublicPage = window.location.pathname.endsWith('/login') || window.location.pathname.endsWith('/callback');
     if (!isPublicPage && !session) {
@@ -15,7 +15,7 @@ const main = async () => {
         return; 
     }
 
-    // --- MÓDULO DE PESTAÑAS ---
+    // --- MÓDULO 2: MANEJO DE PESTAÑAS ---
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
     if (tabButtons.length > 0 && tabContents.length > 0) {
@@ -37,7 +37,7 @@ const main = async () => {
         }
     }
 
-    // --- MÓDULO DEL CHAT DE LA IA ---
+    // --- MÓDULO 3: MANEJO DEL CHAT DE LA IA ---
     const chatForm = document.getElementById('chat-form');
     if (chatForm) {
         const userInput = document.getElementById('user-input');
@@ -72,7 +72,7 @@ const main = async () => {
         });
     }
     
-    // --- MÓDULO DEL FORMULARIO DE CAMPAÑA ---
+    // --- MÓDULO 4: FORMULARIO DE CAMPAÑA ---
     const createCampaignTab = document.getElementById('create-campaign');
     if (createCampaignTab) {
         const planCards = createCampaignTab.querySelectorAll('.plan-card');
@@ -151,7 +151,7 @@ const main = async () => {
         }
     }
     
-    // --- MÓDULO DE LOGOUT ---
+    // --- MÓDULO 5: LOGOUT ---
     const logoutButton = document.getElementById('logout-btn');
     if (logoutButton) {
         logoutButton.addEventListener('click', async () => {
@@ -160,7 +160,7 @@ const main = async () => {
         });
     }
 
-    // --- MÓDULO PESTAÑA "CONVERSACIONES" ---
+    // --- MÓDULO 6: PESTAÑA "CONVERSACIONES" ---
     const conversationsTab = document.getElementById('conversations');
     if (conversationsTab) {
         const conversationCards = conversationsTab.querySelectorAll('.conversation-card');
