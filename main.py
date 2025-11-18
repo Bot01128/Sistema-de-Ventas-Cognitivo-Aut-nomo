@@ -6,12 +6,17 @@ import uuid
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_babel import Babel
 from cerebro_dashboard import create_chatbot
+from werkzeug.routing import BaseConverter
 
 # --- CONFIGURACION INICIAL ---
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "una-clave-secreta-muy-robusta-para-desarrollo")
+class UUIDConverter(BaseConverter):
+    def to_python(self, value): return uuid.UUID(value)
+    def to_url(self, value): return str(value)
+app.url_map.converters['uuid'] = UUIDConverter
 
-# --- BLOQUE DE CONFIGURACION DE IDIOMAS (INTACTO) ---
+# --- BLOQUE DE CONFIGURACION DE IDIOMAS ---
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.join(basedir, 'translations')
 def get_locale():
@@ -22,25 +27,28 @@ babel = Babel(app, locale_selector=get_locale)
 def inject_get_locale():
     return dict(get_locale=get_locale)
 
-# --- INICIALIZACION DE LA APLICACION Y BASE DE DATOS (INTACTO) ---
+# --- INICIALIZACION DE LA APLICACION Y BASE DE DATOS ---
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
 
 print("=====================================================")
 print(">>> [DIAGNOSTICO] INICIANDO APLICACION...")
 if DATABASE_URL: print(">>> [DIAGNOSTICO] DATABASE_URL encontrada.")
 else: print("!!! ERROR [DIAGNOSTICO]: DATABASE_URL NO FUE ENCONTRADA!")
+if GOOGLE_API_KEY: print(">>> [main.py] GOOGLE_API_KEY encontrada.")
+else: print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
 print("=====================================================")
-if GOOGLE_API_KEY:
-    genai.configure(api_key=GOOGLE_API_KEY)
-    print(">>> [main.py] IA de Google configurada.")
-else:
-    print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
 
-# --- CARGA DE LA PERSONALIDAD PARA EL CHAT (INTACTO) ---
-ID_DE_LA_CAMPAÑA_ACTUAL = 1 
-descripcion_de_la_campana = "Soy un asistente virtual generico, hubo un error al cargar la descripcion."
+# --- CARGA DE LA PERSONALIDAD PARA EL CHAT ---
+dashboard_brain = None
 try:
+    if GOOGLE_API_KEY:
+        genai.configure(api_key=GOOGLE_API_KEY)
+        
+    ID_DE_LA_CAMPAÑA_ACTUAL = 1 
+    descripcion_de_la_campana = "Soy un asistente virtual generico, hubo un error al cargar la descripcion."
+    
     print(f">>> [main.py] Buscando descripcion para la campana ID: {ID_DE_LA_CAMPAÑA_ACTUAL}...")
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
@@ -53,22 +61,20 @@ try:
         print("!!! ERROR [DIAGNOSTICO]: Conexion exitosa, PERO NO SE ENCONTRO la campana con ID 1.")
     cur.close()
     conn.close()
-except Exception as e:
-    print(f"!!! ERROR FATAL [DIAGNOSTICO]: LA CONEXION A SUPABASE FALLO! El error fue: {e}")
+    
+    dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
+    if dashboard_brain:
+        print(">>> [main.py] Cerebro con personalidad de campana inicializado.")
+    else:
+        print("!!! ERROR [main.py]: El cerebro no pudo ser inicializado.")
 
-dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
-if dashboard_brain:
-    print(">>> [main.py] Cerebro con personalidad de campana inicializado.")
-else:
-    print("!!! ERROR [main.py]: El cerebro no pudo ser inicializado.")
+except Exception as e:
+    print(f"!!! ERROR FATAL [DIAGNOSTICO]: Fallo en la inicializacion. El error fue: {e}")
 
 # --- RUTAS DE LA APLICACION ---
-
 @app.route('/')
 def home():
-    # La ruta raíz ahora intenta ir al dashboard del cliente. 
-    # El JS de la página se encargará de protegerla si no hay sesión.
-    return render_template('client_dashboard.html')
+    return render_template('dashboard.html')
 
 @app.route('/cliente')
 def client_dashboard():
@@ -80,22 +86,38 @@ def login():
     
 @app.route('/callback')
 def callback():
-    return render_template('callback.html')
+    return render_template('callback.html', admin_email_js=ADMIN_EMAIL)
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    if not dashboard_brain:
-        return jsonify({"error": "Chat no disponible."}), 500
+    if not dashboard_brain: return jsonify({"error": "Chat no disponible por error de inicializacion."}), 500
     user_message = request.json.get('message')
-    if not user_message:
-        return jsonify({"error": "No hay mensaje."}), 400
+    if not user_message: return jsonify({"error": "No hay mensaje."}), 400
     try:
         response_text = dashboard_brain.invoke({"question": user_message})
         return jsonify({"response": response_text})
-    except Exception as e:
-        return jsonify({"error": "Ocurrio un error."}), 500
+    except Exception as e: return jsonify({"error": f"Ocurrio un error en el chat: {e}"}), 500
 
-# --- (El resto de las rutas de /pre-nido, etc. están intactas) ---
+# --- RUTAS DEL PERSUASOR ---
+@app.route('/pre-nido/<uuid:id_unico>')
+def mostrar_pre_nido(id_unico):
+    nombre_negocio_db = "Empresa Real"
+    return render_template('persuasor.html', prospecto_id=str(id_unico), nombre_negocio=nombre_negocio_db)
+
+@app.route('/generar-nido', methods=['POST'])
+def generar_nido_y_enviar_enlace():
+    return render_template('nido_template.html')
+
+# --- RUTAS DE PRUEBA ---
+@app.route('/ver-pre-nido')
+def ver_pre_nido():
+    id_de_prueba = str(uuid.uuid4())
+    nombre_de_prueba = "Ferreteria El Tornillo Feliz (Prueba)"
+    return render_template('persuasor.html', prospecto_id=id_de_prueba, nombre_negocio=nombre_de_prueba)
+
+@app.route('/ver-nido')
+def ver_nido():
+    return render_template('nido_template.html')
 
 # --- BLOQUE DE ARRANQUE ---
 if __name__ == '__main__':
