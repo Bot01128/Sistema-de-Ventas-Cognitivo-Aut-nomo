@@ -39,9 +39,9 @@
             </div>
 
             <div class="tab-content" id="campaign" style="display: block;">
-                <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
+                <!-- === INICIO DE LOS CAMBIOS DE TEXTO === -->
+                <h2>Datos Personales</h2>
                 
-                <!-- === INICIO DE LA ÚNICA MODIFICACIÓN === -->
                 <div class="form-section" style="background-color: #e9ecef; padding: 20px; border-radius: 8px;">
                     <label style="font-size: 1.2em; margin-bottom: 15px;">Paso 0: Primero, cuéntanos sobre ti</label>
                     <label for="client_name" style="margin-top:10px;">Tu Nombre Completo</label>
@@ -56,7 +56,11 @@
                     <label for="business_name" style="margin-top:15px;">Nombre de tu Negocio</label>
                     <input type="text" id="business_name" placeholder="Ej: Ferretería El Tornillo Feliz">
                 </div>
-                <!-- === FIN DE LA ÚNICA MODIFICACIÓN === -->
+
+                <hr> <!-- Línea divisoria para separar las secciones -->
+                
+                <h2 style="margin-top: 30px;">{{ _('Configurar Campaña de Prospección') }}</h2>
+                <!-- === FIN DE LOS CAMBIOS DE TEXTO === -->
 
                 <div class="form-section">
                     <label>{{ _('1. Selecciona un Plan') }}</label>
@@ -93,25 +97,3 @@
                     <p>Prospectos por día: <strong id="daily-prospects">4</strong></p>
                     <p>Costo Mensual Final: <strong id="total-cost">$149.00</strong></p>
                     <hr class="summary-divider">
-                    <p>Saldo en tu Cuenta: <strong id="current-balance">$0.00</strong></p>
-                    <p id="recharge-line" class="recharge-needed">Mínimo a Recargar: <strong id="recharge-amount">$149.00</strong></p>
-                    <p id="remaining-line" class="balance-ok" style="display:none;">Saldo Restante: <strong id="remaining-balance">$0.00</strong></p>
-                </div>
-                <div id="action-buttons-container">
-                    <button id="lancam" class="cta-button">{{ _('Lanzar Campaña') }}</button>
-                    <button id="recarga-ya" class="cta-button btn-blue-3d" style="display:none;">Recargar y Continuar</button>
-                </div>
-
-            </div>
-
-            <div class="tab-content" id="billing" style="display:none;">
-                <h2>{{ _('Mi Saldo y Facturación') }}</h2>
-                <p>Saldo Actual: <strong>$0.00</strong></p>
-                <button class="cta-button btn-blue-3d">{{ _('+ Recargar Saldo') }}</button>
-            </div>
-        </div>
-    </div>
-  
-   <script src="{{ url_for('static', filename='script.js') }}"></script>
-</body>
-</html>
