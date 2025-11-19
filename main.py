@@ -32,17 +32,17 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
 
-print("=====================================================")
-print(">>> [DIAGNOSTICO] INICIANDO APLICACION...")
-if DATABASE_URL: print(">>> [DIAGNOSTICO] DATABASE_URL encontrada.")
-else: print("!!! ERROR [DIAGNOSTICO]: DATABASE_URL NO FUE ENCONTRADA!")
-if GOOGLE_API_KEY: print(">>> [main.py] GOOGLE_API_KEY encontrada.")
-else: print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
-print("=====================================================")
-
 # --- CARGA DE LA PERSONALIDAD PARA EL CHAT ---
 dashboard_brain = None
 try:
+    print("=====================================================")
+    print(">>> [DIAGNOSTICO] INICIANDO APLICACION...")
+    if DATABASE_URL: print(">>> [DIAGNOSTICO] DATABASE_URL encontrada.")
+    else: print("!!! ERROR [DIAGNOSTICO]: DATABASE_URL NO FUE ENCONTRADA!")
+    if GOOGLE_API_KEY: print(">>> [main.py] GOOGLE_API_KEY encontrada.")
+    else: print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
+    print("=====================================================")
+
     if GOOGLE_API_KEY:
         genai.configure(api_key=GOOGLE_API_KEY)
         
