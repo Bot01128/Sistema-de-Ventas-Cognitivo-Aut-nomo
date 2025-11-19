@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diagnóstico Personalizado para {{ nombre_negocio }}</title>
-    
-    <!-- Enlace a la nueva hoja de estilos externa -->
     <link rel="stylesheet" href="{{ url_for('static', filename='nido.css') }}">
 </head>
 <body>
@@ -40,31 +38,45 @@
         <div class="section">
             <h2>Habla con tu Agente IA Ahora</h2>
             <p>¿Tienes alguna pregunta sobre nuestros productos o servicios? ¡Pruébalo tú mismo! Conversa con el Agente IA que hemos preparado para ti.</p>
-            
             <div class="live-chat-container">
-                <div class="chat-window" id="chat-window">
+                <div class="chat-window" id="chat-window-ia">
                     <div class="message bot-message">
                         ¡Hola! Gracias por tu interés. Soy un Agente de IA entrenado específicamente para '{{ nombre_negocio }}'. ¿En qué puedo ayudarte hoy?
                     </div>
                 </div>
-                <form id="chat-form" class="chat-input-area">
-                    <input type="text" id="user-input" placeholder="Escribe tu pregunta aquí..." autocomplete="off">
-                    <button type="submit" id="send-button">Enviar</button>
+                <form id="chat-form-ia" class="chat-input-area">
+                    <input type="text" id="user-input-ia" placeholder="Escribe tu pregunta aquí..." autocomplete="off">
+                    <button type="submit" class="btn-3d">Enviar</button>
                 </form>
             </div>
         </div>
+        
+        <!-- === INICIO DE LA NUEVA SECCIÓN: CHAT HUMANO === -->
+        <div class="section">
+            <h2>¿Prefieres hablar con una persona?</h2>
+            <p>Nuestro equipo está disponible para responder tus preguntas y ayudarte a empezar.</p>
+            <div class="live-chat-container">
+                <div class="chat-window" id="chat-window-human">
+                    <div class="message human-message">
+                        ¡Hola! Soy Moises. Estoy aquí para ayudarte. ¿En qué puedo asistirte?
+                    </div>
+                </div>
+                <form id="chat-form-human" class="chat-input-area">
+                    <input type="text" id="user-input-human" placeholder="Escribe tu mensaje aquí..." autocomplete="off">
+                    <button type="submit" class="btn-3d">Enviar</button>
+                </form>
+            </div>
+        </div>
+        <!-- === FIN DE LA NUEVA SECCIÓN === -->
 
-        <!-- === INICIO DE LA NUEVA SECCIÓN DE PROPAGANDA === -->
         <div class="section autoneura-promo-section">
             <h2>¿Cansado de perder clientes potenciales?</h2>
             <p>Potencia tus propias ventas con Inteligencia Artificial. AutoNeura crea asistentes virtuales que convierten 24/7, los 365 días del año.</p>
-            <a href="/" class="btn-promo">CREAR CAMPAÑA CON INTELIGENCIA ARTIFICIAL AUTONEURA</a>
+            <a href="/" class="btn-promo btn-3d">CREAR CAMPAÑA CON INTELIGENCIA ARTIFICIAL AUTONEURA</a>
         </div>
-        <!-- === FIN DE LA NUEVA SECCIÓN === -->
         
     </div>
 
-    <!-- Enlace al nuevo archivo JavaScript externo -->
     <script src="{{ url_for('static', filename='nido.js') }}"></script>
 </body>
 </html>
