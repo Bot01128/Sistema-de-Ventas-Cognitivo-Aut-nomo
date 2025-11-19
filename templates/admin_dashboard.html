@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Arquitecto - AutoNeura</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_style.css') }}">
+</head>
+<body>
+    <div class="top-bar">
+        <div class="logo"><h2>AutoNeura <strong>[Modo Arquitecto]</strong></h2></div>
+        <div class="user-info">
+            <span>Bienvenido, Arquitecto</span>
+            <button id="logout-btn" class="logout-btn">Cerrar Sesión</button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="left-panel">
+            <div class="chat-header">
+                <h2>Asistente de CEO</h2>
+            </div>
+            <div class="chat-window">
+                <div class="chat-messages" id="chat-messages">
+                    <p class="msg-assistant">Sistema AutoNeura operativo. Reporte global:<br>
+                        - 👥 **7 Clientes Activos**<br>
+                        - 🎉 **2 Nuevos Registros**<br>
+                        - ⚠️ **1 Alerta Crítica:** Cliente 'Zapatería Veloz' al 90% de su cuota.
+                    </p>
+                </div>
+                <form id="chat-form" class="chat-input">
+                    <input type="text" id="user-input" placeholder="Ej: Muéstrame clientes por consumo...">
+                    <button id="send-btn" type="submit">Ejecutar</button>
+                </form>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div class="tab-nav">
+                <button class="tab-button active" data-tab="dashboard-global">Dashboard Global</button>
+                <button class="tab-button" data-tab="clientes">Clientes</button>
+                <button class="tab-button" data-tab="campanas-todas">Campañas (Todas)</button>
+                <button class="tab-button" data-tab="crear-campana">Crear Campaña</button>
+                <button class="tab-button" data-tab="supervisar-flujos">Supervisar Flujos</button>
+                <button class="tab-button" data-tab="supervisar-conversaciones">Supervisar Conversaciones</button>
+            </div>
+
+            <div class="tab-content" id="dashboard-global" style="display: block;">
+                <h2>Resumen del Imperio</h2>
+                <!-- Aquí irían gráficos reales -->
+                <p>Gráficos de crecimiento de clientes, ingresos y campañas más rentables (En Construcción).</p>
+            </div>
+
+            <div class="tab-content" id="clientes" style="display: none;">
+                <h2>Gestión de Clientes</h2>
+                <table class="admin-table">
+                    <thead><tr><th>Nombre del Cliente</th><th>Email</th><th>Plan</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody>
+                        <tr><td>Ferretería El Tornillo Feliz</td><td>cliente1@email.com</td><td>Intermedio</td><td class="status-active">Activo</td><td><button>Ver</button></td></tr>
+                        <tr><td>Zapatería Veloz</td><td>cliente2@email.com</td><td>Básico</td><td class="status-warning">Alerta de Límite</td><td><button>Ver</button></td></tr>
+                        <tr><td>Spas de Lujo S.A.</td><td>cliente3@email.com</td><td>Premium</td><td class="status-active">Activo</td><td><button>Ver</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tab-content" id="campanas-todas" style="display: none;">
+                <h2>Todas las Campañas</h2>
+                <table class="admin-table">
+                     <thead><tr><th>Cliente</th><th>Campaña</th><th>Estado</th><th>Prospectos</th><th>Leads</th></tr></thead>
+                     <tbody>
+                        <tr><td>Ferretería El Tornillo Feliz</td><td>Búsqueda de Spas</td><td>Completada</td><td>152</td><td>89</td></tr>
+                        <tr><td>Ferretería El Tornillo Feliz</td><td>Restaurantes Italianos</td><td>Analizando</td><td>100</td><td>45</td></tr>
+                        <tr><td>Zapatería Veloz</td><td>Venta de Zapatos Escolares</td><td>Activa</td><td>350</td><td>150</td></tr>
+                     </tbody>
+                </table>
+            </div>
+
+            <div class="tab-content" id="crear-campana" style="display: none;">
+                <h2>Lanzar Campaña para un Cliente</h2>
+                <div class="form-section">
+                    <label>Seleccionar Cliente</label>
+                    <select><option>Ferretería El Tornillo Feliz</option><option>Zapatería Veloz</option></select>
+                </div>
+                <!-- Aquí iría el formulario completo de Crear Campaña -->
+                <p>Formulario de creación de campaña (En Construcción).</p>
+            </div>
+            
+            <div class="tab-content" id="supervisar-flujos" style="display: none;">
+                <h2>Supervisar Flujo de Prospectos</h2>
+                <div class="form-section">
+                    <label>Seleccionar Campaña a Supervisar</label>
+                    <select><option>Ferretería - Búsqueda de Spas</option><option>Zapatería - Venta Escolar</option></select>
+                </div>
+                 <!-- Aquí iría la vista del Kanban -->
+                <p>Vista del flujo de prospectos para la campaña seleccionada (En Construcción).</p>
+            </div>
+
+            <div class="tab-content" id="supervisar-conversaciones" style="display: none;">
+                <h2>Supervisar Conversaciones</h2>
+                 <div class="form-section">
+                    <label>Seleccionar Cliente a Supervisar</label>
+                    <select><option>Ferretería El Tornillo Feliz</option><option>Zapatería Veloz</option></select>
+                </div>
+                <!-- Aquí iría la vista de la "Torre de Control" -->
+                <p>Vista de las conversaciones para el cliente seleccionado (En Construcción).</p>
+            </div>
+        </div>
+    </div>
+  
+   <script src="{{ url_for('static', filename='admin_script.js') }}"></script>
+</body>
+</html>
