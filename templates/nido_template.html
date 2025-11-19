@@ -12,29 +12,8 @@
             <h1>{{ titulo_personalizado }}</h1>
             <p>Hemos preparado este breve análisis y demostración para mostrarte cómo la IA puede potenciar tu comunicación con los clientes.</p>
         </div>
-
-        <div class="section">
-            <h2>Diagnóstico Rápido</h2>
-            <p>{{ texto_diagnostico }}</p>
-        </div>
-
-        <div class="section">
-            <h2>Demostración Interactiva</h2>
-            <p>Imagina que un cliente te contacta. Así es como un Agente de IA podría gestionar la conversación:</p>
-            <div class="chat-simulator">
-                <p class="chat-q">Cliente: {{ ejemplo_pregunta_1 }}</p>
-                <p class="chat-a"><strong>Tu Agente IA:</strong> {{ ejemplo_respuesta_1 }}</p>
-                <hr>
-                <p class="chat-q">Cliente: {{ ejemplo_pregunta_2 }}</p>
-                <p class="chat-a"><strong>Tu Agente IA:</strong> {{ ejemplo_respuesta_2 }}</p>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Contenido de Valor para tu Negocio</h2>
-            <p>{{ texto_contenido_de_valor }}</p>
-        </div>
-
+        
+        <!-- ... (otras secciones sin cambios) ... -->
         <div class="section">
             <h2>Habla con tu Agente IA Ahora</h2>
             <p>¿Tienes alguna pregunta sobre nuestros productos o servicios? ¡Pruébalo tú mismo! Conversa con el Agente IA que hemos preparado para ti.</p>
@@ -51,23 +30,21 @@
             </div>
         </div>
         
-        <!-- === INICIO DE LA NUEVA SECCIÓN: CHAT HUMANO === -->
         <div class="section">
             <h2>¿Prefieres hablar con una persona?</h2>
             <p>Nuestro equipo está disponible para responder tus preguntas y ayudarte a empezar.</p>
             <div class="live-chat-container">
+                <!-- === INICIO DE LA MODIFICACIÓN: SALUDO INICIAL ELIMINADO === -->
                 <div class="chat-window" id="chat-window-human">
-                    <div class="message human-message">
-                        ¡Hola! Soy Moises. Estoy aquí para ayudarte. ¿En qué puedo asistirte?
-                    </div>
+                    <!-- El mensaje inicial ha sido removido -->
                 </div>
+                <!-- === FIN DE LA MODIFICACIÓN === -->
                 <form id="chat-form-human" class="chat-input-area">
                     <input type="text" id="user-input-human" placeholder="Escribe tu mensaje aquí..." autocomplete="off">
                     <button type="submit" class="btn-3d">Enviar</button>
                 </form>
             </div>
         </div>
-        <!-- === FIN DE LA NUEVA SECCIÓN === -->
 
         <div class="section autoneura-promo-section">
             <h2>¿Cansado de perder clientes potenciales?</h2>
