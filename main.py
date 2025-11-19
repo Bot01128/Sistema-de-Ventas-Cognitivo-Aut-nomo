@@ -88,6 +88,12 @@ def login():
 def callback():
     return render_template('callback.html', admin_email_js=ADMIN_EMAIL)
 
+# === INICIO DE LA ÚNICA MODIFICACIÓN: RUTA DEL ARQUITECTO AÑADIDA ===
+@app.route('/admin')
+def admin_dashboard():
+    return render_template('admin_dashboard.html')
+# === FIN DE LA ÚNICA MODIFICACIÓN ===
+
 @app.route('/chat', methods=['POST'])
 def chat():
     if not dashboard_brain: return jsonify({"error": "Chat no disponible por error de inicializacion."}), 500
