@@ -1,138 +1,54 @@
 /* --- ESTILOS GENERALES Y ORIGINALES --- */
-body { 
-    font-family: sans-serif; 
-    line-height: 1.6; 
-    margin: 0; 
-    padding: 20px; 
-    background-color: #f4f4f9; 
-    color: #333; 
-}
-.container { 
-    max-width: 800px; 
-    margin: auto; 
-    background: white; 
-    padding: 30px; 
-    border-radius: 8px; 
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
-}
-h1, h2 { 
-    color: #5a29e4; 
-}
-.section { 
-    margin-bottom: 30px; 
-    border-bottom: 1px solid #eee; 
-    padding-bottom: 20px; 
-}
-.chat-simulator { 
-    border: 1px solid #ccc; 
-    padding: 15px; 
-    border-radius: 5px; 
-    background: #f9f9f9; 
-}
-.chat-q { 
-    font-weight: bold; 
-    color: #333; 
-}
-.chat-a { 
-    color: #555; 
-    margin-left: 20px; 
-    font-style: italic; 
-}
-.cta-button { 
-    display: inline-block; 
-    background-color: #5a29e4; 
-    color: white; 
-    padding: 12px 25px; 
-    text-decoration: none; 
-    border-radius: 5px; 
-    font-weight: bold; 
-    text-align: center; 
-}
+body { font-family: sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f4f4f9; color: #333; }
+.container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+h1, h2 { color: #5a29e4; }
+.section { margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+.chat-simulator { border: 1px solid #ccc; padding: 15px; border-radius: 5px; background: #f9f9f9; }
+.chat-q { font-weight: bold; color: #333; }
+.chat-a { color: #555; margin-left: 20px; font-style: italic; }
 
 /* --- ESTILOS PARA EL CHAT EN VIVO --- */
-.live-chat-container {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-top: 20px;
-}
+.live-chat-container { border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-top: 20px; }
 .chat-window {
-    height: 400px;
-    overflow-y: auto;
+    height: 300px;
+    overflow-y: auto; /* ESTA ES LA LÍNEA CLAVE PARA LA BARRA DE SCROLL */
     padding: 20px;
     background-color: #f9f9f9;
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
-.message {
-    padding: 10px 15px;
-    border-radius: 18px;
-    max-width: 75%;
-    line-height: 1.4;
-}
-.bot-message {
-    background-color: #e9e9eb;
-    color: #333;
-    align-self: flex-start;
-    border-bottom-left-radius: 4px;
-}
-.user-message {
-    background-color: #007bff;
-    color: white;
-    align-self: flex-end;
-    border-bottom-right-radius: 4px;
-}
-.chat-input-area {
-    display: flex;
-    border-top: 1px solid #e0e0e0;
-}
-#user-input {
-    flex-grow: 1;
-    border: none;
-    padding: 15px;
-    font-size: 1em;
-    outline: none;
-}
-#send-button {
-    background-color: #5a29e4;
-    color: white;
-    border: none;
-    padding: 0 25px;
-    cursor: pointer;
-    font-size: 1em;
-    font-weight: bold;
-}
-#send-button:hover {
-    background-color: #481fb9;
-}
+.chat-window::-webkit-scrollbar { width: 8px; }
+.chat-window::-webkit-scrollbar-track { background: #f1f1f1; }
+.chat-window::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+.chat-window::-webkit-scrollbar-thumb:hover { background: #aaa; }
+.message { padding: 10px 15px; border-radius: 18px; max-width: 75%; line-height: 1.4; }
+.bot-message { background-color: #e9e9eb; color: #333; align-self: flex-start; }
+.user-message { background-color: #007bff; color: white; align-self: flex-end; }
+.human-message { background-color: #28a745; color: white; align-self: flex-start; }
+.chat-input-area { display: flex; border-top: 1px solid #e0e0e0; }
+.chat-input-area input { flex-grow: 1; border: none; padding: 15px; font-size: 1em; outline: none; }
 
-/* --- ESTILOS PARA LA NUEVA SECCIÓN DE PROPAGANDA --- */
-.autoneura-promo-section {
-    text-align: center; 
-    padding-top: 20px; 
-    border-bottom: none; 
+/* --- ESTILOS DE BOTONES Y PROPAGANDA --- */
+.autoneura-promo-section { text-align: center; padding-top: 20px; border-bottom: none; }
+.autoneura-promo-section h2 { font-size: 1.8em; }
+.autoneura-promo-section p { max-width: 600px; margin: 0 auto 25px auto; }
+.btn-promo { display: block; width: 100%; box-sizing: border-box; text-decoration: none; text-align: center; }
+.btn-3d {
+    background-color: #5a29e4; color: white; border: none; padding: 15px 25px;
+    font-size: 1em; font-weight: bold; cursor: pointer; border-radius: 8px;
+    transition: all 0.1s ease-in-out;
+    border-style: solid; border-width: 4px;
+    border-top-color: #9d81f7;
+    border-left-color: #9d81f7;
+    border-bottom-color: #3c1a96;
+    border-right-color: #3c1a96;
 }
-.autoneura-promo-section h2 {
-    font-size: 1.8em; 
-}
-.autoneura-promo-section p {
-    max-width: 600px; 
-    margin: 0 auto 25px auto; 
-}
-.btn-promo {
-    display: inline-block;
-    background-color: #5a29e4;
-    color: white;
-    padding: 15px 30px;
-    text-decoration: none;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 1.1em;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-.btn-promo:hover {
-    background-color: #481fb9;
+.btn-3d:hover { background-color: #6a3eef; }
+.btn-3d:active {
+    border-top-color: #3c1a96;
+    border-left-color: #3c1a96;
+    border-bottom-color: #9d81f7;
+    border-right-color: #9d81f7;
+    transform: translateY(2px);
 }
