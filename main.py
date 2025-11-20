@@ -30,55 +30,21 @@ def inject_get_locale():
 # --- INICIALIZACION DE LA APLICACION Y BASE DE DATOS ---
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
-ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
 
-# --- CARGA DE LA PERSONALIDAD PARA EL CHAT ---
+# === LA SOLUCIÓN DEFINITIVA: CARGA PEREZOSA (LAZY LOADING) ===
+# El cerebro de la IA se inicializa como 'None'. No se cargará al arrancar.
 dashboard_brain = None
-try:
-    print("=====================================================")
-    print(">>> [DIAGNOSTICO] INICIANDO APLICACION...")
-    if DATABASE_URL: print(">>> [DIAGNOSTICO] DATABASE_URL encontrada.")
-    else: print("!!! ERROR [DIAGNOSTICO]: DATABASE_URL NO FUE ENCONTRADA!")
-    if GOOGLE_API_KEY: print(">>> [main.py] GOOGLE_API_KEY encontrada.")
-    else: print("!!! WARNING [main.py]: GOOGLE_API_KEY no encontrada.")
-    print("=====================================================")
+# Configuramos la API de Google una sola vez si la clave existe.
+if GOOGLE_API_KEY:
+    genai.configure(api_key=GOOGLE_API_KEY)
+# === FIN DE LA MODIFICACIÓN ESTRUCTURAL ===
 
-    if GOOGLE_API_KEY:
-        genai.configure(api_key=GOOGLE_API_KEY)
-        
-    ID_DE_LA_CAMPAÑA_ACTUAL = 1 
-    descripcion_de_la_campana = "Soy un asistente virtual generico, hubo un error al cargar la descripcion."
-    
-    print(f">>> [main.py] Buscando descripcion para la campana ID: {ID_DE_LA_CAMPAÑA_ACTUAL}...")
-    conn = psycopg2.connect(DATABASE_URL)
-    cur = conn.cursor()
-    cur.execute("SELECT descripcion_producto FROM campanas WHERE id = %s", (ID_DE_LA_CAMPAÑA_ACTUAL,))
-    result = cur.fetchone()
-    if result and result[0]:
-        descripcion_de_la_campana = result[0]
-        print(">>> [DIAGNOSTICO] EXITO! Se encontro la descripcion en Supabase.")
-    else:
-        print("!!! ERROR [DIAGNOSTICO]: Conexion exitosa, PERO NO SE ENCONTRO la campana con ID 1.")
-    cur.close()
-    conn.close()
-    
-    dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
-    if dashboard_brain:
-        print(">>> [main.py] Cerebro con personalidad de campana inicializado.")
-    else:
-        print("!!! ERROR [main.py]: El cerebro no pudo ser inicializado.")
-
-except Exception as e:
-    print(f"!!! ERROR FATAL [DIAGNOSTICO]: Fallo en la inicializacion. El error fue: {e}")
-
-# === INICIO DE LA ÚNICA MODIFICACIÓN: RUTA DE HEALTHCHECK AÑADIDA ===
 # --- RUTA DE HEALTHCHECK PARA RAILWAY ---
 @app.route('/health')
 def health_check():
     # Esta ruta es usada por la plataforma para verificar que la app está viva.
-    # Debe ser muy rápida y no depender de bases de datos o servicios externos.
+    # Es instantánea porque ya no depende de la carga de la IA.
     return "OK", 200
-# === FIN DE LA ÚNICA MODIFICACIÓN ===
 
 # --- RUTAS DE LA APLICACION ---
 @app.route('/')
@@ -103,13 +69,39 @@ def admin_taller():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    if not dashboard_brain: return jsonify({"error": "Chat no disponible por error de inicializacion."}), 500
-    user_message = request.json.get('message')
-    if not user_message: return jsonify({"error": "No hay mensaje."}), 400
+    global dashboard_brain # Usamos la variable global
+
     try:
+        # === INICIO DE LA CARGA PEREZOSA ===
+        # Si el cerebro es 'None', significa que es el PRIMER mensaje de chat.
+        # Solo en este caso, realizamos la operación lenta de cargar la IA.
+        if dashboard_brain is None:
+            print(">>> [main.py - LAZY LOADING] Primer mensaje de chat recibido. INICIALIZANDO CEREBRO...")
+            ID_DE_LA_CAMPAÑA_ACTUAL = 1 
+            descripcion_de_la_campana = "Soy un asistente virtual generico, hubo un error al cargar la descripcion."
+            
+            conn = psycopg2.connect(DATABASE_URL)
+            cur = conn.cursor()
+            cur.execute("SELECT descripcion_producto FROM campanas WHERE id = %s", (ID_DE_LA_CAMPAÑA_ACTUAL,))
+            result = cur.fetchone()
+            if result and result[0]:
+                descripcion_de_la_campana = result[0]
+            cur.close()
+            conn.close()
+            
+            dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
+            print(">>> [main.py - LAZY LOADING] Cerebro inicializado y listo para reusar.")
+        # === FIN DE LA CARGA PEREZOSA ===
+
+        user_message = request.json.get('message')
+        if not user_message: return jsonify({"error": "No hay mensaje."}), 400
+        
         response_text = dashboard_brain.invoke({"question": user_message})
         return jsonify({"response": response_text})
-    except Exception as e: return jsonify({"error": f"Ocurrio un error en el chat: {e}"}), 500
+
+    except Exception as e:
+        print(f"!!! ERROR FATAL en la ruta /chat: {e}")
+        return jsonify({"error": f"Ocurrio un error en el chat: {e}"}), 500
 
 # --- RUTAS DEL PERSUASOR ---
 @app.route('/pre-nido/<uuid:id_unico>')
@@ -124,7 +116,6 @@ def generar_nido_y_enviar_enlace():
     if email and prospecto_id:
         conn = None
         try:
-            print(f">>> [main.py] Recibido email: '{email}' para prospecto ID: {prospecto_id}. Actualizando DB...")
             conn = psycopg2.connect(DATABASE_URL)
             cur = conn.cursor()
             nuevo_estado = 'email_capturado'
@@ -133,19 +124,13 @@ def generar_nido_y_enviar_enlace():
                 (email, nuevo_estado, prospecto_id)
             )
             conn.commit()
-            print(f">>> [DIAGNOSTICO] EXITO! Prospecto {prospecto_id} actualizado a estado '{nuevo_estado}'.")
         except Exception as e:
-            print(f"!!! ERROR [DIAGNOSTICO]: No se pudo actualizar el prospecto {prospecto_id}. Error: {e}")
-            if conn:
-                conn.rollback()
+            if conn: conn.rollback()
         finally:
             if conn:
                 cur.close()
                 conn.close()
-    else:
-        print("!!! WARNING [main.py]: No se recibieron email o prospecto_id en /generar-nido.")
     return render_template('nido_template.html')
-
 
 # --- RUTAS DE PRUEBA ---
 @app.route('/ver-pre-nido')
