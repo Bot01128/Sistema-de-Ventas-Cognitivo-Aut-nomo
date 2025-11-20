@@ -108,7 +108,6 @@ def mostrar_pre_nido(id_unico):
     nombre_negocio_db = "Empresa Real"
     return render_template('persuasor.html', prospecto_id=str(id_unico), nombre_negocio=nombre_negocio_db)
 
-# === INICIO DE LA ÚNICA MODIFICACIÓN: LÓGICA DE CAPTURA DE EMAIL AÑADIDA ===
 @app.route('/generar-nido', methods=['POST'])
 def generar_nido_y_enviar_enlace():
     # 1. Recibir los datos del formulario de la página 'persuasor.html'
@@ -152,15 +151,20 @@ def generar_nido_y_enviar_enlace():
 
     # 8. Finalmente, mostrar la página 'nido_template.html' como lo hacía antes
     return render_template('nido_template.html')
-# === FIN DE LA ÚNICA MODIFICACIÓN ===
 
 
+# === INICIO DE LA ÚNICA MODIFICACIÓN: RUTA DE PRUEBA CORREGIDA ===
 # --- RUTAS DE PRUEBA ---
 @app.route('/ver-pre-nido')
 def ver_pre_nido():
-    id_de_prueba = str(uuid.uuid4())
+    # ¡MODIFICACIÓN! En lugar de un ID falso, ahora usamos el ID real (1)
+    # que creamos manualmente en la base de datos para nuestras pruebas.
+    id_real_para_prueba = "1"
     nombre_de_prueba = "Ferreteria El Tornillo Feliz (Prueba)"
-    return render_template('persuasor.html', prospecto_id=id_de_prueba, nombre_de_prueba)
+    # Pasamos el ID real a la plantilla para que el formulario lo envíe correctamente.
+    # También corregimos el nombre de la variable a 'nombre_negocio' para que coincida con la plantilla.
+    return render_template('persuasor.html', prospecto_id=id_real_para_prueba, nombre_negocio=nombre_de_prueba)
+# === FIN DE LA ÚNICA MODIFICACIÓN ===
 
 @app.route('/ver-nido')
 def ver_nido():
