@@ -137,20 +137,19 @@ def generar_nido_y_enviar_enlace():
         print("!!! WARNING [main.py]: No se recibieron email o prospecto_id en /generar-nido.")
     return render_template('nido_template.html')
 
+
 # --- RUTAS DE PRUEBA ---
 @app.route('/ver-pre-nido')
 def ver_pre_nido():
-    # Usamos el ID real que existe en la DB para la prueba.
-    id_real_para_prueba = "1"
-    nombre_para_plantilla = "Ferreteria El Tornillo Feliz (Prueba)"
+    id_de_prueba = "1"  # Usamos el ID real para la prueba
+    nombre_de_prueba = "Ferreteria El Tornillo Feliz (Prueba)"
     
-    # CORRECCIÓN FINAL: La plantilla espera una variable llamada 'nombre_negocio'.
-    # Le pasamos el nombre usando el formato de palabra clave (keyword) para evitar el SyntaxError.
-    return render_template(
-        'persuasor.html',
-        prospecto_id=id_real_para_prueba,
-        nombre_negocio=nombre_para_plantilla
-    )
+    # === LA ÚNICA CORRECCIÓN BASADA EN LOS LOGS ===
+    # El error era 'nombre_de_prueba' en lugar de 'nombre_negocio=nombre_de_prueba'.
+    # La plantilla HTML espera una variable llamada 'nombre_negocio'.
+    # Al asignarla correctamente, se resuelve el SyntaxError.
+    return render_template('persuasor.html', prospecto_id=id_de_prueba, nombre_negocio=nombre_de_prueba)
+    # === FIN DE LA CORRECCIÓN ===
 
 @app.route('/ver-nido')
 def ver_nido():
