@@ -5,15 +5,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- FUNCIÓN PRINCIPAL DE ARRANQUE ---
-const main = async () => {
-
-    // --- MÓDULO 1: SEGURIDAD (EL GUARDIA) ---
-    const { data: { session } } = await supabase.auth.getSession();
-    const isPublicPage = window.location.pathname.endsWith('/login') || window.location.pathname.endsWith('/callback');
-    if (!isPublicPage && !session) {
-        window.location.href = '/login';
-        return; 
-    }
+const main = () => {
 
     // --- MÓDULO 2: MANEJO DE PESTAÑAS ---
     const tabButtons = document.querySelectorAll('.tab-button');
@@ -23,8 +15,8 @@ const main = async () => {
             if (!activeButton) return;
             const tabId = activeButton.getAttribute('data-tab');
             const activeTabContent = document.getElementById(tabId);
-            tabContents.forEach(content => { content.style.display = 'none'; });
-            if (activeTabContent) { activeTabContent.style.display = 'block'; }
+            tabContents.forEach(content => content.style.display = 'none');
+            if (activeTabContent) activeTabContent.style.display = 'block';
             tabButtons.forEach(btn => btn.classList.remove('active'));
             activeButton.classList.add('active');
         };
@@ -186,18 +178,5 @@ const main = async () => {
     }
 };
 
-// --- LÓGICA EXCLUSIVA DE LA PÁGINA DE LOGIN ---
-const googleLoginButton = document.getElementById('google-login-btn');
-if (googleLoginButton) {
-    googleLoginButton.addEventListener('click', async () => {
-        await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: window.location.origin + '/callback'
-            }
-        });
-    });
-} else {
-    // Si no es la página de login, ejecuta el guardia de seguridad y el resto de la lógica.
-    main();
-}
+// Se ejecuta el código del dashboard directamente, sin seguridad.
+main();
