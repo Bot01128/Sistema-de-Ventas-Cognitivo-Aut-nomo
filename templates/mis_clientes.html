@@ -6,8 +6,7 @@
     <title>{{ _('AutoNeura AI - Portal de Cliente') }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
-    <!-- ESTA LÍNEA ES LA IMPORTANTE -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='mis_clientes.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mis_cliente.css') }}">
 </head>
 <body>
     <div class="top-bar">
@@ -40,6 +39,8 @@
                 <button class="tab-button" data-tab="create-campaign">{{ _('Crear Campaña') }}</button>
                 <button class="tab-button" data-tab="prospect-flow">{{ _('Flujo de Prospectos') }}</button>
                 <button class="tab-button" data-tab="conversations">{{ _('Conversaciones') }}</button>
+                <button class="tab-button" data-tab="billing">{{ _('Facturación') }}</button>
+                <button class="tab-button" data-tab="suggestions">{{ _('Tus Sugerencias') }}</button>
             </div>
 
             <div class="tab-content" id="my-campaigns" style="display: block;">
@@ -176,6 +177,19 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="tab-content" id="billing" style="display: none;">
+                <h2>{{ _('Mi Saldo y Facturación') }}</h2>
+                <p>Saldo Actual: <strong>$0.00</strong></p>
+                <button class="cta-button btn-blue-3d">{{ _('+ Recargar Saldo') }}</button>
+            </div>
+            
+            <div class="tab-content" id="suggestions" style="display: none;">
+                 <h2>Tú eres el Arquitecto de Nuestro Futuro</h2>
+                 <p>Tu voz es la brújula que guía nuestra innovación. ¿Qué funcionalidad revolucionaría tu trabajo?</p>
+                 <textarea placeholder="Describe aquí esa función increíble..."></textarea>
+                 <button class="cta-button btn-blue-3d">Enviar mi Sugerencia</button>
             </div>
         </div>
     </div>
