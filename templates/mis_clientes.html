@@ -2,13 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taller del Arquitecto - AutoNeura</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     
     <!-- === INICIO DE LA CORRECCIÓN === -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='mis_clientes_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mis_clientes.css') }}">
     <!-- === FIN DE LA CORRECCIÓN === -->
 </head>
 <body>
@@ -21,9 +21,7 @@
     </div>
     <div class="container">
         <div class="left-panel">
-            <div class="chat-header">
-                <h2>Asistente de Pruebas</h2>
-            </div>
+            <div class="chat-header"><h2>Asistente de Pruebas</h2></div>
             <div class="chat-window">
                 <div class="chat-messages" id="chat-messages">
                     <p class="msg-assistant">Taller listo para pruebas. ¿Qué campaña crearemos hoy?</p>
@@ -43,23 +41,12 @@
 
             <div class="tab-content" id="create-campaign" style="display: block;">
                 <h2>Crear Campaña de Prueba</h2>
-                <div class="form-section">
-                    <label>1. Selecciona un Plan</label>
-                    <div class="plans-container">
-                        <div class="plan-card" data-plan="arrancador"><h4>El Arrancador</h4><div class="price">$149<span>/mes</span></div><small>4 prospectos/día</small></div>
-                        <div class="plan-card" data-plan="profesional"><h4>El Profesional</h4><div class="price">$399<span>/mes</span></div><small>15 prospectos/día</small></div>
-                        <div class="plan-card" data-plan="dominador"><h4>El Dominador</h4><div class="price">$999<span>/mes</span></div><small>50 prospectos/día</small></div>
-                    </div>
-                </div>
-                <!-- ... resto del formulario ... -->
-                <button id="lancam" class="cta-button">Lanzar Campaña de Prueba</button>
+                <p>(Aquí irá el formulario de creación de campaña)</p>
             </div>
 
             <div class="tab-content" id="my-campaigns" style="display: none;">
                 <h2>Mis Campañas de Prueba</h2>
-                <table class="campaign-table">
-                    <!-- ... tabla de tus campañas de prueba ... -->
-                </table>
+                <p>(Aquí irá la tabla con tus campañas personales)</p>
             </div>
 
             <div class="tab-content" id="suggestions" style="display: none;">
@@ -72,7 +59,7 @@
    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
    
    <!-- === INICIO DE LA CORRECCIÓN === -->
-   <script src="{{ url_for('static', filename='mis_clientes_script.js') }}"></script>
+   <script src="{{ url_for('static', filename='mis_clientes.js') }}"></script>
    <!-- === FIN DE LA CORRECCIÓN === -->
 </body>
 </html>
