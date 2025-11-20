@@ -80,11 +80,9 @@ def home():
 def client_dashboard():
     return render_template('client_dashboard.html')
 
-# === INICIO DE LA ÚNICA MODIFICACIÓN: RUTA PARA TU NUEVO PANEL AÑADIDA ===
 @app.route('/mis-clientes')
 def mis_clientes():
     return render_template('mis_clientes.html')
-# === FIN DE LA ÚNICA MODIFICACIÓN ===
 
 @app.route('/admin')
 def admin_dashboard():
@@ -110,16 +108,59 @@ def mostrar_pre_nido(id_unico):
     nombre_negocio_db = "Empresa Real"
     return render_template('persuasor.html', prospecto_id=str(id_unico), nombre_negocio=nombre_negocio_db)
 
+# === INICIO DE LA ÚNICA MODIFICACIÓN: LÓGICA DE CAPTURA DE EMAIL AÑADIDA ===
 @app.route('/generar-nido', methods=['POST'])
 def generar_nido_y_enviar_enlace():
+    # 1. Recibir los datos del formulario de la página 'persuasor.html'
+    email = request.form.get('email')
+    prospecto_id = request.form.get('prospecto_id')
+
+    # 2. Validar que recibimos los datos necesarios antes de proceder
+    if email and prospecto_id:
+        conn = None
+        try:
+            # 3. Conectarse a la base de datos para actualizar al prospecto
+            print(f">>> [main.py] Recibido email: '{email}' para prospecto ID: {prospecto_id}. Actualizando DB...")
+            conn = psycopg2.connect(DATABASE_URL)
+            cur = conn.cursor()
+            
+            # 4. Preparar y ejecutar la actualización del prospecto
+            nuevo_estado = 'email_capturado'
+            cur.execute(
+                "UPDATE prospectos SET email = %s, estado_prospecto = %s WHERE id = %s",
+                (email, nuevo_estado, prospecto_id)
+            )
+            
+            # 5. Confirmar y guardar los cambios en la base de datos
+            conn.commit()
+            print(f">>> [DIAGNOSTICO] EXITO! Prospecto {prospecto_id} actualizado a estado '{nuevo_estado}'.")
+
+        except Exception as e:
+            # 6. En caso de error, imprimirlo y deshacer cualquier cambio
+            print(f"!!! ERROR [DIAGNOSTICO]: No se pudo actualizar el prospecto {prospecto_id}. Error: {e}")
+            if conn:
+                conn.rollback()
+        
+        finally:
+            # 7. Asegurarse de cerrar siempre la conexión a la base de datos
+            if conn:
+                cur.close()
+                conn.close()
+    else:
+        # Mensaje de advertencia si no se reciben los datos esperados
+        print("!!! WARNING [main.py]: No se recibieron email o prospecto_id en /generar-nido.")
+
+    # 8. Finalmente, mostrar la página 'nido_template.html' como lo hacía antes
     return render_template('nido_template.html')
+# === FIN DE LA ÚNICA MODIFICACIÓN ===
+
 
 # --- RUTAS DE PRUEBA ---
 @app.route('/ver-pre-nido')
 def ver_pre_nido():
     id_de_prueba = str(uuid.uuid4())
     nombre_de_prueba = "Ferreteria El Tornillo Feliz (Prueba)"
-    return render_template('persuasor.html', prospecto_id=id_de_prueba, nombre_negocio=nombre_de_prueba)
+    return render_template('persuasor.html', prospecto_id=id_de_prueba, nombre_de_prueba)
 
 @app.route('/ver-nido')
 def ver_nido():
