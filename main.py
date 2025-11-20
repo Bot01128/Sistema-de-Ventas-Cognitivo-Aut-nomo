@@ -31,19 +31,14 @@ def inject_get_locale():
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
-# === LA SOLUCIÓN DEFINITIVA: CARGA PEREZOSA (LAZY LOADING) ===
-# El cerebro de la IA se inicializa como 'None'. No se cargará al arrancar.
+# --- LAZY LOADING DEL CEREBRO DE LA IA ---
 dashboard_brain = None
-# Configuramos la API de Google una sola vez si la clave existe.
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-# === FIN DE LA MODIFICACIÓN ESTRUCTURAL ===
 
 # --- RUTA DE HEALTHCHECK PARA RAILWAY ---
 @app.route('/health')
 def health_check():
-    # Esta ruta es usada por la plataforma para verificar que la app está viva.
-    # Es instantánea porque ya no depende de la carga de la IA.
     return "OK", 200
 
 # --- RUTAS DE LA APLICACION ---
@@ -51,6 +46,7 @@ def health_check():
 def home():
     return render_template('dashboard.html')
 
+# ... (todas tus otras rutas como /cliente, /admin, etc. van aquí)
 @app.route('/cliente')
 def client_dashboard():
     return render_template('client_dashboard.html')
@@ -67,19 +63,15 @@ def admin_dashboard():
 def admin_taller():
     return render_template('admin_taller.html')
 
+
 @app.route('/chat', methods=['POST'])
 def chat():
-    global dashboard_brain # Usamos la variable global
-
+    global dashboard_brain
     try:
-        # === INICIO DE LA CARGA PEREZOSA ===
-        # Si el cerebro es 'None', significa que es el PRIMER mensaje de chat.
-        # Solo en este caso, realizamos la operación lenta de cargar la IA.
         if dashboard_brain is None:
             print(">>> [main.py - LAZY LOADING] Primer mensaje de chat recibido. INICIALIZANDO CEREBRO...")
             ID_DE_LA_CAMPAÑA_ACTUAL = 1 
             descripcion_de_la_campana = "Soy un asistente virtual generico, hubo un error al cargar la descripcion."
-            
             conn = psycopg2.connect(DATABASE_URL)
             cur = conn.cursor()
             cur.execute("SELECT descripcion_producto FROM campanas WHERE id = %s", (ID_DE_LA_CAMPAÑA_ACTUAL,))
@@ -88,11 +80,9 @@ def chat():
                 descripcion_de_la_campana = result[0]
             cur.close()
             conn.close()
-            
             dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
             print(">>> [main.py - LAZY LOADING] Cerebro inicializado y listo para reusar.")
-        # === FIN DE LA CARGA PEREZOSA ===
-
+        
         user_message = request.json.get('message')
         if not user_message: return jsonify({"error": "No hay mensaje."}), 400
         
@@ -109,6 +99,7 @@ def mostrar_pre_nido(id_unico):
     nombre_negocio_db = "Empresa Real"
     return render_template('persuasor.html', prospecto_id=str(id_unico), nombre_negocio=nombre_negocio_db)
 
+# === INICIO DE LA MODIFICACIÓN CLAVE ===
 @app.route('/generar-nido', methods=['POST'])
 def generar_nido_y_enviar_enlace():
     email = request.form.get('email')
@@ -125,12 +116,21 @@ def generar_nido_y_enviar_enlace():
             )
             conn.commit()
         except Exception as e:
+            print(f"!!! ERROR al guardar en DB: {e}")
             if conn: conn.rollback()
         finally:
             if conn:
                 cur.close()
                 conn.close()
-    return render_template('nido_template.html')
+    
+    # En lugar de mostrar el nido, redirigimos a la página de confirmación.
+    return redirect(url_for('mostrar_confirmacion'))
+
+# Nueva ruta para la página de agradecimiento.
+@app.route('/confirmacion')
+def mostrar_confirmacion():
+    return render_template('confirmacion.html')
+# === FIN DE LA MODIFICACIÓN CLAVE ===
 
 # --- RUTAS DE PRUEBA ---
 @app.route('/ver-pre-nido')
