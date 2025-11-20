@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller del Arquitecto - AutoNeura</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='mis_clientes_style.css') }}">
+</head>
+<body>
+    <div class="top-bar">
+        <div class="logo"><h2>AutoNeura <strong>[Modo Taller]</strong></h2></div>
+        <div class="user-info">
+            <span>Bienvenido, Arquitecto</span>
+            <button id="logout-btn" class="logout-btn">Cerrar Sesión</button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="left-panel">
+            <div class="chat-header">
+                <h2>Asistente de Pruebas</h2>
+            </div>
+            <div class="chat-window">
+                <div class="chat-messages" id="chat-messages">
+                    <p class="msg-assistant">Taller listo para pruebas. ¿Qué campaña crearemos hoy?</p>
+                </div>
+                <form id="chat-form" class="chat-input">
+                    <input type="text" id="user-input" placeholder="Comandos de prueba...">
+                    <button id="send-btn" type="submit">Ejecutar</button>
+                </form>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div class="tab-nav">
+                <button class="tab-button active" data-tab="create-campaign">Crear Campaña (Admin)</button>
+                <button class="tab-button" data-tab="my-campaigns">Mis Campañas (Admin)</button>
+                <button class="tab-button" data-tab="suggestions">Sugerencias Clientes</button>
+            </div>
+
+            <div class="tab-content" id="create-campaign" style="display: block;">
+                <h2>Crear Campaña de Prueba</h2>
+                <!-- Aquí está el formulario completo que ya funciona -->
+                <div class="form-section">
+                    <label>1. Selecciona un Plan</label>
+                    <div class="plans-container">
+                        <div class="plan-card" data-plan="arrancador"><h4>El Arrancador</h4><div class="price">$149<span>/mes</span></div><small>4 prospectos/día</small></div>
+                        <div class="plan-card" data-plan="profesional"><h4>El Profesional</h4><div class="price">$399<span>/mes</span></div><small>15 prospectos/día</small></div>
+                        <div class="plan-card" data-plan="dominador"><h4>El Dominador</h4><div class="price">$999<span>/mes</span></div><small>50 prospectos/día</small></div>
+                    </div>
+                </div>
+                <!-- ... resto del formulario ... -->
+                <button id="lancam" class="cta-button">Lanzar Campaña de Prueba</button>
+            </div>
+
+            <div class="tab-content" id="my-campaigns" style="display: none;">
+                <h2>Mis Campañas de Prueba</h2>
+                <table class="campaign-table">
+                    <!-- ... tabla de tus campañas de prueba ... -->
+                </table>
+            </div>
+
+            <div class="tab-content" id="suggestions" style="display: none;">
+                 <h2>Bandeja de Sugerencias</h2>
+                 <p>Aquí revisarás las sugerencias enviadas por tus clientes.</p>
+            </div>
+        </div>
+    </div>
+  
+   <script src="{{ url_for('static', filename='client_script.js') }}"></script>
+</body>
+</html>
