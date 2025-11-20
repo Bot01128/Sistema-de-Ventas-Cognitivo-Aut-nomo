@@ -110,46 +110,31 @@ def mostrar_pre_nido(id_unico):
 
 @app.route('/generar-nido', methods=['POST'])
 def generar_nido_y_enviar_enlace():
-    # 1. Recibir los datos del formulario de la página 'persuasor.html'
     email = request.form.get('email')
     prospecto_id = request.form.get('prospecto_id')
-
-    # 2. Validar que recibimos los datos necesarios antes de proceder
     if email and prospecto_id:
         conn = None
         try:
-            # 3. Conectarse a la base de datos para actualizar al prospecto
             print(f">>> [main.py] Recibido email: '{email}' para prospecto ID: {prospecto_id}. Actualizando DB...")
             conn = psycopg2.connect(DATABASE_URL)
             cur = conn.cursor()
-            
-            # 4. Preparar y ejecutar la actualización del prospecto
             nuevo_estado = 'email_capturado'
             cur.execute(
                 "UPDATE prospectos SET email = %s, estado_prospecto = %s WHERE id = %s",
                 (email, nuevo_estado, prospecto_id)
             )
-            
-            # 5. Confirmar y guardar los cambios en la base de datos
             conn.commit()
             print(f">>> [DIAGNOSTICO] EXITO! Prospecto {prospecto_id} actualizado a estado '{nuevo_estado}'.")
-
         except Exception as e:
-            # 6. En caso de error, imprimirlo y deshacer cualquier cambio
             print(f"!!! ERROR [DIAGNOSTICO]: No se pudo actualizar el prospecto {prospecto_id}. Error: {e}")
             if conn:
                 conn.rollback()
-        
         finally:
-            # 7. Asegurarse de cerrar siempre la conexión a la base de datos
             if conn:
                 cur.close()
                 conn.close()
     else:
-        # Mensaje de advertencia si no se reciben los datos esperados
         print("!!! WARNING [main.py]: No se recibieron email o prospecto_id en /generar-nido.")
-
-    # 8. Finalmente, mostrar la página 'nido_template.html' como lo hacía antes
     return render_template('nido_template.html')
 
 
@@ -157,12 +142,10 @@ def generar_nido_y_enviar_enlace():
 # --- RUTAS DE PRUEBA ---
 @app.route('/ver-pre-nido')
 def ver_pre_nido():
-    # ¡MODIFICACIÓN! En lugar de un ID falso, ahora usamos el ID real (1)
-    # que creamos manualmente en la base de datos para nuestras pruebas.
-    id_real_para_prueba = "1"
+    id_real_para_prueba = "1" 
     nombre_de_prueba = "Ferreteria El Tornillo Feliz (Prueba)"
-    # Pasamos el ID real a la plantilla para que el formulario lo envíe correctamente.
-    # También corregimos el nombre de la variable a 'nombre_negocio' para que coincida con la plantilla.
+    # CORRECCIÓN DE SINTAXIS: Se cambió 'nombre_de_prueba' por 'nombre_negocio=nombre_de_prueba'
+    # para que coincida con la plantilla y corrija el error de Python.
     return render_template('persuasor.html', prospecto_id=id_real_para_prueba, nombre_negocio=nombre_de_prueba)
 # === FIN DE LA ÚNICA MODIFICACIÓN ===
 
