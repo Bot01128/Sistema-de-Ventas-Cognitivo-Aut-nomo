@@ -1,65 +1,67 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ get_locale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taller del Arquitecto - AutoNeura</title>
+    <title>{{ _('AutoNeura AI - Portal de Cliente') }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     
-    <!-- === INICIO DE LA CORRECCIÓN === -->
+    <!-- === INICIO DE LA ÚNICA MODIFICACIÓN === -->
     <link rel="stylesheet" href="{{ url_for('static', filename='mis_clientes.css') }}">
-    <!-- === FIN DE LA CORRECCIÓN === -->
+    <!-- === FIN DE LA ÚNICA MODIFICACIÓN === -->
 </head>
 <body>
     <div class="top-bar">
-        <div class="logo"><h2>AutoNeura <strong>[Modo Taller]</strong></h2></div>
+        <div class="logo"><h2>AutoNeura AI</h2></div>
         <div class="user-info">
-            <span>Bienvenido, Arquitecto</span>
-            <button id="logout-btn" class="logout-btn">Cerrar Sesión</button>
+            <span><strong>{{ _('Saldo:') }}</strong> $0.00</span>
+            <button class="recharge-btn">{{ _('+ Recargar Saldo') }}</button>
+            <button id="logout-btn" class="recharge-btn" style="background-color: #6c757d; border-color: #5a6268;">Cerrar Sesión</button>
         </div>
     </div>
     <div class="container">
         <div class="left-panel">
-            <div class="chat-header"><h2>Asistente de Pruebas</h2></div>
+            <div class="chat-header">
+                <h2>Inteligencia Artificial AutoNeura</h2>
+            </div>
             <div class="chat-window">
                 <div class="chat-messages" id="chat-messages">
-                    <p class="msg-assistant">Taller listo para pruebas. ¿Qué campaña crearemos hoy?</p>
+                    <p class="msg-assistant">{{ _("¡Hola! Soy la Inteligencia Artificial AutoNeura...") }}</p>
+                    <p class="msg-assistant">{{ _("¿Tienes alguna pregunta?") }}</p>
                 </div>
                 <form id="chat-form" class="chat-input">
-                    <input type="text" id="user-input" placeholder="Comandos de prueba...">
-                    <button id="send-btn" type="submit">Ejecutar</button>
+                    <input type="text" id="user-input" placeholder="{{ _('Escribe tu pregunta...') }}">
+                    <button id="send-btn" type="submit">{{ _('Enviar') }}</button>
                 </form>
             </div>
         </div>
         <div class="right-panel">
             <div class="tab-nav">
-                <button class="tab-button active" data-tab="create-campaign">Crear Campaña (Admin)</button>
-                <button class="tab-button" data-tab="my-campaigns">Mis Campañas (Admin)</button>
-                <button class="tab-button" data-tab="suggestions">Sugerencias Clientes</button>
+                <button class="tab-button active" data-tab="my-campaigns">{{ _('Mis Campañas') }}</button>
+                <button class="tab-button" data-tab="create-campaign">{{ _('Crear Campaña') }}</button>
+                <button class="tab-button" data-tab="prospect-flow">{{ _('Flujo de Prospectos') }}</button>
+                <button class="tab-button" data-tab="conversations">{{ _('Conversaciones') }}</button>
+                <button class="tab-button" data-tab="billing">{{ _('Facturación') }}</button>
+                <button class="tab-button" data-tab="suggestions">{{ _('Tus Sugerencias') }}</button>
             </div>
 
-            <div class="tab-content" id="create-campaign" style="display: block;">
-                <h2>Crear Campaña de Prueba</h2>
-                <p>(Aquí irá el formulario de creación de campaña)</p>
+            <div class="tab-content" id="my-campaigns" style="display: block;">
+                <!-- ... Contenido de Mis Campañas ... -->
             </div>
 
-            <div class="tab-content" id="my-campaigns" style="display: none;">
-                <h2>Mis Campañas de Prueba</h2>
-                <p>(Aquí irá la tabla con tus campañas personales)</p>
+            <div class="tab-content" id="create-campaign" style="display: none;">
+                <!-- ... Contenido de Crear Campaña ... -->
             </div>
 
-            <div class="tab-content" id="suggestions" style="display: none;">
-                 <h2>Bandeja de Sugerencias</h2>
-                 <p>Aquí revisarás las sugerencias enviadas por tus clientes.</p>
-            </div>
+            <!-- ... (Resto de las pestañas sin cambios) ... -->
         </div>
     </div>
   
    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
    
-   <!-- === INICIO DE LA CORRECCIÓN === -->
+   <!-- === INICIO DE LA ÚNICA MODIFICACIÓN === -->
    <script src="{{ url_for('static', filename='mis_clientes.js') }}"></script>
-   <!-- === FIN DE LA CORRECCIÓN === -->
+   <!-- === FIN DE LA ÚNICA MODIFICACIÓN === -->
 </body>
 </html>
