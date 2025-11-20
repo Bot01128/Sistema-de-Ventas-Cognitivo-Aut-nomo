@@ -74,25 +74,23 @@ except Exception as e:
 # --- RUTAS DE LA APLICACION ---
 @app.route('/')
 def home():
+    # La ruta raíz ahora vuelve a ser la página de ventas principal.
     return render_template('dashboard.html')
 
 @app.route('/cliente')
 def client_dashboard():
     return render_template('client_dashboard.html')
 
-@app.route('/login')
-def login():
-    return render_template('login.html')
-    
-@app.route('/callback')
-def callback():
-    return render_template('callback.html', admin_email_js=ADMIN_EMAIL)
+# --- RUTAS DE LOGIN ELIMINADAS ---
+# La ruta /login y /callback han sido eliminadas.
 
-# === INICIO DE LA ÚNICA MODIFICACIÓN: RUTA DEL ARQUITECTO AÑADIDA ===
 @app.route('/admin')
 def admin_dashboard():
     return render_template('admin_dashboard.html')
-# === FIN DE LA ÚNICA MODIFICACIÓN ===
+
+@app.route('/admin/taller')
+def admin_taller():
+    return render_template('admin_taller.html')
 
 @app.route('/chat', methods=['POST'])
 def chat():
