@@ -71,6 +71,15 @@ try:
 except Exception as e:
     print(f"!!! ERROR FATAL [DIAGNOSTICO]: Fallo en la inicializacion. El error fue: {e}")
 
+# === INICIO DE LA ÚNICA MODIFICACIÓN: RUTA DE HEALTHCHECK AÑADIDA ===
+# --- RUTA DE HEALTHCHECK PARA RAILWAY ---
+@app.route('/health')
+def health_check():
+    # Esta ruta es usada por la plataforma para verificar que la app está viva.
+    # Debe ser muy rápida y no depender de bases de datos o servicios externos.
+    return "OK", 200
+# === FIN DE LA ÚNICA MODIFICACIÓN ===
+
 # --- RUTAS DE LA APLICACION ---
 @app.route('/')
 def home():
@@ -141,15 +150,9 @@ def generar_nido_y_enviar_enlace():
 # --- RUTAS DE PRUEBA ---
 @app.route('/ver-pre-nido')
 def ver_pre_nido():
-    id_de_prueba = "1"  # Usamos el ID real para la prueba
+    id_real_para_prueba = "1"
     nombre_de_prueba = "Ferreteria El Tornillo Feliz (Prueba)"
-    
-    # === LA ÚNICA CORRECCIÓN BASADA EN LOS LOGS ===
-    # El error era 'nombre_de_prueba' en lugar de 'nombre_negocio=nombre_de_prueba'.
-    # La plantilla HTML espera una variable llamada 'nombre_negocio'.
-    # Al asignarla correctamente, se resuelve el SyntaxError.
-    return render_template('persuasor.html', prospecto_id=id_de_prueba, nombre_negocio=nombre_de_prueba)
-    # === FIN DE LA CORRECCIÓN ===
+    return render_template('persuasor.html', prospecto_id=id_real_para_prueba, nombre_negocio=nombre_de_prueba)
 
 @app.route('/ver-nido')
 def ver_nido():
