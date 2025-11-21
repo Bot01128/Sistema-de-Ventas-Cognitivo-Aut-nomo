@@ -79,6 +79,15 @@
                     <input type="text" id="que_vendes" placeholder="{{ _('Ej: Software para restaurantes') }}">
                     <label for="a_quien_va_dirigido" style="margin-top: 15px;">{{ _('¿A quién va dirigido?') }}</label>
                     <input type="text" id="a_quien_va_dirigido" placeholder="{{ _('Ej: Restaurantes italianos, Ferreterías') }}">
+
+                    <!-- Nuevos campos agregados -->
+                    <label for="idiomas_busqueda" style="margin-top: 15px;">{{ _('¿En qué idiomas quieres buscar? (Sepáralos por comas)') }}</label>
+                    <input type="text" id="idiomas_busqueda" placeholder="{{ _('Ej: Español, Inglés') }}">
+
+                    <label for="ubicacion_geografica" style="margin-top: 15px;">{{ _('¿Ubicación geográfica? (País, Ciudad)') }}</label>
+                    <input type="text" id="ubicacion_geografica" placeholder="{{ _('Ej: Estados Unidos, Miami') }}">
+                    <!-- Fin de nuevos campos -->
+
                 </div>
                 <div class="form-section">
                     <label>{{ _('4. Describe tu Producto y Contacto') }}</label>
