@@ -82,13 +82,17 @@ const main = () => {
         const remainingBalanceElement = createCampaignTab.querySelector('#remaining-balance');
 
         if (planCards.length > 0 && prospectsInput) {
-            const userBalance = 0.00;
-            if(currentBalanceElement) currentBalanceElement.textContent = `$${userBalance.toFixed(2)}`;
+            // CAMBIO PARA ADMIN: Saldo virtual alto para no bloquear el botón
+            const userBalance = 1000000.00; 
+            
+            if(currentBalanceElement) currentBalanceElement.textContent = "∞ (Admin)";
+            
             const plans = {
                 arrancador: { name: 'El Arrancador', baseProspects: 4, baseCost: 149, extraCost: 37.25, limit: 14 },
                 profesional: { name: 'El Profesional', baseProspects: 15, baseCost: 399, extraCost: 26.60, limit: 49 },
                 dominador: { name: 'El Dominador', baseProspects: 50, baseCost: 999, extraCost: 20.00, limit: Infinity }
             };
+
             const handleFormUpdate = () => {
                 const prospectsCount = parseInt(prospectsInput.value, 10);
                 if (isNaN(prospectsCount) || prospectsCount < 4) return;
@@ -96,25 +100,31 @@ const main = () => {
                 if (prospectsCount <= plans.arrancador.limit) { activePlanKey = 'arrancador'; } 
                 else if (prospectsCount <= plans.profesional.limit) { activePlanKey = 'profesional'; } 
                 else { activePlanKey = 'dominador'; }
+                
                 const currentPlan = plans[activePlanKey];
                 planCards.forEach(card => card.classList.remove('selected'));
                 const cardToSelect = createCampaignTab.querySelector(`.plan-card[data-plan="${activePlanKey}"]`);
                 if (cardToSelect) cardToSelect.classList.add('selected');
+                
                 const extraProspects = prospectsCount - currentPlan.baseProspects;
                 const totalCost = currentPlan.baseCost + (extraProspects * currentPlan.extraCost);
                 const planName = (prospectsCount === currentPlan.baseProspects) ? currentPlan.name : 'Personalizado';
+                
                 if(selectedPlanElement) selectedPlanElement.textContent = planName;
                 if(dailyProspectsElement) dailyProspectsElement.textContent = prospectsCount;
                 if(totalCostElement) totalCostElement.textContent = `$${totalCost.toFixed(2)}`;
+                
                 if (launchButton && summaryBox && rechargeLine && remainingLine) {
+                    // Lógica de Admin: Siempre tienes saldo suficiente
                     if (userBalance >= totalCost) {
                         const remaining = userBalance - totalCost;
-                        if(remainingBalanceElement) remainingBalanceElement.textContent = `$${remaining.toFixed(2)}`;
+                        if(remainingBalanceElement) remainingBalanceElement.textContent = "Suficiente";
                         rechargeLine.style.display = 'none';
                         remainingLine.style.display = 'flex';
                         summaryBox.style.borderColor = '#28a745';
                         launchButton.disabled = false;
                     } else {
+                        // Esto nunca debería pasar en modo Admin con saldo millonario
                         const needed = totalCost - userBalance;
                         if(rechargeAmountElement) rechargeAmountElement.textContent = `$${needed.toFixed(2)}`;
                         rechargeLine.style.display = 'flex';
@@ -124,6 +134,7 @@ const main = () => {
                     }
                 }
             };
+
             planCards.forEach(card => {
                 card.addEventListener('click', () => {
                     const planKey = card.getAttribute('data-plan');
@@ -140,6 +151,72 @@ const main = () => {
             if (phoneInput) {
                 window.intlTelInput(phoneInput, { utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js" });
             }
+
+            // --- LÓGICA DE ENVÍO DE LA CAMPAÑA (NUEVO) ---
+            launchButton.addEventListener('click', async (e) => {
+                e.preventDefault();
+                
+                // 1. Recolectar Datos
+                const nombre = document.getElementById('nombre_campana').value;
+                const queVende = document.getElementById('que_vendes').value;
+                const aQuien = document.getElementById('a_quien_va_dirigido').value;
+                const idiomas = document.getElementById('idiomas_busqueda').value;
+                const ubicacion = document.getElementById('ubicacion_geografica').value;
+                const descripcion = document.getElementById('descripcion_producto').value;
+                const prospectosDia = prospectsInput.value;
+                
+                let tipoProducto = 'Tangible';
+                const intangibleCheck = document.getElementById('tipo_producto_intangible');
+                if (intangibleCheck && intangibleCheck.checked) {
+                    tipoProducto = 'Intangible';
+                }
+
+                // 2. Validación Básica
+                if (!nombre || !queVende || !ubicacion) {
+                    alert("Por favor, completa los campos obligatorios: Nombre, Qué Vendes y Ubicación.");
+                    return;
+                }
+
+                // 3. Efecto de Carga
+                const originalText = launchButton.innerText;
+                launchButton.innerText = "🚀 Iniciando Orquestador...";
+                launchButton.disabled = true;
+
+                // 4. Enviar al Backend (main.py)
+                try {
+                    const response = await fetch('/api/crear-campana', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nombre: nombre,
+                            que_vende: queVende,
+                            descripcion: descripcion, // Descripción larga para el Analista
+                            a_quien: aQuien,
+                            idiomas: idiomas,
+                            ubicacion: ubicacion,
+                            tipo_producto: tipoProducto,
+                            prospectos_dia: prospectosDia
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        alert("¡Campaña Creada Exitosamente!\n\nEl Orquestador ha recibido la orden y los Cazadores saldrán en breve.");
+                        window.location.reload(); // Recargar para ver cambios si los hubiera
+                    } else {
+                        alert("Error al crear campaña: " + (data.error || "Desconocido"));
+                        launchButton.innerText = originalText;
+                        launchButton.disabled = false;
+                    }
+
+                } catch (error) {
+                    console.error("Error de conexión:", error);
+                    alert("Error de conexión con el servidor.");
+                    launchButton.innerText = originalText;
+                    launchButton.disabled = false;
+                }
+            });
         }
     }
     
@@ -178,5 +255,5 @@ const main = () => {
     }
 };
 
-// Se ejecuta el código del dashboard directamente, sin seguridad.
+// Se ejecuta el código del dashboard directamente.
 main();
