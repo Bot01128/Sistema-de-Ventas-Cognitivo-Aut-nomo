@@ -28,16 +28,23 @@ const main = () => {
     if (createCampaignTab) {
         const launchButton = createCampaignTab.querySelector('#lancam');
         const prospectsInput = createCampaignTab.querySelector('#prospects-per-day');
+        const phoneInput = createCampaignTab.querySelector("#numero_whatsapp");
         
-        // Configuración visual del plan (simulada para Admin)
+        // Inicializar input de teléfono bonito
+        if (phoneInput) {
+            window.intlTelInput(phoneInput, { 
+                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+                preferredCountries: ['co', 'mx', 'us', 'es']
+            });
+        }
+
+        // Configuración visual del plan
         const planCards = createCampaignTab.querySelectorAll('.plan-card');
         if (planCards.length > 0) {
             planCards.forEach(card => {
                 card.addEventListener('click', () => {
-                    // Visualmente selecciona
                     planCards.forEach(c => c.classList.remove('selected'));
                     card.classList.add('selected');
-                    // Actualiza input
                     if (card.dataset.plan === 'arrancador') prospectsInput.value = 4;
                     if (card.dataset.plan === 'profesional') prospectsInput.value = 15;
                     if (card.dataset.plan === 'dominador') prospectsInput.value = 50;
@@ -50,13 +57,15 @@ const main = () => {
             launchButton.addEventListener('click', async (e) => {
                 e.preventDefault();
                 
-                // 1. Recolectar Datos
+                // 1. RECOLECTAR DATOS
                 const nombre = document.getElementById('nombre_campana').value.trim();
                 const queVende = document.getElementById('que_vendes').value.trim();
                 const aQuien = document.getElementById('a_quien_va_dirigido').value.trim();
                 const idiomas = document.getElementById('idiomas_busqueda').value.trim();
                 const ubicacion = document.getElementById('ubicacion_geografica').value.trim();
                 const descripcion = document.getElementById('descripcion_producto').value.trim();
+                const enlaceVenta = document.getElementById('enlace_venta').value.trim();
+                const whatsapp = phoneInput ? phoneInput.value.trim() : "";
                 const prospectosDia = prospectsInput ? prospectsInput.value : 4;
                 
                 // 2. VALIDACIÓN DE TIPO DE PRODUCTO (OBLIGATORIO)
@@ -67,16 +76,21 @@ const main = () => {
                 if (tangibleCheck.checked) tipoProducto = 'Tangible';
                 if (intangibleCheck.checked) tipoProducto = 'Intangible';
 
-                // REGLA DE NEGOCIO: Debe marcar uno
-                if (!tipoProducto) {
-                    alert("⚠️ ¡FALTA INFORMACIÓN!\n\nPor favor selecciona si el producto es TANGIBLE o INTANGIBLE.\nEsto es vital para saber qué Bot activar.");
-                    return;
-                }
+                // 3. VALIDACIÓN ESTRICTA (MANO DURA) 🛡️
+                let faltantes = [];
+                if (!nombre) faltantes.push("Nombre de la Campaña");
+                if (!queVende) faltantes.push("¿Qué vendes?");
+                if (!aQuien) faltantes.push("¿A quién va dirigido?");
+                if (!ubicacion) faltantes.push("Ubicación Geográfica");
+                if (!idiomas) faltantes.push("Idiomas");
+                if (!tipoProducto) faltantes.push("Tipo de Producto (Tangible/Intangible)");
+                if (!descripcion) faltantes.push("Descripción del Producto");
+                if (!whatsapp) faltantes.push("Número de WhatsApp");
+                if (!enlaceVenta) faltantes.push("Enlace de Venta");
 
-                // 3. VALIDACIÓN DE CAMPOS DE TEXTO
-                if (!nombre || !queVende || !ubicacion || !aQuien) {
-                    alert("⚠️ FALTAN DATOS\n\nPor favor completa:\n- Nombre de la Campaña\n- Qué vendes\n- A quién va dirigido\n- Ubicación");
-                    return;
+                if (faltantes.length > 0) {
+                    alert("⚠️ ¡ALTO AHÍ! FALTAN DATOS OBLIGATORIOS\n\nPara vender con éxito, el sistema necesita:\n\n- " + faltantes.join("\n- "));
+                    return; // Detiene todo aquí
                 }
 
                 // 4. Efecto de Carga
@@ -97,9 +111,16 @@ const main = () => {
                             idiomas: idiomas,
                             ubicacion: ubicacion,
                             tipo_producto: tipoProducto,
-                            prospectos_dia: prospectosDia
+                            prospectos_dia: prospectosDia,
+                            whatsapp: whatsapp,
+                            enlace_venta: enlaceVenta
                         })
                     });
+
+                    // Manejo de respuesta (Incluyendo el 404)
+                    if (response.status === 404) {
+                        throw new Error("Ruta no encontrada (404). El archivo main.py no tiene la función '/api/crear-campana'. Verifica GitHub.");
+                    }
 
                     const contentType = response.headers.get("content-type");
                     if (contentType && contentType.indexOf("application/json") !== -1) {
@@ -112,12 +133,12 @@ const main = () => {
                         }
                     } else {
                         const text = await response.text();
-                        alert("❌ ERROR CRÍTICO (HTML response):\n" + text.substring(0, 150) + "...");
+                        alert("❌ ERROR CRÍTICO DE RESPUESTA:\n" + text.substring(0, 150) + "...");
                     }
 
                 } catch (error) {
                     console.error("Error:", error);
-                    alert("❌ ERROR DE CONEXIÓN:\nNo pude contactar con main.py.\n\nPosibles causas:\n1. Tu internet.\n2. El servidor Railway se está reiniciando.");
+                    alert("❌ ERROR DE CONEXIÓN:\n" + error.message);
                 } finally {
                     launchButton.innerText = originalText;
                     launchButton.disabled = false;
