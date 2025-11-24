@@ -1,16 +1,11 @@
-// --- CONFIGURACIÓN DE SUPABASE ---
-const SUPABASE_URL = 'https://fxduwnictssgxqndokly.supabase.co'; 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4ZHV3bmljdHNzZ3hxbmRva2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMzc3NDgsImV4cCI6MjA3NzYxMzc0OH0.1uqbiNroOCvAsn08Ps7JZpXV9K-rUyLfukOL5w4X_eg';
+document.addEventListener('DOMContentLoaded', () => {
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const main = () => {
-
-    // --- MÓDULO 2: MANEJO DE PESTAÑAS ---
+    // --- MÓDULO DE PESTAÑAS (INTACTO) ---
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
-    if (tabButtons.length > 0) {
+    if (tabButtons.length > 0 && tabContents.length > 0) {
         const switchTab = (activeButton) => {
+            if (!activeButton) return;
             const tabId = activeButton.getAttribute('data-tab');
             const activeTabContent = document.getElementById(tabId);
             tabContents.forEach(content => content.style.display = 'none');
@@ -18,19 +13,58 @@ const main = () => {
             tabButtons.forEach(btn => btn.classList.remove('active'));
             activeButton.classList.add('active');
         };
-        tabButtons.forEach(button => button.addEventListener('click', () => switchTab(button)));
-        const initialBtn = document.querySelector('.tab-button.active');
-        if (initialBtn) switchTab(initialBtn);
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => switchTab(button));
+        });
+        const initialActiveButton = document.querySelector('.tab-button.active');
+        if (initialActiveButton) {
+            switchTab(initialActiveButton);
+        }
     }
 
-    // --- MÓDULO 4: FORMULARIO DE CAMPAÑA (ADMIN) ---
+    // === INICIO DE LA RESTAURACIÓN: MÓDULO DEL CHAT DE LA IA ===
+    const chatForm = document.getElementById('chat-form');
+    if (chatForm) {
+        const userInput = document.getElementById('user-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const appendMessage = (message, type) => {
+            if (!chatMessages) return;
+            const messageElement = document.createElement('p');
+            messageElement.classList.add(type === 'user' ? 'msg-user' : 'msg-assistant');
+            messageElement.innerText = message;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+        chatForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const userMessage = userInput.value.trim();
+            if (!userMessage) return;
+            appendMessage(userMessage, 'user');
+            userInput.value = '';
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userMessage })
+                });
+                if (!response.ok) throw new Error('Server response not ok');
+                const data = await response.json();
+                appendMessage(data.response, 'assistant');
+            } catch (error) {
+                console.error('Error en el chat:', error);
+                appendMessage('Lo siento, estoy teniendo problemas de conexión.', 'assistant');
+            }
+        });
+    }
+    // === FIN DE LA RESTAURACIÓN ===
+
+    // --- MÓDULO DEL FORMULARIO DE CAMPAÑA (INTACTO) ---
     const createCampaignTab = document.getElementById('create-campaign');
     if (createCampaignTab) {
         const launchButton = createCampaignTab.querySelector('#lancam');
         const prospectsInput = createCampaignTab.querySelector('#prospects-per-day');
         const phoneInput = createCampaignTab.querySelector("#numero_whatsapp");
         
-        // Inicializar input de teléfono bonito
         if (phoneInput) {
             window.intlTelInput(phoneInput, { 
                 utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
@@ -38,7 +72,6 @@ const main = () => {
             });
         }
 
-        // Configuración visual del plan
         const planCards = createCampaignTab.querySelectorAll('.plan-card');
         if (planCards.length > 0) {
             planCards.forEach(card => {
@@ -52,12 +85,10 @@ const main = () => {
             });
         }
 
-        // --- LÓGICA DE ENVÍO DE CAMPAÑA ---
         if (launchButton) {
             launchButton.addEventListener('click', async (e) => {
                 e.preventDefault();
                 
-                // 1. RECOLECTAR DATOS
                 const nombre = document.getElementById('nombre_campana').value.trim();
                 const queVende = document.getElementById('que_vendes').value.trim();
                 const aQuien = document.getElementById('a_quien_va_dirigido').value.trim();
@@ -68,7 +99,6 @@ const main = () => {
                 const whatsapp = phoneInput ? phoneInput.value.trim() : "";
                 const prospectosDia = prospectsInput ? prospectsInput.value : 4;
                 
-                // 2. VALIDACIÓN DE TIPO DE PRODUCTO (OBLIGATORIO)
                 const tangibleCheck = document.getElementById('tipo_producto_tangible');
                 const intangibleCheck = document.getElementById('tipo_producto_intangible');
                 let tipoProducto = null;
@@ -76,7 +106,6 @@ const main = () => {
                 if (tangibleCheck.checked) tipoProducto = 'Tangible';
                 if (intangibleCheck.checked) tipoProducto = 'Intangible';
 
-                // 3. VALIDACIÓN ESTRICTA (MANO DURA) 🛡️
                 let faltantes = [];
                 if (!nombre) faltantes.push("Nombre de la Campaña");
                 if (!queVende) faltantes.push("¿Qué vendes?");
@@ -89,16 +118,14 @@ const main = () => {
                 if (!enlaceVenta) faltantes.push("Enlace de Venta");
 
                 if (faltantes.length > 0) {
-                    alert("⚠️ ¡ALTO AHÍ! FALTAN DATOS OBLIGATORIOS\n\nPara vender con éxito, el sistema necesita:\n\n- " + faltantes.join("\n- "));
-                    return; // Detiene todo aquí
+                    alert("⚠️ ¡ALTO AHÍ! FALTAN DATOS OBLIGATORIOS\n\n- " + faltantes.join("\n- "));
+                    return;
                 }
 
-                // 4. Efecto de Carga
                 const originalText = launchButton.innerText;
                 launchButton.innerText = "🚀 Contactando al Orquestador...";
                 launchButton.disabled = true;
 
-                // 5. Enviar al Backend
                 try {
                     const response = await fetch('/api/crear-campana', {
                         method: 'POST',
@@ -117,16 +144,15 @@ const main = () => {
                         })
                     });
 
-                    // Manejo de respuesta (Incluyendo el 404)
                     if (response.status === 404) {
-                        throw new Error("Ruta no encontrada (404). El archivo main.py no tiene la función '/api/crear-campana'. Verifica GitHub.");
+                        throw new Error("Ruta no encontrada (404).");
                     }
 
                     const contentType = response.headers.get("content-type");
                     if (contentType && contentType.indexOf("application/json") !== -1) {
                         const data = await response.json();
                         if (data.success) {
-                            alert("✅ ¡CAMPAÑA LANZADA CON ÉXITO!\n\nEl Orquestador ha recibido la orden.\nRevisa la tabla 'Prospectos' en unos minutos.");
+                            alert("✅ ¡CAMPAÑA LANZADA CON ÉXITO!");
                             window.location.reload();
                         } else {
                             alert("❌ ERROR DEL SERVIDOR:\n" + data.error);
@@ -146,6 +172,4 @@ const main = () => {
             });
         }
     }
-};
-
-main();
+});
