@@ -9,26 +9,34 @@ from dotenv import load_dotenv
 # --- CONFIGURACIÓN INICIAL ---
 load_dotenv()
 
-# Configuración de Logs para depuración profesional
+# Configuración de Logs (Te permitirá ver en la consola de Railway qué está pasando)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - CAZADOR - %(levelname)s - %(message)s')
 
 APIFY_TOKEN = os.environ.get("APIFY_API_TOKEN")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-# --- LÓGICA DE CEREBRO (ARSENAL) ---
+# --- LÓGICA DE INTELIGENCIA (EL ARSENAL) ---
 
-def obtener_mejor_bot(plataforma_objetivo, tipo_producto, mision="Extraer negocios locales"):
+def consultar_arsenal(plataforma_objetivo, tipo_producto, mision="Extraer negocios locales"):
     """
-    Consulta la tabla 'bot_arsenal' en Supabase para encontrar el mejor Bot (Actor)
-    disponible basado en la estrategia de la campaña.
+    Consulta la tabla 'bot_arsenal' en Supabase para obtener el mejor 'Actor'
+    disponible y activo para la tarea.
     """
-    logging.info(f"Consultando Arsenal para: Plataforma={plataforma_objetivo}, Producto={tipo_producto}")
+    logging.info(f"🔎 Consultando Arsenal para: Plataforma={plataforma_objetivo}, Producto={tipo_producto}")
+    
     conn = None
     try:
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
         
-        # Selecciona el bot con mayor nivel de confianza que coincida con los criterios
+        # Mapeo para coincidir con tu base de datos (Tangible/Intangible)
+        tipo_prod_db = 'Intangible' if 'intangible' in str(tipo_producto).lower() else 'Tangible'
+        
+        # QUERY INTELIGENTE:
+        # 1. Busca coincidencia de plataforma.
+        # 2. Busca coincidencia de tipo de producto O que sirva para "Ambos".
+        # 3. Solo bots activos.
+        # 4. Ordena por Nivel de Confianza (el mejor primero).
         query = """
             SELECT tool_name, actor_id, provider 
             FROM bot_arsenal 
@@ -38,167 +46,190 @@ def obtener_mejor_bot(plataforma_objetivo, tipo_producto, mision="Extraer negoci
             ORDER BY confidence_level DESC
             LIMIT 1;
         """
-        # Mapeo simple para asegurar que coincida con los valores de la DB
-        tipo_prod_db = 'Intangible' if 'intangible' in tipo_producto.lower() else 'Tangible'
         
         cur.execute(query, (plataforma_objetivo, tipo_prod_db))
         resultado = cur.fetchone()
         
         cur.close()
-        conn.close()
-
+        
         if resultado:
-            logging.info(f"Bot Seleccionado: {resultado[0]} (ID: {resultado[1]})")
+            logging.info(f"✅ Bot Seleccionado: {resultado[0]} (ID: {resultado[1]}) - Proveedor: {resultado[2]}")
             return {"nombre": resultado[0], "actor_id": resultado[1], "provider": resultado[2]}
         else:
-            logging.error("No se encontró ningún bot adecuado en el Arsenal.")
+            logging.warning("⚠️ No se encontró ningún bot adecuado en el Arsenal. Verifica tu tabla 'bot_arsenal'.")
             return None
 
     except Exception as e:
-        logging.error(f"Error crítico conectando al Arsenal: {e}")
-        if conn: conn.close()
+        logging.error(f"❌ Error conectando al Arsenal: {e}")
         return None
+    finally:
+        if conn: conn.close()
 
-# --- LÓGICA DE ADAPTACIÓN (INPUTS) ---
+# --- LÓGICA DE AHORRO Y EJECUCIÓN (INPUTS) ---
 
-def preparar_input_actor(actor_id, busqueda, ubicacion, max_items):
+def preparar_input_blindado(actor_id, busqueda, ubicacion, max_items):
     """
-    Adapta los parámetros de búsqueda al formato JSON específico que requiere cada Bot.
+    Configura los parámetros del Bot asegurando el AHORRO DE COSTOS.
+    Desactiva imágenes y videos.
     """
-    # 1. Configuración para Google Maps Scraper (Compass o Apify oficial)
+    logging.info(f"⚙️ Configurando parámetros de ahorro para: {actor_id}")
+
+    # 1. Google Maps (Compass o Apify Oficial)
     if "google-maps" in actor_id or "google-places" in actor_id:
         return {
             "searchStringsArray": [busqueda],
             "locationQuery": ubicacion,
-            "maxCrawledPlacesPerSearch": max_items,
-            "language": "es", # Se puede parametrizar según campaña
-            "allPlacesNoSearchAction": False
+            "maxCrawledPlacesPerSearch": int(max_items),
+            "language": "es",
+            # --- MEDIDAS DE AHORRO EXTREMO ---
+            "maxImages": 0,             # NO descargar imágenes
+            "scrapePosts": False,       # NO descargar posts
+            "reviewsDistribution": False, # NO analizar reviews a fondo
+            "reviewsSort": "newest",
+            "maxReviews": 0,            # Solo queremos datos de contacto, no reviews
+            "oneReviewPerUser": False,
+            "allPlacesNoSearchAction": False 
         }
     
-    # 2. Configuración para TikTok Hashtag Scraper
+    # 2. TikTok Hashtag Scraper
     elif "tiktok-hashtag" in actor_id:
-        # Asumimos que 'busqueda' es el hashtag
         hashtag = busqueda.replace("#", "").strip()
         return {
             "hashtags": [hashtag],
-            "resultsPerPage": max_items,
-            "shouldDownloadCovers": False
+            "resultsPerPage": int(max_items),
+            # --- MEDIDAS DE AHORRO ---
+            "shouldDownloadCovers": False, 
+            "shouldDownloadSlideshowImages": False,
+            "shouldDownloadVideo": False,
+            "shouldDownloadAuthorAvatar": False
         }
     
-    # 3. Configuración para Instagram Scraper
+    # 3. Instagram Scraper
     elif "instagram-scraper" in actor_id:
         return {
             "search": busqueda,
             "searchType": "hashtag",
-            "resultsLimit": max_items
+            "resultsLimit": int(max_items),
+            # --- MEDIDAS DE AHORRO ---
+            "searchLimit": 1, # Limitar búsquedas profundas
         }
         
-    # Default (intento genérico)
+    # Configuración Genérica (Fallback)
     else:
         return {
             "searchQueries": [busqueda],
-            "maxItems": max_items
+            "maxItems": int(max_items)
         }
 
 # --- LÓGICA DE NORMALIZACIÓN (OUTPUTS) ---
 
-def normalizar_resultado(item, plataforma):
+def normalizar_datos(item, plataforma, bot_id):
     """
-    Toma el JSON crudo de Apify y lo convierte en un diccionario estandarizado
-    para nuestra tabla 'prospects'.
+    Convierte el JSON sucio de Apify en el formato limpio de nuestra tabla 'prospects'.
     """
-    datos_normalizados = {
+    datos = {
         "business_name": None,
         "website_url": None,
         "phone_number": None,
         "social_profiles": {},
         "address": None,
-        "url_fuente": None
+        "source_bot_id": bot_id,
+        "raw_data": {} # Opcional: guardar un resumen
     }
 
-    if plataforma == "Google Maps":
-        datos_normalizados["business_name"] = item.get("title")
-        datos_normalizados["website_url"] = item.get("website")
-        datos_normalizados["phone_number"] = item.get("phone")
-        datos_normalizados["address"] = item.get("address")
-        datos_normalizados["url_fuente"] = item.get("url") # URL de Gmaps
-        
-        # Extraer redes sociales si el scraper las detectó
-        if item.get("socialMedia"):
-            datos_normalizados["social_profiles"] = item.get("socialMedia")
+    try:
+        if plataforma == "Google Maps":
+            datos["business_name"] = item.get("title")
+            datos["website_url"] = item.get("website")
+            datos["phone_number"] = item.get("phone")
+            datos["address"] = item.get("address")
+            
+            # Intentar extraer redes sociales si el bot las encontró
+            if item.get("socialMedia"):
+                datos["social_profiles"] = item.get("socialMedia")
+            
+            # Fallback para nombre si está vacío
+            if not datos["business_name"]:
+                datos["business_name"] = item.get("name")
 
-    elif plataforma == "TikTok":
-        author = item.get("authorMeta", {})
-        datos_normalizados["business_name"] = author.get("nickName") or author.get("name")
-        datos_normalizados["website_url"] = author.get("signatureLink") # Link en bio
-        datos_normalizados["url_fuente"] = item.get("webVideoUrl")
-        datos_normalizados["social_profiles"] = {"tiktok": f"https://www.tiktok.com/@{author.get('name')}"}
+        elif plataforma == "TikTok":
+            author = item.get("authorMeta", {})
+            datos["business_name"] = author.get("nickName") or author.get("name") or item.get("text")
+            datos["website_url"] = author.get("signatureLink")
+            datos["social_profiles"] = {"tiktok": f"https://www.tiktok.com/@{author.get('name')}"}
+            datos["raw_data"] = {"diggCount": item.get("diggCount"), "playCount": item.get("playCount")}
 
-    elif plataforma == "Instagram":
-        datos_normalizados["business_name"] = item.get("fullName") or item.get("username")
-        datos_normalizados["url_fuente"] = f"https://www.instagram.com/{item.get('username')}"
-        # Instagram a veces requiere más procesamiento para sacar email/web
+        elif plataforma == "Instagram":
+            datos["business_name"] = item.get("fullName") or item.get("username")
+            datos["website_url"] = item.get("externalUrl")
+            datos["social_profiles"] = {"instagram": f"https://www.instagram.com/{item.get('username')}"}
     
-    return datos_normalizados
+    except Exception as e:
+        logging.error(f"Error normalizando item: {e}")
+    
+    return datos
 
-# --- PROCESO PRINCIPAL ---
+# --- FUNCIÓN PRINCIPAL (LA QUE LLAMA EL ORQUESTADOR) ---
 
-def ejecutar_caza(campana_id, prompt_busqueda, ubicacion, plataforma="Google Maps", max_resultados=10):
+def ejecutar_caza(campana_id, prompt_busqueda, ubicacion, plataforma="Google Maps", tipo_producto="Tangible", max_resultados=10):
     """
-    Función orquestada. Recibe la orden, busca la herramienta, ejecuta y guarda.
+    Función maestra ejecutada por el Orquestador.
+    1. Consulta Arsenal.
+    2. Configura Apify (con ahorro).
+    3. Ejecuta Caza.
+    4. Guarda en Supabase.
     """
-    logging.info(f"--- INICIANDO PROTOCOLO DE CAZA: Campaña {campana_id} ---")
-    
-    # 1. Obtener detalles de la campaña (Tipo de producto, etc.) para elegir bot
-    # (Aquí simplificamos asumiendo que el Orquestador nos pasa lo necesario, 
-    # pero idealmente haríamos un SELECT a la tabla campaigns)
-    tipo_producto_simulado = "Tangible" # Esto vendría de la DB
-    
-    # 2. Consultar Arsenal
-    bot_info = obtener_mejor_bot(plataforma, tipo_producto_simulado)
+    logging.info(f"🚀 INICIANDO PROTOCOLO DE CAZA | Campaña: {campana_id}")
+
+    # 1. Consultar Arsenal
+    bot_info = consultar_arsenal(plataforma, tipo_producto)
     if not bot_info:
-        return
+        logging.error("⛔ Abortando caza: No hay bot disponible.")
+        return False
 
-    # 3. Ejecutar Apify
+    actor_id = bot_info["actor_id"]
+
+    # 2. Ejecutar Apify
     try:
         client = ApifyClient(APIFY_TOKEN)
-        actor_id = bot_info["actor_id"]
         
-        run_input = preparar_input_actor(actor_id, prompt_busqueda, ubicacion, max_resultados)
+        run_input = preparar_input_blindado(actor_id, prompt_busqueda, ubicacion, max_resultados)
         
-        logging.info(f"Lanzando Actor Apify: {actor_id}")
-        logging.info(f"Query: {prompt_busqueda} en {ubicacion}")
-        
+        logging.info(f"📡 Llamando a Apify ({actor_id})...")
         run = client.actor(actor_id).call(run_input=run_input)
         
         if not run or run.get('status') != 'SUCCEEDED':
-            logging.error("La ejecución del Actor en Apify falló o no terminó correctamente.")
-            return
+            logging.error("❌ La ejecución en Apify falló.")
+            return False
 
         dataset_id = run["defaultDatasetId"]
-        logging.info(f"Caza finalizada. Dataset ID: {dataset_id}. Procesando resultados...")
+        logging.info(f"✅ Caza en Apify completada. Descargando Dataset: {dataset_id}")
 
-        # 4. Guardar en Base de Datos (Supabase)
+        # 3. Guardar en Base de Datos (Supabase)
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
         
         contador_nuevos = 0
+        dataset_items = client.dataset(dataset_id).iterate_items()
         
-        for item in client.dataset(dataset_id).iterate_items():
-            # Normalizar datos
-            datos = normalizar_resultado(item, plataforma)
+        for item in dataset_items:
+            # Normalizar
+            datos = normalizar_datos(item, plataforma, actor_id)
             
-            if not datos["business_name"]: continue # Saltar si no hay nombre
+            # Filtro básico: Si no hay nombre, no nos sirve
+            if not datos["business_name"]:
+                continue
 
-            # Insertar en DB (Tabla prospects)
-            # Usamos ON CONFLICT DO NOTHING para evitar duplicados si ya cazamos este negocio/url
+            # Insertar (Usando los nombres de columna de tu FOTO de Supabase)
             try:
+                # Nota: 'campana_id' en la tabla se llama 'campaign_id' según tu esquema visualizado, 
+                # ajusta el SQL abajo si en tu DB es 'campana_id'
                 cur.execute(
                     """
                     INSERT INTO prospects 
-                    (campaign_id, business_name, website_url, phone_number, social_profiles, source_bot_id, status, created_at)
-                    VALUES (%s, %s, %s, %s, %s, (SELECT id FROM bot_arsenal WHERE actor_id = %s LIMIT 1), 'cazado', NOW())
-                    ON CONFLICT DO NOTHING
+                    (campana_id, business_name, website_url, phone_number, social_profiles, source_bot_id, estado_prospecto, datos_json, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, 'cazado', %s, NOW())
+                    ON CONFLICT (website_url) DO NOTHING 
                     RETURNING id;
                     """,
                     (
@@ -207,39 +238,42 @@ def ejecutar_caza(campana_id, prompt_busqueda, ubicacion, plataforma="Google Map
                         datos["website_url"],
                         datos["phone_number"],
                         Json(datos["social_profiles"]),
-                        actor_id
+                        actor_id,
+                        Json(datos["raw_data"]) # datos_json extra
                     )
                 )
+                # Nota sobre ON CONFLICT: Idealmente deberías tener un constraint unique en website_url o business_name+phone
+                # Si no tienes constraint, quita la línea "ON CONFLICT..."
                 
-                if cur.fetchone():
+                if cur.rowcount > 0:
                     contador_nuevos += 1
             except Exception as db_err:
-                logging.warning(f"Error guardando fila: {db_err}")
-                conn.rollback() # Rollback parcial si falla una fila
+                # Si falla una inserción (ej: duplicado sin constraint), lo ignoramos y seguimos
+                conn.rollback()
+                logging.debug(f"Salto de fila (posible duplicado o error): {db_err}")
                 continue
+            else:
+                conn.commit() # Commit por éxito individual (o por lote si prefieres velocidad)
 
-        conn.commit()
         cur.close()
         conn.close()
         
-        logging.info(f"--- MISIÓN CUMPLIDA ---")
-        logging.info(f"Se han añadido {contador_nuevos} nuevos prospectos a la base de datos.")
+        logging.info(f"🎉 CICLO COMPLETADO. Nuevos prospectos guardados: {contador_nuevos}")
+        return True
 
     except Exception as e:
-        logging.critical(f"Error Catastrófico en el proceso de caza: {e}")
+        logging.critical(f"🔥 Error Catastrófico en worker_cazador: {e}")
+        return False
 
-# --- ENTRY POINT (SIMULACIÓN DEL ORQUESTADOR) ---
+# --- BLOQUE DE PRUEBA (SOLO SE EJECUTA SI CORRES ESTE ARCHIVO DIRECTAMENTE) ---
 if __name__ == "__main__":
-    # Esto simula la llamada que haría el Orquestador (main.py)
-    
-    # Datos que vendrían de la IA y la Campaña
-    ID_CAMPAÑA_PRUEBA = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" # Un UUID válido de tu tabla campaigns
-    PROMPT_IA = "Clinicas dentales"
-    UBICACION = "Medellin, Colombia"
-    PLATAFORMA = "Google Maps" 
-    
-    print(">> Iniciando prueba de trabajador_cazador.py...")
-    if APIFY_TOKEN and DATABASE_URL:
-        ejecutar_caza(ID_CAMPAÑA_PRUEBA, PROMPT_IA, UBICACION, PLATAFORMA, max_resultados=5)
-    else:
-        print("Faltan variables de entorno (APIFY_TOKEN o DATABASE_URL). Revisa tu archivo .env")
+    print(">> Modo de Prueba Manual del Trabajador Cazador")
+    # Para probar, descomenta y pon un ID de campaña real de tu tabla 'campanas'
+    # ejecutar_caza(
+    #     campana_id=1, 
+    #     prompt_busqueda="Ferreterias industriales", 
+    #     ubicacion="Bogota, Colombia", 
+    #     plataforma="Google Maps", 
+    #     tipo_producto="Tangible", 
+    #     max_resultados=5
+    # )
