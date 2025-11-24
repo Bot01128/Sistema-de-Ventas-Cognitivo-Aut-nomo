@@ -7,20 +7,37 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, s
 from flask_babel import Babel
 from psycopg2.extras import Json
 from werkzeug.routing import BaseConverter
-from cerebro_dashboard import create_chatbot
+from dotenv import load_dotenv
 
-# --- CONFIGURACION INICIAL ---
+# --- IMPORTACIÓN DE MÓDULOS PROPIOS ---
+# Importamos el chatbot del dashboard administrativo
+try:
+    from cerebro_dashboard import create_chatbot
+except ImportError:
+    print("!!! ADVERTENCIA: No se encontró cerebro_dashboard.py. El chat administrativo no funcionará.")
+    create_chatbot = None
+
+# Importamos el Trabajador Nutridor para el chat de ventas (Nido)
+try:
+    from trabajador_nutridor import TrabajadorNutridor
+except ImportError:
+    print("!!! ADVERTENCIA: No se encontró trabajador_nutridor.py. El chat del Nido estará desactivado.")
+    TrabajadorNutridor = None
+
+# --- CONFIGURACIÓN INICIAL ---
+load_dotenv() # Asegura que las variables de entorno se carguen
+
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "una-clave-secreta-muy-robusta-para-desarrollo")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "autoneura-super-secret-key-2025")
 
-# Convertidor de UUID para las URLs
+# Convertidor de UUID para las URLs (Mantenemos esto para otras rutas que usen UUID)
 class UUIDConverter(BaseConverter):
     def to_python(self, value): return uuid.UUID(value)
     def to_url(self, value): return str(value)
 
 app.url_map.converters['uuid'] = UUIDConverter
 
-# --- BLOQUE DE CONFIGURACION DE IDIOMAS ---
+# --- BLOQUE DE CONFIGURACIÓN DE IDIOMAS ---
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.join(basedir, 'translations')
 
@@ -34,14 +51,19 @@ babel = Babel(app, locale_selector=get_locale)
 def inject_get_locale():
     return dict(get_locale=get_locale)
 
-# --- INICIALIZACION DE BASE DE DATOS Y API KEYS ---
+# --- CONEXIÓN BASE DE DATOS Y API KEYS ---
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
-# --- LAZY LOADING DEL CEREBRO DE LA IA (DASHBOARD) ---
-dashboard_brain = None
+# --- VARIABLES GLOBALES (SINGLETONS) ---
+dashboard_brain = None # Cerebro para el Admin Dashboard
+nutridor_brain = None  # Cerebro para el Nido (Clientes)
+
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
+    # Inicializamos el Nutridor una sola vez
+    if TrabajadorNutridor:
+        nutridor_brain = TrabajadorNutridor()
 
 # --- HELPER DE BASE DE DATOS ---
 def get_db_connection():
@@ -50,57 +72,15 @@ def get_db_connection():
         conn = psycopg2.connect(DATABASE_URL)
         return conn
     except Exception as e:
-        print(f"!!! ERROR CONECTANDO A DB: {e}")
+        print(f"!!! ERROR CRÍTICO CONECTANDO A DB: {e}")
         return None
 
-# --- FUNCION AUXILIAR DE IA PARA EL NIDO ---
-def generar_contenido_nido_con_ia(negocio, dolores, producto):
-    """Genera el contenido del Showroom dinámicamente usando Gemini."""
-    try:
-        if not GOOGLE_API_KEY: raise Exception("Sin API Key")
-        
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        prompt = f"""
-        Genera un JSON con contenido para una landing page de ventas (Showroom) para el negocio '{negocio}'.
-        
-        CONTEXTO:
-        Dolores detectados: {dolores}
-        Nuestro Producto: {producto}
-        
-        FORMATO JSON REQUERIDO (Solo devuelve el JSON):
-        {{
-            "titulo": "Un título impactante y personalizado",
-            "diagnostico": "Un párrafo de 3 líneas diagnosticando sus problemas sutilmente.",
-            "chat_q1": "Una pregunta que un cliente típico de {negocio} haría.",
-            "chat_a1": "Una respuesta ideal dada por una IA.",
-            "chat_q2": "Otra pregunta difícil de un cliente.",
-            "chat_a2": "Otra respuesta perfecta de la IA.",
-            "valor": "Un consejo breve de alto valor sobre cómo mejorar su negocio hoy mismo."
-        }}
-        """
-        response = model.generate_content(prompt)
-        # Limpieza básica del JSON string para evitar errores de parseo
-        texto_json = response.text.replace("```json", "").replace("```", "").strip()
-        return json.loads(texto_json)
-    except Exception as e:
-        print(f"Error IA Nido: {e}. Usando contenido por defecto.")
-        # Fallback por si la IA falla
-        return {
-            "titulo": f"Estrategia de Crecimiento para {negocio}",
-            "diagnostico": "Hemos detectado oportunidades clave para optimizar la atención al cliente y automatizar respuestas frecuentes.",
-            "chat_q1": "¿Tienen disponibilidad para hoy?",
-            "chat_a1": "¡Hola! Sí, tenemos agenda disponible. ¿Deseas reservar ahora?",
-            "chat_q2": "¿Cuáles son sus precios?",
-            "chat_a2": "Nuestros precios varían según el servicio. ¿Te gustaría ver nuestro catálogo?",
-            "valor": "La automatización puede recuperar hasta un 30% de las ventas perdidas por falta de respuesta inmediata."
-        }
-
-# --- RUTA DE HEALTHCHECK PARA RAILWAY ---
+# --- RUTA DE HEALTHCHECK (PARA RAILWAY) ---
 @app.route('/health')
 def health_check():
     return "OK", 200
 
-# --- RUTAS PRINCIPALES DE LA APLICACION ---
+# --- RUTAS PRINCIPALES (VISTAS) ---
 @app.route('/')
 def home():
     return render_template('dashboard.html')
@@ -121,57 +101,21 @@ def admin_dashboard():
 def admin_taller():
     return render_template('admin_taller.html')
 
-# --- CHATBOT DEL DASHBOARD (Legacy Support) ---
-@app.route('/chat', methods=['POST'])
-def chat():
-    global dashboard_brain
-    try:
-        if dashboard_brain is None:
-            print(">>> [main.py - LAZY LOADING] Primer mensaje de chat recibido. INICIALIZANDO CEREBRO...")
-            descripcion_de_la_campana = "Soy un asistente virtual de AutoNeura."
-            
-            conn = get_db_connection()
-            if conn:
-                cur = conn.cursor()
-                try:
-                    cur.execute("SELECT product_description FROM campaigns WHERE id = '1' OR id::text LIKE '%%' LIMIT 1")
-                    result = cur.fetchone()
-                    if result and result[0]:
-                        descripcion_de_la_campana = result[0]
-                except Exception as e:
-                    print(f"Aviso DB Chat: {e}")
-                    conn.rollback()
-                finally:
-                    cur.close()
-                    conn.close()
-            
-            dashboard_brain = create_chatbot(descripcion_producto=descripcion_de_la_campana)
-            print(">>> [main.py - LAZY LOADING] Cerebro inicializado y listo para reusar.")
-        
-        user_message = request.json.get('message')
-        if not user_message: return jsonify({"error": "No hay mensaje."}), 400
-        
-        response_text = dashboard_brain.invoke({"question": user_message})
-        return jsonify({"response": response_text})
-
-    except Exception as e:
-        print(f"!!! ERROR FATAL en la ruta /chat: {e}")
-        return jsonify({"error": f"Ocurrio un error en el chat: {e}"}), 500
-
-# --- RUTAS DEL SISTEMA DE CAMPAÑAS (AQUÍ ESTABA EL FALTANTE) ---
-
+# --- API: CREACIÓN DE CAMPAÑA (Backend del Formulario) ---
 @app.route('/api/crear-campana', methods=['POST'])
 def crear_campana():
-    """Recibe los datos del formulario mis_clientes.js y crea la campaña en DB."""
+    """Recibe los datos del formulario frontend y crea la campaña en PostgreSQL."""
+    conn = None
     try:
         data = request.json
         conn = get_db_connection()
         if not conn:
-            return jsonify({"success": False, "error": "No hay conexión a la base de datos"}), 500
+            return jsonify({"success": False, "error": "Fallo de conexión a DB"}), 500
             
         cur = conn.cursor()
 
-        # 1. Verificar si existe el Cliente Admin (o crearlo)
+        # 1. Verificar/Crear Cliente Admin (Simplificado para MVP)
+        # En el futuro, esto vendría del login de sesión real.
         cur.execute("SELECT id FROM clients WHERE email = 'admin@autoneura.com'")
         cliente_existente = cur.fetchone()
         
@@ -179,7 +123,7 @@ def crear_campana():
         if cliente_existente:
             client_id = cliente_existente[0]
         else:
-            # Crear cliente admin por defecto
+            # Crear cliente admin por defecto si no existe
             cur.execute("""
                 INSERT INTO clients (email, full_name, is_active, daily_prospects_quota, balance)
                 VALUES ('admin@autoneura.com', 'Admin Principal', TRUE, %s, 1000000.00)
@@ -188,10 +132,10 @@ def crear_campana():
             client_id = cur.fetchone()[0]
             conn.commit()
 
-        # 2. Insertar la Nueva Campaña
-        # Concatenamos 'que_vende' y 'descripcion' para que el Analista tenga más info
+        # 2. Preparar Datos para el Orquestador/Analista
         desc_completa = f"{data.get('que_vende')}. Detalles: {data.get('descripcion')}. Enlace: {data.get('enlace_venta')}"
 
+        # 3. Insertar Campaña
         cur.execute("""
             INSERT INTO campaigns (
                 client_id, 
@@ -203,8 +147,9 @@ def crear_campana():
                 geo_location,
                 status,
                 sales_link,
-                whatsapp_contact
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, 'active', %s, %s)
+                whatsapp_contact,
+                created_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, 'active', %s, %s, NOW())
             RETURNING id
         """, (
             client_id,
@@ -221,8 +166,11 @@ def crear_campana():
         nueva_campana_id = cur.fetchone()[0]
         conn.commit()
         
-        print(f">>> NUEVA CAMPAÑA CREADA: {data.get('nombre')} (ID: {nueva_campana_id})")
-        return jsonify({"success": True, "message": "Campaña lanzada con éxito."})
+        print(f">>> CAMPAÑA CREADA EXITOSAMENTE: {data.get('nombre')} (ID: {nueva_campana_id})")
+        
+        # Aquí es donde el Orquestador (en el otro proceso) detectará la campaña nueva
+        
+        return jsonify({"success": True, "message": "Campaña lanzada al Orquestador."})
 
     except Exception as e:
         print(f"Error creando campaña: {e}")
@@ -233,94 +181,177 @@ def crear_campana():
             cur.close()
             conn.close()
 
-# --- RUTAS DEL SISTEMA DE PERSUASIÓN ---
+# --- RUTAS DEL SISTEMA PERSUASOR / NUTRIDOR (El Embudo) ---
 
-@app.route('/pre-nido/<uuid:id_unico>')
-def mostrar_pre_nido(id_unico):
-    """Paso 1: El prospecto llega desde el email."""
+@app.route('/ver-pre-nido/<string:token>')
+def mostrar_pre_nido(token):
+    """
+    Paso 1 del Embudo: El prospecto hace clic en el enlace del email del Persuasor.
+    Usamos <string:token> porque secrets.token_urlsafe genera texto, no UUID.
+    """
     conn = get_db_connection()
-    if not conn: return "Error de conexión", 500
+    if not conn: return "Error de conexión con el servidor.", 500
     
     cur = conn.cursor()
     try:
-        cur.execute("SELECT id, business_name FROM prospects WHERE unique_access_token = %s", (str(id_unico),))
+        # Buscamos al prospecto por su TOKEN ÚNICO
+        query = """
+            SELECT id, business_name, contenido_generado 
+            FROM prospects 
+            WHERE token_acceso = %s
+        """
+        cur.execute(query, (token,))
         resultado = cur.fetchone()
+        
         if resultado:
-            return render_template('persuasor.html', prospecto_id=resultado[0], nombre_negocio=resultado[1])
+            pid, nombre_negocio, contenido_json = resultado
+            
+            # Extraemos los textos personalizados generados por el Persuasor
+            # Si el JSON es nulo (por versión vieja), usamos defaults
+            titulo = "Oportunidad Detectada"
+            mensaje = "Hemos analizado tu negocio y tenemos una propuesta."
+            
+            if contenido_json:
+                if isinstance(contenido_json, str):
+                    import json
+                    contenido_json = json.loads(contenido_json)
+                
+                titulo = contenido_json.get('prenido_titulo', titulo)
+                mensaje = contenido_json.get('prenido_mensaje', mensaje)
+
+            # Renderizamos la plantilla con los datos DB
+            return render_template(
+                'persuasor.html', 
+                prospecto_id=pid, 
+                nombre_negocio=nombre_negocio,
+                titulo_personalizado=titulo,
+                mensaje_personalizado=mensaje
+            )
         else:
-            return "Enlace inválido o expirado.", 404
+            return render_template('404.html'), 404 # O un mensaje simple si no tienes 404.html
+            
+    except Exception as e:
+        print(f"Error en Pre-Nido: {e}")
+        return "Ocurrió un error procesando tu solicitud.", 500
     finally:
         cur.close()
         conn.close()
 
 @app.route('/generar-nido', methods=['POST'])
-def generar_nido_y_enviar_enlace():
-    """Paso 2: Captura de Lead y Showroom."""
-    email = request.form.get('email')
+def generar_nido_y_entrar():
+    """
+    Paso 2 del Embudo: El prospecto ingresa su email en el Pre-Nido.
+    Esto activa al Nutridor y muestra el Showroom.
+    """
+    email_usuario = request.form.get('email')
     prospecto_id = request.form.get('prospecto_id')
     
-    if not email or not prospecto_id: return "Faltan datos", 400
+    if not email_usuario or not prospecto_id: 
+        return "Faltan datos obligatorios.", 400
 
     conn = get_db_connection()
-    if not conn: return "Error conexión", 500
+    if not conn: return "Error crítico DB", 500
 
     try:
         cur = conn.cursor()
+        
+        # 1. Actualizar Prospecto: Guardar email y cambiar estado
         cur.execute("""
             UPDATE prospects 
-            SET captured_email = %s, status = 'nutriendo', last_interaction_at = NOW()
+            SET captured_email = %s, 
+                estado_prospecto = 'nutriendo', -- Activa al Nutridor asíncrono
+                last_interaction_at = NOW()
             WHERE id = %s
-            RETURNING business_name, pain_points, campaign_id
-        """, (email, prospecto_id))
-        datos = cur.fetchone()
+            RETURNING business_name, token_acceso
+        """, (email_usuario, prospecto_id))
+        
+        res = cur.fetchone()
         conn.commit()
         
-        if not datos: return "Error identificando prospecto", 404
-            
-        nombre_negocio, pain_points, campaign_id = datos
+        if not res: return "Prospecto no encontrado.", 404
         
-        desc_producto = "IA Avanzada"
-        if campaign_id:
-            cur.execute("SELECT product_description FROM campaigns WHERE id = %s", (campaign_id,))
-            res = cur.fetchone()
-            if res: desc_producto = res[0]
-
-        cur.close()
-        conn.close()
-
-        contenido_nido = generar_contenido_nido_con_ia(nombre_negocio, pain_points, desc_producto)
+        nombre_negocio, token_acceso = res
         
-        return render_template('nido_template.html',
-                               nombre_negocio=nombre_negocio,
-                               titulo_personalizado=contenido_nido['titulo'],
-                               texto_diagnostico=contenido_nido['diagnostico'],
-                               ejemplo_pregunta_1=contenido_nido['chat_q1'],
-                               ejemplo_respuesta_1=contenido_nido['chat_a1'],
-                               ejemplo_pregunta_2=contenido_nido['chat_q2'],
-                               ejemplo_respuesta_2=contenido_nido['chat_a2'],
-                               texto_contenido_de_valor=contenido_nido['valor'],
-                               prospecto_id=prospecto_id)
+        # 2. Renderizar el Nido (Showroom)
+        # Pasamos el token_acceso al frontend para que el Chat pueda usarlo
+        return render_template(
+            'nido_template.html',
+            nombre_negocio=nombre_negocio,
+            token_sesion=token_acceso, # CRÍTICO: El chat usará esto para saber quién es
+            titulo_personalizado=f"Bienvenido al futuro de {nombre_negocio}",
+            texto_contenido_de_valor="Aquí tienes la demostración interactiva de tu Agente IA."
+        )
 
     except Exception as e:
-        print(f"Error generar-nido: {e}")
-        if conn: conn.close()
-        return "Error interno", 500
+        print(f"Error generando Nido: {e}")
+        if conn: conn.rollback()
+        return "Error interno del servidor.", 500
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
 
 @app.route('/api/chat-nido', methods=['POST'])
 def chat_nido_api():
-    return jsonify({"respuesta": "Gracias. Tu mensaje está siendo procesado por nuestra IA."})
+    """
+    API del Chatbot de Ventas (El Nutridor en acción).
+    Recibe el mensaje del usuario y el token de sesión.
+    """
+    data = request.json
+    token = data.get('token')
+    mensaje = data.get('mensaje')
+    
+    if not token or not mensaje:
+        return jsonify({"respuesta": "Error de comunicación."}), 400
 
-# --- RUTAS DE PRUEBA ---
+    if nutridor_brain:
+        # Llamada al Trabajador Nutridor (Lógica real)
+        respuesta_ia = nutridor_brain.responder_chat_nido(token, mensaje)
+        return jsonify({"respuesta": respuesta_ia})
+    else:
+        return jsonify({"respuesta": "El sistema de IA se está reiniciando. Intenta en un momento."})
+
+# --- CHATBOT DEL ADMIN DASHBOARD (Legacy / Soporte Técnico) ---
+@app.route('/chat', methods=['POST'])
+def chat_admin():
+    global dashboard_brain
+    try:
+        # Lazy Loading del cerebro admin
+        if dashboard_brain is None:
+            print(">>> [main.py] Inicializando Cerebro Admin...")
+            conn = get_db_connection()
+            desc_campana = "Asistente AutoNeura"
+            if conn:
+                try:
+                    cur = conn.cursor()
+                    cur.execute("SELECT product_description FROM campaigns LIMIT 1")
+                    res = cur.fetchone()
+                    if res: desc_campana = res[0]
+                    conn.close()
+                except: pass
+            
+            if create_chatbot:
+                dashboard_brain = create_chatbot(descripcion_producto=desc_campana)
+        
+        user_message = request.json.get('message')
+        if not user_message: return jsonify({"error": "Empty message"}), 400
+        
+        if dashboard_brain:
+            response_text = dashboard_brain.invoke({"question": user_message})
+            return jsonify({"response": response_text})
+        else:
+            return jsonify({"response": "Sistema en mantenimiento."})
+
+    except Exception as e:
+        print(f"Error en chat admin: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# --- RUTAS DE VISUALIZACIÓN DIRECTA (PARA DEBUG) ---
 @app.route('/confirmacion')
 def mostrar_confirmacion(): return render_template('confirmacion.html')
 
-@app.route('/ver-pre-nido')
-def ver_pre_nido(): return render_template('persuasor.html', prospecto_id="prueba", nombre_negocio="Demo")
-
-@app.route('/ver-nido')
-def ver_nido(): return render_template('nido_template.html', nombre_negocio="Demo", titulo_personalizado="Demo", texto_diagnostico="...", texto_contenido_de_valor="...")
-
-# --- BLOQUE DE ARRANQUE ---
+# --- ARRANQUE DE LA APLICACIÓN ---
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port)
+    # En producción (Railway/Fly), debug debe ser False para estabilidad
+    app.run(host='0.0.0.0', port=port, debug=False)

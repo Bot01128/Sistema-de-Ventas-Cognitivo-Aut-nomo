@@ -77,20 +77,16 @@
 
             <div class="tab-content" id="create-campaign" style="display: none;">
                 <h2>{{ _('Configurar Campaña de Prospección') }}</h2>
+                
+                <!-- SECCIÓN ELIMINADA: 1. Selecciona un Plan -->
+
                 <div class="form-section">
-                    <label>{{ _('1. Selecciona un Plan') }}</label>
-                    <div class="plans-container">
-                        <div class="plan-card" data-plan="arrancador"><h4>{{ _('El Arrancador') }}</h4><div class="price">$149<span>/mes</span></div><small>4 prospectos/día</small></div>
-                        <div class="plan-card" data-plan="profesional"><h4>{{ _('El Profesional') }}</h4><div class="price">$399<span>/mes</span></div><small>15 prospectos/día</small></div>
-                        <div class="plan-card" data-plan="dominador"><h4>{{ _('El Dominador') }}</h4><div class="price">$999<span>/mes</span></div><small>50 prospectos/día</small></div>
-                    </div>
-                </div>
-                <div class="form-section">
-                    <label for="prospects-per-day">{{ _('2. O personaliza la cantidad de Prospectos por Día') }}</label>
+                    <label for="prospects-per-day">{{ _('Cantidad de Prospectos por Día') }}</label>
                     <input type="number" id="prospects-per-day" value="4" min="4">
                 </div>
+                
                 <div class="form-section">
-                    <label>{{ _('3. Define tu Campaña') }}</label>
+                    <label>{{ _('Datos de la Campaña') }}</label>
                     <label for="nombre_campana" style="margin-top:10px;">{{ _('Nombre de la Campaña') }}</label>
                     <input type="text" id="nombre_campana" placeholder="{{ _('Ej: Búsqueda de Restaurantes en Miami') }}">
                     <label for="que_vendes" style="margin-top:15px;">{{ _('¿Qué vendes?') }}</label>
@@ -98,33 +94,44 @@
                     <label for="a_quien_va_dirigido" style="margin-top: 15px;">{{ _('¿A quién va dirigido?') }}</label>
                     <input type="text" id="a_quien_va_dirigido" placeholder="{{ _('Ej: Restaurantes italianos, Ferreterías') }}">
 
-                    <!-- Nuevos campos agregados -->
+                    <!-- Campos de segmentación -->
                     <label for="idiomas_busqueda" style="margin-top: 15px;">{{ _('¿En qué idiomas quieres buscar? (Sepáralos por comas)') }}</label>
                     <input type="text" id="idiomas_busqueda" placeholder="{{ _('Ej: Español, Inglés') }}">
 
                     <label for="ubicacion_geografica" style="margin-top: 15px;">{{ _('¿Ubicación geográfica? (País, Ciudad)') }}</label>
                     <input type="text" id="ubicacion_geografica" placeholder="{{ _('Ej: Estados Unidos, Miami') }}">
-                    <!-- Fin de nuevos campos -->
-
                 </div>
+                
                 <div class="form-section">
-                    <label>{{ _('4. Describe tu Producto y Contacto') }}</label>
-                    <div class="form-section" style="margin-top:15px;"><label>{{ _('Tipo de Producto') }}</label><div class="checkbox-group"><input type="checkbox" id="tipo_producto_tangible" name="tipo_producto"><label for="tipo_producto_tangible">{{ _('Tangible') }}</label></div><div class="checkbox-group"><input type="checkbox" id="tipo_producto_intangible" name="tipo_producto"><label for="tipo_producto_intangible">{{ _('Intangible') }}</label></div></div>
-                    <div class="form-section"><label for="descripcion_producto">{{ _('Descripción del Producto/Servicio') }}</label><textarea id="descripcion_producto" maxlength="25000" placeholder="{{ _('Describe qué vendes...') }}"></textarea></div>
-                    <div class="form-section"><label for="numero_whatsapp">{{ _('Número de WhatsApp') }}</label><input type="tel" id="numero_whatsapp"></div>
-                    <div class="form-section"><label for="enlace_venta">{{ _('Enlace de Venta') }}</label><input type="text" id="enlace_venta"></div>
+                    <label>{{ _('Descripción del Producto y Contacto') }}</label>
+                    <div class="form-section" style="margin-top:15px;">
+                        <label>{{ _('Tipo de Producto') }}</label>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="tipo_producto_tangible" name="tipo_producto">
+                            <label for="tipo_producto_tangible">{{ _('Tangible') }}</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="tipo_producto_intangible" name="tipo_producto">
+                            <label for="tipo_producto_intangible">{{ _('Intangible') }}</label>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <label for="descripcion_producto">{{ _('Descripción del Producto/Servicio') }}</label>
+                        <textarea id="descripcion_producto" maxlength="25000" placeholder="{{ _('Describe qué vendes...') }}"></textarea>
+                    </div>
+                    <div class="form-section">
+                        <label for="numero_whatsapp">{{ _('Número de WhatsApp') }}</label>
+                        <input type="tel" id="numero_whatsapp">
+                    </div>
+                    <div class="form-section">
+                        <label for="enlace_venta">{{ _('Enlace de Venta') }}</label>
+                        <input type="text" id="enlace_venta">
+                    </div>
                 </div>
-                <div id="summary-box" class="form-section summary-box">
-                    <h4>{{ _('Resumen Final') }}</h4>
-                    <p>Plan Seleccionado: <strong id="selected-plan"></strong></p>
-                    <p>Prospectos por día: <strong id="daily-prospects"></strong></p>
-                    <p>Costo Mensual Final: <strong id="total-cost"></strong></p>
-                    <hr class="summary-divider">
-                    <p>Saldo en tu Cuenta: <strong id="current-balance">$0.00</strong></p>
-                    <p id="recharge-line" class="recharge-needed">Mínimo a Recargar: <strong id="recharge-amount"></strong></p>
-                    <p id="remaining-line" class="balance-ok" style="display:none;">Saldo Restante: <strong id="remaining-balance"></strong></p>
-                </div>
-                <div id="action-buttons-container">
+
+                <!-- SECCIÓN ELIMINADA: Resumen Final -->
+
+                <div id="action-buttons-container" style="margin-top: 20px;">
                     <button id="lancam" class="cta-button">{{ _('Lanzar Campaña') }}</button>
                 </div>
             </div>

@@ -1,116 +1,149 @@
 import os
 import json
+import logging
+import secrets
 import psycopg2
-from dotenv import load_dotenv
+from psycopg2.extras import Json
 import google.generativeai as genai
+from dotenv import load_dotenv
 
 # --- CONFIGURACIÓN ---
 load_dotenv()
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - PERSUASOR - %(levelname)s - %(message)s')
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
-# Configurar la IA de Google
+# Configuración IA
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-    print(">>> IA de Google configurada exitosamente.")
+    modelo_ia = genai.GenerativeModel('gemini-1.5-flash')
 else:
-    print("!!! ADVERTENCIA: GOOGLE_API_KEY no encontrada. El Persuasor no puede funcionar.")
+    logging.error("❌ SIN CEREBRO: GOOGLE_API_KEY no encontrada.")
+    modelo_ia = None
 
-# --- FUNCIÓN DE PERSUASIÓN CON IA ---
-def generar_borrador_con_ia(nombre_negocio, informe_analisis, servicio_ofrecido):
-    if not GOOGLE_API_KEY:
-        return "Error: GOOGLE_API_KEY no configurada."
-
-    # Extraemos los puntos de dolor del informe para usarlos en el prompt
-    puntos_de_dolor = informe_analisis.get("puntos_de_dolor", [])
-    inteligencia_adicional = informe_analisis.get("inteligencia_adicional", {})
-    queja_principal = inteligencia_adicional.get("queja_principal_resenas", "No especificada")
-
-    # Convertimos la lista de puntos de dolor en un texto legible
-    texto_puntos_de_dolor = ", ".join(puntos_de_dolor).replace("_", " ") if puntos_de_dolor else "No se encontraron puntos de dolor específicos, pero siempre hay áreas de mejora en la comunicación digital."
-
-    prompt = f"""
-    Actúa como un consultor de marketing digital experto y amigable llamado Moises Bove, CEO de AutoNeura AI.
-    Tu misión es redactar un borrador de correo electrónico corto, profesional y muy personalizado (menos de 150 palabras) para el negocio llamado "{nombre_negocio}".
-
-    Esta es la inteligencia que hemos recopilado sobre ellos:
-    - Puntos de dolor identificados: {texto_puntos_de_dolor}.
-    - Queja principal en sus reseñas (si aplica): {queja_principal}.
-    
-    El servicio que ofreces para solucionar estos problemas es: {servicio_ofrecido}.
-
-    INSTRUCCIONES PARA EL EMAIL:
-    1.  **Apertura Personalizada:** Empieza con un saludo cordial y directo al negocio.
-    2.  **Demostración de Valor:** Menciona sutilmente uno de los puntos de dolor que encontraste, demostrando que has hecho tu investigación. No los acuses, preséntalo como una oportunidad de mejora.
-    3.  **Presentación de la Solución:** Conecta tu servicio como la solución lógica a ese problema específico.
-    4.  **Llamada a la Acción (CTA) de Baja Fricción:** Termina con una pregunta abierta y fácil de responder, como "¿Estarían abiertos a una demostración rápida de 15 minutos la próxima semana para ver cómo esto podría beneficiarlos?".
-    5.  **Cierre:** Un cierre profesional: "Saludos cordiales, Moises Bove, CEO de AutoNeura AI".
-
-    No incluyas el asunto del email, solo el cuerpo del mensaje.
+def generar_contenido_persuasivo(nombre_prospecto, nombre_cliente, que_vende_cliente, puntos_dolor):
     """
-    
-    try:
-        print(f"--- Enviando prompt a la IA para '{nombre_negocio}'...")
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(prompt)
-        borrador = response.text.strip()
-        print(">>> Borrador de IA recibido exitosamente.")
-        return borrador
-    except Exception as e:
-        print(f"!!! ERROR durante la generación de IA: {e}")
-        return f"Error al generar el borrador: {e}"
+    Usa Gemini para generar TODO el contenido personalizado:
+    1. El Email de invitación.
+    2. El Título de la página Pre-Nido (Círculo Negro).
+    3. El Texto persuasivo de la página Pre-Nido (Círculo Azul).
+    """
+    dolor_principal = puntos_dolor[0] if puntos_dolor else "falta de optimización digital"
+    lista_dolores = ", ".join(puntos_dolor) if puntos_dolor else "general"
 
-# --- FUNCIÓN PRINCIPAL DEL PERSUASOR ---
-def persuadir_prospecto():
-    print("\n--- Trabajador Persuasor v1.0 INICIADO ---")
+    # Prompt diseñado para devolver JSON puro
+    prompt = f"""
+    Eres un experto en Copywriting Persuasivo y Ventas B2B.
+    
+    TUS DATOS:
+    - Vendedor (Cliente): {nombre_cliente}
+    - Producto/Servicio: {que_vende_cliente}
+    - Prospecto (Comprador): {nombre_prospecto}
+    - Dolor/Problema detectado: {lista_dolores}
+
+    TU MISIÓN:
+    Genera un objeto JSON con 3 textos persuasivos para un embudo de ventas.
+    
+    ESTRUCTURA DEL JSON REQUERIDA:
+    {{
+        "email_asunto": "Un asunto corto y curioso (max 7 palabras)",
+        "email_cuerpo": "Un email corto (max 100 palabras). NO saludes con 'Espero que estés bien'. Ve al grano. Menciona el problema ({dolor_principal}) y diles que preparaste una demostración personalizada. El llamado a la acción es hacer clic en el enlace.",
+        "prenido_titulo": "Un título impactante para la página web (Círculo Negro). Debe prometer una solución al {dolor_principal}.",
+        "prenido_mensaje": "Un párrafo persuasivo (Círculo Azul). Explica que ya hiciste un análisis preliminar y detectaste una oportunidad. Diles que para ver el reporte completo y la demo, solo necesitan confirmar su correo abajo."
+    }}
+
+    IMPORTANTE: Responde SOLO con el JSON. Sin bloques de código markdown.
+    """
+
+    try:
+        respuesta = modelo_ia.generate_content(prompt)
+        texto_limpio = respuesta.text.strip().replace("```json", "").replace("```", "")
+        return json.loads(texto_limpio)
+    except Exception as e:
+        logging.error(f"Error generando contenido con IA: {e}")
+        return None
+
+def trabajar_persuasor(limite_lote=5):
+    """
+    Busca prospectos 'analizados', genera su contenido y crea el token mágico.
+    """
+    logging.info("🧠 INICIANDO TURNO DE PERSUASIÓN")
     
     conn = None
-    prospecto_id = None
     try:
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
-        
-        # Buscamos un prospecto analizado y listo para ser persuadido
-        cur.execute("SELECT id, nombre_negocio, informe_analisis FROM prospectos WHERE estado = 'analizado_exitoso' LIMIT 1")
-        prospecto = cur.fetchone()
-        
-        if not prospecto:
-            print(">>> No se encontraron nuevos prospectos para persuadir. Misión cumplida.")
+
+        # 1. Obtener prospectos ANALIZADOS + Datos de la CAMPAÑA
+        # Hacemos JOIN porque necesitamos saber qué vende el cliente para persuadir
+        query = """
+            SELECT 
+                p.id, 
+                p.business_name, 
+                p.puntos_de_dolor,
+                c.nombre_negocio, -- Nombre de mi cliente
+                c.descripcion_producto -- Qué vende mi cliente
+            FROM prospects p
+            JOIN campanas c ON p.campana_id = c.id
+            WHERE p.estado_prospecto = 'analizado_exitoso'
+            LIMIT %s
+            FOR UPDATE OF p SKIP LOCKED
+        """
+        cur.execute(query, (limite_lote,))
+        lote = cur.fetchall()
+
+        if not lote:
+            logging.info("💤 No hay prospectos analizados esperando persuasión.")
             return
 
-        prospecto_id, nombre, informe_json = prospecto
-        print(f">>> Prospecto encontrado para persuadir: {nombre} (ID: {prospecto_id})")
-        
-        cur.execute("UPDATE prospectos SET estado = 'en_persuasion' WHERE id = %s", (prospecto_id,))
-        conn.commit()
+        logging.info(f"⚡ Procesando {len(lote)} prospectos para crear sus Nidos.")
 
-        # Definimos el servicio que estamos vendiendo (esto vendrá de la campaña en el futuro)
-        servicio_a_vender = "un Agente de IA personalizado que responde a clientes 24/7, captura leads y aumenta las ventas."
-        
-        # Llamamos a la IA para generar el mensaje
-        borrador_mensaje = generar_borrador_con_ia(nombre, informe_json, servicio_a_vender)
-        
-        print("--- ¡PERSUASIÓN COMPLETADA! Guardando borrador... ---")
-        
-        # Guardamos el borrador y actualizamos el estado final
-        cur.execute(
-            "UPDATE prospectos SET estado = %s, borrador_mensaje = %s WHERE id = %s",
-            ('listo_para_revision', borrador_mensaje, prospecto_id)
-        )
-        conn.commit()
-        print(">>> Borrador guardado en la base de datos.")
+        for fila in lote:
+            pid, p_nombre, p_dolores, c_nombre, c_producto = fila
+            
+            # Parsear dolores si viene como string JSON
+            if isinstance(p_dolores, str):
+                try: p_dolores = json.loads(p_dolores).get("dolores_detectados", [])
+                except: p_dolores = []
+            elif isinstance(p_dolores, dict):
+                 p_dolores = p_dolores.get("dolores_detectados", [])
+
+            # 2. Generar Contenido (Email + Landing)
+            contenido = generar_contenido_persuasivo(p_nombre, c_nombre, c_producto, p_dolores)
+
+            if contenido:
+                # 3. Generar TOKEN ÚNICO (La llave del Nido)
+                # Este token irá en la URL: autoneura.com/ver-pre-nido/{token_unico}
+                token_unico = secrets.token_urlsafe(16)
+
+                # 4. Guardar Todo
+                # Guardamos el contenido generado y cambiamos estado a 'persuadido'
+                # (Listo para que el sistema de correo lo envíe)
+                update_query = """
+                    UPDATE prospects
+                    SET 
+                        contenido_generado = %s,
+                        token_acceso = %s,
+                        estado_prospecto = 'persuadido',
+                        updated_at = NOW()
+                    WHERE id = %s
+                """
+                cur.execute(update_query, (Json(contenido), token_unico, pid))
+                conn.commit()
+                logging.info(f"✅ Prospecto {p_nombre} persuadido. Token: {token_unico}")
+            else:
+                logging.warning(f"⚠️ Fallo al generar IA para {p_nombre}")
+                # Opcional: Marcar error o reintentar luego
 
     except Exception as e:
-        print(f"!!! Ocurrió un error catastrófico en el Persuasor: {e} !!!")
-        if conn and prospecto_id:
-            cur.execute("UPDATE prospectos SET estado = 'analizado_con_error_persuasion' WHERE id = %s", (prospecto_id,))
-            conn.commit()
+        logging.critical(f"❌ Error catastrófico en Persuasor: {e}")
+        if conn: conn.rollback()
     finally:
         if conn:
             cur.close()
             conn.close()
 
-# --- EJECUCIÓN DEL SCRIPT ---
+# --- ENTRY POINT ---
 if __name__ == "__main__":
-    persuadir_prospecto()
+    trabajar_persuasor()
