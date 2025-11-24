@@ -1,5 +1,6 @@
 import os
 import time
+import json
 import logging
 import psycopg2
 import threading
@@ -8,25 +9,29 @@ from psycopg2.extras import Json
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# --- IMPORTACIÓN DE TRABAJADORES (TUS EMPLEADOS) ---
+# --- IMPORTACIÓN DE TUS EMPLEADOS (LOS TRABAJADORES) ---
 try:
+    # Asegúrate de que los nombres de archivo coincidan exactamente
     from trabajador_cazador import ejecutar_caza
     from trabajador_analista import TrabajadorAnalista
-    from trabajador_persuasor import TrabajadorPersuasor
+    from trabajador_persuasor import trabajar_persuasor
     from trabajador_nutridor import TrabajadorNutridor
+    # Nota: Si el espía es crítico, impórtalo también:
+    # from trabajador_espia import trabajar_espia 
 except ImportError as e:
-    print(f"!!! ERROR CRÍTICO: Faltan archivos de trabajadores: {e}")
-    exit(1)
+    print(f"!!! ERROR CRÍTICO DE INICIO: Faltan archivos de trabajadores. Detalle: {e}")
+    # En producción no salimos, solo logueamos, pero para dev es mejor saberlo.
+    # exit(1) 
 
 # --- CONFIGURACIÓN ---
 load_dotenv()
 
-# Configuración de Logs (Formato profesional)
+# Configuración de Logs (Guarda historial en archivo y muestra en consola)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - ORQUESTADOR (CEO) - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("sistema_ventas.log"),
+        logging.FileHandler("sistema_autoneura.log"),
         logging.StreamHandler()
     ]
 )
@@ -34,32 +39,43 @@ logging.basicConfig(
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
-# Configuración IA (Cerebro Estratégico)
+# Cerebro Estratégico (Gemini)
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
+    modelo_estrategico = genai.GenerativeModel('gemini-1.5-flash')
+else:
+    logging.warning("⚠️ CEREBRO DESCONECTADO: No hay API Key de Google. El Orquestador será menos inteligente.")
+    modelo_estrategico = None
 
 class OrquestadorSupremo:
     def __init__(self):
+        # Inicializamos a los jefes de departamento
         self.analista = TrabajadorAnalista()
-        self.persuasor = TrabajadorPersuasor()
+        # Persuasor es una función, no clase en la última versión, pero lo manejamos en el método
         self.nutridor = TrabajadorNutridor()
-        self.model = genai.GenerativeModel('gemini-1.5-flash') if GOOGLE_API_KEY else None
-
+        
     def conectar_db(self):
         return psycopg2.connect(DATABASE_URL)
 
-    # ==========================================
-    # MÓDULO 1: GESTIÓN FINANCIERA Y DE SUSCRIPCIONES
-    # ==========================================
+    # ==============================================================================
+    # 💰 DEPARTAMENTO FINANCIERO (COBROS Y SUSPENSIONES)
+    # ==============================================================================
 
-    def gestionar_ciclo_vida_clientes(self):
+    def gestionar_finanzas_clientes(self):
         """
-        Revisa pagos, corta servicios y elimina datos de morosos.
+        Ciclo de facturación:
+        1. Alerta preventiva (3 días antes).
+        2. Intento de cobro (Día 0).
+        3. Suspensión (Si falla).
+        4. Eliminación (Si persiste mora).
         """
+        logging.info("💼 Revisando estado de cuentas y pagos...")
         conn = self.conectar_db()
         cur = conn.cursor()
+        
         try:
-            # 1. ALERTA DE PAGO (3 días antes)
+            # 1. ALERTA DE PAGO PRÓXIMO
+            # Busca clientes activos que vencen en 3 días y no han sido avisados
             cur.execute("""
                 SELECT id, email, full_name, next_payment_date 
                 FROM clients 
@@ -68,238 +84,280 @@ class OrquestadorSupremo:
                 AND payment_alert_sent = FALSE
             """)
             por_vencer = cur.fetchall()
-            for cliente in por_vencer:
-                self.enviar_email_sistema(cliente[1], "Recordatorio de Pago", 
-                    f"Hola {cliente[2]}, tu suscripción vence el {cliente[3]}. Por favor recarga saldo.")
-                cur.execute("UPDATE clients SET payment_alert_sent = TRUE WHERE id = %s", (cliente[0],))
+            for c in por_vencer:
+                self.enviar_notificacion(c[1], "Tu suscripción vence pronto", f"Hola {c[2]}, recordatorio amistoso.")
+                cur.execute("UPDATE clients SET payment_alert_sent = TRUE WHERE id = %s", (c[0],))
 
-            # 2. CORTE DE SERVICIO (Día de pago fallido)
+            # 2. PROCESAMIENTO DE COBROS (Día de Vencimiento)
             cur.execute("""
                 SELECT id, email, balance, plan_cost 
                 FROM clients 
-                WHERE is_active = TRUE AND next_payment_date < NOW()
+                WHERE is_active = TRUE AND next_payment_date <= NOW()
             """)
             vencidos = cur.fetchall()
-            for cliente in vencidos:
-                cid, email, saldo, costo = cliente
+            
+            for c in vencidos:
+                cid, email, saldo, costo = c
+                
+                # LÓGICA DE COBRO (Simplificada: Saldo vs Costo)
+                # Aquí podrías integrar Stripe/Cryptomus real para intentar cargar tarjeta
                 if saldo >= costo:
-                    # Cobro exitoso
                     nuevo_saldo = saldo - costo
                     cur.execute("""
                         UPDATE clients 
-                        SET balance = %s, next_payment_date = next_payment_date + INTERVAL '30 DAYS', payment_alert_sent = FALSE 
+                        SET balance = %s, 
+                            next_payment_date = next_payment_date + INTERVAL '30 DAYS', 
+                            payment_alert_sent = FALSE 
                         WHERE id = %s
                     """, (nuevo_saldo, cid))
-                    logging.info(f"💰 Cobro exitoso al cliente {cid}. Nuevo saldo: {nuevo_saldo}")
+                    self.enviar_notificacion(email, "Pago Exitoso", "Tu servicio continúa sin interrupciones.")
+                    logging.info(f"✅ Cobro exitoso: Cliente {cid}. Nuevo ciclo iniciado.")
                 else:
-                    # Fallo de pago -> Corte de servicio
-                    cur.execute("UPDATE clients SET is_active = FALSE, status = 'suspended' WHERE id = %s", (cid,))
-                    self.enviar_email_sistema(email, "Servicio Suspendido", 
-                        "No pudimos procesar tu pago. Tus trabajadores han sido detenidos. Recarga para continuar.")
-                    logging.warning(f"⛔ Servicio suspendido para {cid} por falta de saldo.")
+                    # FALLO DE PAGO -> SUSPENSIÓN
+                    cur.execute("UPDATE clients SET is_active = FALSE, status = 'suspended_payment_fail' WHERE id = %s", (cid,))
+                    self.enviar_notificacion(email, "Servicio Suspendido", "No pudimos procesar tu pago. Tus bots se han detenido.")
+                    logging.warning(f"⛔ Cliente {cid} suspendido por falta de fondos.")
 
-            # 3. ELIMINACIÓN DE MOROSOS (2 días después del corte)
+            # 3. ELIMINACIÓN DE MOROSOS (La regla de los 2 días)
+            # Si lleva 2 días suspendido y no pagó, se borra todo.
             cur.execute("""
                 SELECT id, email FROM clients 
-                WHERE status = 'suspended' 
+                WHERE status = 'suspended_payment_fail' 
                 AND next_payment_date < NOW() - INTERVAL '2 DAYS'
             """)
             morosos = cur.fetchall()
-            for moroso in morosos:
-                cid, email = moroso
-                logging.info(f"🗑️ ELIMINANDO DATOS de cliente moroso {cid}...")
+            
+            for m in morosos:
+                cid, email = m
+                logging.warning(f"🗑️ EJECUTANDO PROTOCOLO DE BORRADO para Cliente {cid}")
                 
-                # Eliminar trabajadores y prospectos (Limpieza total)
-                cur.execute("DELETE FROM prospects WHERE campaign_id IN (SELECT id FROM campaigns WHERE client_id = %s)", (cid,))
-                cur.execute("DELETE FROM campaigns WHERE client_id = %s", (cid,))
-                # Opcional: Eliminar cliente o dejarlo marcado como 'deleted'
-                cur.execute("UPDATE clients SET status = 'deleted_data' WHERE id = %s", (cid,))
+                # Borrado en cascada (primero hijos, luego padres)
+                cur.execute("DELETE FROM prospects WHERE campana_id IN (SELECT id FROM campanas WHERE client_id = %s)", (cid,))
+                cur.execute("DELETE FROM campanas WHERE client_id = %s", (cid,))
+                # No borramos el cliente, lo marcamos como 'baja_definitiva' para historial
+                cur.execute("UPDATE clients SET status = 'baja_definitiva', is_active = FALSE WHERE id = %s", (cid,))
                 
-                self.enviar_email_sistema(email, "Cuenta Eliminada", 
-                    "Debido a la falta de pago, hemos eliminado tus datos y campañas. Esperamos verte pronto.")
+                self.enviar_notificacion(email, "Cuenta Cancelada", "Tus datos han sido eliminados por falta de pago.")
 
             conn.commit()
+
         except Exception as e:
-            logging.error(f"Error en gestión financiera: {e}")
+            logging.error(f"Error crítico en finanzas: {e}")
             conn.rollback()
         finally:
             cur.close()
             conn.close()
 
-    # ==========================================
-    # MÓDULO 2: ESTRATEGIA DE MERCADO (CEREBRO IA)
-    # ==========================================
+    # ==============================================================================
+    # 🧠 DEPARTAMENTO DE ESTRATEGIA (LA IA PIENSA)
+    # ==============================================================================
 
-    def definir_estrategia_caza(self, campana):
+    def planificar_estrategia_caza(self, descripcion_producto, audiencia_objetivo):
         """
-        Usa IA para convertir "Vendo casas" en "Buscar Inversores en Miami".
+        Transforma "Vendo software" en -> "Buscar: Restaurantes nuevos en Miami"
         """
-        if not self.model: return campana['target_audience'], "Google Maps"
+        if not modelo_estrategico:
+            return audiencia_objetivo, "Google Maps" # Fallback tonto
 
         prompt = f"""
-        ACTÚA COMO: Estratega de Marketing de Guerrilla.
-        CLIENTE VENDE: {campana['product_description']}
-        OBJETIVO: {campana['campaign_name']}
-        UBICACIÓN: {campana['geo_location']}
+        Eres un Estratega de Marketing B2B.
+        PRODUCTO: {descripcion_producto}
+        AUDIENCIA DESEADA: {audiencia_objetivo}
         
-        TU MISIÓN:
-        1. Identifica quién compra esto (Perfil B2B, B2C, B2G).
-        2. Define la búsqueda EXACTA para encontrarlo en Google Maps o Redes.
-        3. Elige la mejor herramienta (Google Maps, LinkedIn, Instagram).
+        Tu tarea:
+        1. Deduce quién es el comprador ideal REAL (no siempre es obvio).
+        2. Genera una 'Query de Búsqueda' optimizada para encontrarlo en Google Maps.
         
-        SALIDA JSON: {{"query_busqueda": "...", "plataforma": "..."}}
+        Responde SOLO con un JSON: {{"query": "...", "razonamiento": "..."}}
         """
         try:
-            res = self.model.generate_content(prompt)
-            estrat = json.loads(res.text.replace("```json", "").replace("```", "").strip())
-            return estrat['query_busqueda'], estrat['plataforma']
+            res = modelo_estrategico.generate_content(prompt)
+            texto_json = res.text.strip().replace("```json", "").replace("```", "")
+            data = json.loads(texto_json)
+            return data.get("query", audiencia_objetivo), "Google Maps"
         except:
-            return campana['target_audience'], "Google Maps"
+            return audiencia_objetivo, "Google Maps"
 
-    # ==========================================
-    # MÓDULO 3: COORDINACIÓN DE TRABAJADORES
-    # ==========================================
+    # ==============================================================================
+    # ⚙️ DEPARTAMENTO DE OPERACIONES (EJECUCIÓN DE TRABAJADORES)
+    # ==============================================================================
 
-    def ejecutar_hilo_cazador(self, camp_id, query, ubicacion, plataforma, cantidad):
-        """Ejecuta al Cazador en un hilo separado para escalabilidad."""
+    def ejecutar_trabajador_cazador_thread(self, cid, query, ubic, plat, cant):
+        """Wrapper para correr el cazador en hilo independiente"""
         try:
-            ejecutar_caza(camp_id, query, ubicacion, plataforma, cantidad)
+            logging.info(f"🧵 Hilo de Caza iniciado para Campaña {cid}")
+            ejecutar_caza(cid, query, ubic, plat, tipo_producto="Tangible", max_resultados=cant)
         except Exception as e:
-            logging.error(f"Error en hilo cazador {camp_id}: {e}")
+            logging.error(f"Error en hilo de caza {cid}: {e}")
 
-    def gestionar_operaciones_diarias(self):
+    def coordinar_operaciones_diarias(self):
+        """
+        El núcleo del sistema.
+        1. Revisa si cumplimos la cuota de prospectos del día.
+        2. Si falta, manda a CAZAR.
+        3. Luego manda a ANALIZAR, PERSUADIR y NUTRIR en cadena.
+        """
         conn = self.conectar_db()
         cur = conn.cursor()
         
         try:
-            # 1. OBTENER CAMPAÑAS ACTIVAS Y CON CUPO
+            # A. OBTENER CAMPAÑAS ACTIVAS DE CLIENTES PAGADORES
+            # Asumimos una tabla 'campanas' unida a 'clients'
             cur.execute("""
-                SELECT c.id, c.client_id, c.campaign_name, c.product_description, 
-                       c.geo_location, c.target_audience, cl.daily_prospects_quota
-                FROM campaigns c
+                SELECT c.id, c.nombre_campana, c.descripcion_producto, c.a_quien_va_dirigido, 
+                       cl.prospects_limit_daily, c.geo_location
+                FROM campanas c
                 JOIN clients cl ON c.client_id = cl.id
-                WHERE c.status = 'active' AND cl.is_active = TRUE
+                WHERE c.estado = 'activa' AND cl.is_active = TRUE
             """)
-            campanas = cur.fetchall()
+            campanas_activas = cur.fetchall()
+            
+            logging.info(f"⚙️ Coordinando {len(campanas_activas)} campañas activas...")
 
-            for camp in campanas:
-                cid, client_id, nombre, prod, ubic, audiencia, cuota = camp
+            for camp in campanas_activas:
+                camp_id, nombre, prod, audiencia, cuota_diaria, ubicacion = camp
                 
-                # Verificar cuántos prospectos VÁLIDOS (3 interacciones) tenemos hoy
-                # NOTA: Tu regla dice que se cobra por válidos, pero cazamos más.
-                # Aquí limitamos la CAZA para no sobrecargar costos de APIFY.
-                # Factor de sobrecaza: Cazamos 3x la cuota para asegurar conversiones.
-                meta_caza_diaria = cuota * 3 
+                # B. VERIFICAR PROGRESO DIARIO
+                # Contamos cuántos se han cazado hoy para esta campaña
+                cur.execute("""
+                    SELECT COUNT(*) FROM prospects 
+                    WHERE campana_id = %s 
+                    AND created_at >= CURRENT_DATE
+                """, (camp_id,))
                 
-                cur.execute("SELECT COUNT(*) FROM prospects WHERE campaign_id = %s AND created_at::date = CURRENT_DATE", (cid,))
                 cazados_hoy = cur.fetchone()[0]
-
-                if cazados_hoy < meta_caza_diaria:
-                    faltantes = meta_caza_diaria - cazados_hoy
+                
+                # Regla de Sobrecaza (Factor 3x): 
+                # Si el cliente paga por 4 leads válidos, cazamos 12 para tener margen de descarte.
+                meta_caza = cuota_diaria * 3
+                
+                if cazados_hoy < meta_caza:
+                    faltantes = meta_caza - cazados_hoy
                     
-                    # 🧠 Definir Estrategia con IA
-                    query_ia, plataforma_ia = self.definir_estrategia_caza({
-                        'product_description': prod, 'campaign_name': nombre, 
-                        'geo_location': ubic, 'target_audience': audiencia
-                    })
+                    # 1. PENSAR (Estrategia)
+                    query_optimizada, plataforma = self.planificar_estrategia_caza(prod, audiencia)
                     
-                    logging.info(f"🚀 Lanzando Cazador para '{nombre}'. Meta: {faltantes}. Estrategia: {query_ia} en {plataforma_ia}")
+                    logging.info(f"🚀 Ordenando Caza para '{nombre}'. Faltan {faltantes}. Query: '{query_optimizada}'")
                     
-                    # ESCALADO DE RECURSOS: Si faltan muchos, usamos hilos.
-                    hilo = threading.Thread(target=self.ejecutar_hilo_cazador, args=(cid, query_ia, ubic, plataforma_ia, faltantes))
-                    hilo.start()
+                    # 2. CAZAR (En paralelo para no bloquear)
+                    t = threading.Thread(
+                        target=self.ejecutar_trabajador_cazador_thread,
+                        args=(camp_id, query_optimizada, ubicacion, plataforma, faltantes)
+                    )
+                    t.start()
                 else:
-                    logging.info(f"⏸️ Campaña '{nombre}' en pausa. Meta de caza cumplida ({cazados_hoy}/{meta_caza_diaria}).")
+                    logging.info(f"✅ Campaña '{nombre}' completa por hoy ({cazados_hoy}/{meta_caza}).")
 
-            # 2. ACTIVAR ANALISTA (Procesa todo lo cazado)
-            self.analista.procesar_lote()
+            # C. PROCESAMIENTO EN CASCADA (Lotes)
+            # Una vez lanzada la caza, procesamos lo que ya esté en la base de datos
+            
+            # 3. ESPÍA (Opcional, si tienes el archivo)
+            # trabajar_espia() 
 
-            # 3. ACTIVAR PERSUASOR (Genera mensajes para los analizados)
-            self.persuasor.procesar_lote()
+            # 4. ANALISTA
+            logging.info("🕵️ Despertando al Analista...")
+            self.analista.procesar_lote_prospectos(limite=10) # Procesa 10 por ciclo
 
-            # 4. ACTIVAR NUTRIDOR (Gestiona seguimientos y embudo)
-            self.nutridor.procesar_seguimientos()
+            # 5. PERSUASOR
+            logging.info("✍️ Despertando al Persuasor...")
+            trabajar_persuasor(limite_lote=10)
 
+            # 6. NUTRIDOR (Ajedrez)
+            logging.info("♟️ Despertando al Nutridor...")
+            self.nutridor.ejecutar_ciclo_seguimiento()
+
+        except Exception as e:
+            logging.error(f"Error en coordinación operaciones: {e}")
         finally:
             cur.close()
             conn.close()
 
-    # ==========================================
-    # MÓDULO 4: REPORTES Y COMUNICACIÓN
-    # ==========================================
+    # ==============================================================================
+    # 📨 COMUNICACIÓN Y REPORTES
+    # ==============================================================================
 
-    def enviar_email_sistema(self, destinatario, asunto, cuerpo):
-        """Simula envío de emails del sistema (Reportes, Alertas)."""
-        logging.info(f"📨 EMAIL SISTEMA a {destinatario} | Asunto: {asunto}")
-        # Aquí iría la conexión SMTP real
+    def enviar_notificacion(self, email, asunto, mensaje):
+        """Wrapper para envío de emails (SendGrid, SMTP, etc.)"""
+        # Aquí iría tu código de envío real. Por ahora logueamos.
+        logging.info(f"📧 [SIMULACION EMAIL] A: {email} | Asunto: {asunto}")
 
-    def generar_reportes_diarios(self):
-        """Envía el reporte de avance cada 24h."""
+    def generar_reporte_diario(self):
+        """Genera y envía estadísticas a cada cliente"""
         conn = self.conectar_db()
         cur = conn.cursor()
+        logging.info("📊 Generando reportes diarios...")
+        
         try:
             cur.execute("SELECT id, email, full_name FROM clients WHERE is_active = TRUE")
             clientes = cur.fetchall()
             
-            for cl in clientes:
-                cid, email, nombre = cl
-                # Estadísticas del día
+            for c in clientes:
+                cid, email, nombre = c
+                
+                # Estadísticas clave
                 cur.execute("""
-                    SELECT COUNT(*) FILTER (WHERE status='cazado') as cazados,
-                           COUNT(*) FILTER (WHERE status='nutriendo') as en_nido,
-                           COUNT(*) FILTER (WHERE interactions_count >= 3) as calificados
-                    FROM prospects 
-                    WHERE campaign_id IN (SELECT id FROM campaigns WHERE client_id = %s)
-                    AND created_at >= NOW() - INTERVAL '24 HOURS'
+                    SELECT 
+                        COUNT(*) FILTER (WHERE estado_prospecto='cazado') as nuevos,
+                        COUNT(*) FILTER (WHERE interacciones_nutridor >= 3) as calificados
+                    FROM prospects p
+                    JOIN campanas cam ON p.campana_id = cam.id
+                    WHERE cam.client_id = %s 
+                    AND p.created_at >= NOW() - INTERVAL '24 HOURS'
                 """, (cid,))
                 stats = cur.fetchone()
                 
-                cuerpo_email = f"""
-                Hola {nombre}, aquí tienes tu reporte diario de AutoNeura:
-                - Nuevos Prospectos Encontrados: {stats[0]}
-                - Prospectos que entraron al Nido: {stats[1]}
-                - LEADS CALIFICADOS (Facturables): {stats[2]}
-                
-                ¡Tu sistema sigue trabajando mientras duermes!
-                """
-                self.enviar_email_sistema(email, "Reporte Diario AutoNeura", cuerpo_email)
+                if stats:
+                    cuerpo = f"""
+                    Hola {nombre}, resumen de hoy:
+                    - Nuevos Prospectos Identificados: {stats[0]}
+                    - Leads Calificados (Facturables): {stats[1]}
+                    
+                    El sistema sigue trabajando.
+                    """
+                    self.enviar_notificacion(email, "Reporte Diario AutoNeura", cuerpo)
+                    
         finally:
             cur.close()
             conn.close()
 
-    # ==========================================
-    # BUCLE PRINCIPAL (MAIN LOOP)
-    # ==========================================
+    # ==============================================================================
+    # 🏁 BUCLE PRINCIPAL (EL CORAZÓN DEL SISTEMA)
+    # ==============================================================================
 
-    def iniciar_operaciones(self):
-        logging.info(">>> SISTEMA DE VENTAS COGNITIVO AUTÓNOMO INICIADO <<<")
+    def iniciar_turno(self):
+        logging.info(">>> 🤖 ORQUESTADOR SUPREMO INICIADO 🤖 <<<")
         
-        schedule_reportes = datetime.now()
+        ultima_revision_reportes = datetime.now() - timedelta(days=1) # Para que corra pronto si hace falta
         
         while True:
             try:
-                # 1. Gestión Financiera (Cada ciclo, es rápido)
-                self.gestionar_ciclo_vida_clientes()
+                inicio_ciclo = time.time()
                 
-                # 2. Operaciones de Venta (Caza, Análisis, Persuasión, Nutrición)
-                self.gestionar_operaciones_diarias()
+                # 1. GESTIÓN DE DINERO (Prioridad 1)
+                self.gestionar_finanzas_clientes()
                 
-                # 3. Reportes Diarios (Una vez al día)
-                if datetime.now() > schedule_reportes + timedelta(hours=24):
-                    self.generar_reportes_diarios()
-                    schedule_reportes = datetime.now()
+                # 2. OPERACIONES TÁCTICAS (Caza -> Venta)
+                self.coordinar_operaciones_diarias()
+                
+                # 3. REPORTES (Una vez al día, ej: a las 8 AM o si pasó 24h)
+                if datetime.now() > ultima_revision_reportes + timedelta(hours=24):
+                    self.generar_reporte_diario()
+                    ultima_revision_reportes = datetime.now()
 
-                # Descanso táctico para no saturar la CPU/DB
-                logging.info("💤 Ciclo completado. Esperando 5 minutos...")
-                time.sleep(300) 
+                # 4. DESCANSO INTELIGENTE
+                # No queremos fundir la base de datos haciendo queries cada milisegundo.
+                # Un ciclo cada 10-15 minutos es saludable para un sistema de bots.
+                tiempo_ciclo = time.time() - inicio_ciclo
+                logging.info(f"💤 Ciclo finalizado en {tiempo_ciclo:.2f}s. Durmiendo 10 minutos...")
+                time.sleep(600) 
 
             except KeyboardInterrupt:
-                logging.info("🛑 Apagando sistema manualmente...")
+                logging.info("🛑 Deteniendo sistema por orden del usuario...")
                 break
             except Exception as e:
-                logging.critical(f"!!! ERROR EN ORQUESTADOR: {e}")
-                time.sleep(60) # Espera de seguridad ante fallos
+                logging.critical(f"🔥 ERROR CATASTRÓFICO EN MAIN LOOP: {e}")
+                time.sleep(60) # Espera de seguridad antes de reiniciar
 
 if __name__ == "__main__":
     ceo = OrquestadorSupremo()
-    ceo.iniciar_operaciones()
+    ceo.iniciar_turno()
