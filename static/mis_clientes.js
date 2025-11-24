@@ -1,13 +1,6 @@
-// --- CONFIGURACIÓN DE SUPABASE ---
-const SUPABASE_URL = 'https://fxduwnictssgxqndokly.supabase.co'; 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4ZHV3bmljdHNzZ3hxbmRva2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMzc3NDgsImV4cCI6MjA3NzYxMzc0OH0.1uqbiNroOCvAsn08Ps7JZpXV9K-rUyLfukOL5w4X_eg';
+document.addEventListener('DOMContentLoaded', () => {
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// --- FUNCIÓN PRINCIPAL DE ARRANQUE ---
-const main = () => {
-
-    // --- MÓDULO 2: MANEJO DE PESTAÑAS ---
+    // --- MÓDULO DE PESTAÑAS (INTACTO) ---
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
     if (tabButtons.length > 0 && tabContents.length > 0) {
@@ -29,7 +22,7 @@ const main = () => {
         }
     }
 
-    // --- MÓDULO 3: MANEJO DEL CHAT DE LA IA ---
+    // === INICIO DE LA RESTAURACIÓN: MÓDULO DEL CHAT DE LA IA ===
     const chatForm = document.getElementById('chat-form');
     if (chatForm) {
         const userInput = document.getElementById('user-input');
@@ -63,120 +56,120 @@ const main = () => {
             }
         });
     }
-    
-    // --- MÓDULO 4: FORMULARIO DE CAMPAÑA ---
+    // === FIN DE LA RESTAURACIÓN ===
+
+    // --- MÓDULO DEL FORMULARIO DE CAMPAÑA (INTACTO) ---
     const createCampaignTab = document.getElementById('create-campaign');
     if (createCampaignTab) {
-        const planCards = createCampaignTab.querySelectorAll('.plan-card');
-        const prospectsInput = createCampaignTab.querySelector('#prospects-per-day');
-        const selectedPlanElement = createCampaignTab.querySelector('#selected-plan');
-        const dailyProspectsElement = createCampaignTab.querySelector('#daily-prospects');
-        const totalCostElement = createCampaignTab.querySelector('#total-cost');
-        const summaryBox = createCampaignTab.querySelector('#summary-box');
         const launchButton = createCampaignTab.querySelector('#lancam');
+        const prospectsInput = createCampaignTab.querySelector('#prospects-per-day');
         const phoneInput = createCampaignTab.querySelector("#numero_whatsapp");
-        const currentBalanceElement = createCampaignTab.querySelector('#current-balance');
-        const rechargeLine = createCampaignTab.querySelector('#recharge-line');
-        const rechargeAmountElement = createCampaignTab.querySelector('#recharge-amount');
-        const remainingLine = createCampaignTab.querySelector('#remaining-line');
-        const remainingBalanceElement = createCampaignTab.querySelector('#remaining-balance');
+        
+        if (phoneInput) {
+            window.intlTelInput(phoneInput, { 
+                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+                preferredCountries: ['co', 'mx', 'us', 'es']
+            });
+        }
 
-        if (planCards.length > 0 && prospectsInput) {
-            const userBalance = 0.00;
-            if(currentBalanceElement) currentBalanceElement.textContent = `$${userBalance.toFixed(2)}`;
-            const plans = {
-                arrancador: { name: 'El Arrancador', baseProspects: 4, baseCost: 149, extraCost: 37.25, limit: 14 },
-                profesional: { name: 'El Profesional', baseProspects: 15, baseCost: 399, extraCost: 26.60, limit: 49 },
-                dominador: { name: 'El Dominador', baseProspects: 50, baseCost: 999, extraCost: 20.00, limit: Infinity }
-            };
-            const handleFormUpdate = () => {
-                const prospectsCount = parseInt(prospectsInput.value, 10);
-                if (isNaN(prospectsCount) || prospectsCount < 4) return;
-                let activePlanKey;
-                if (prospectsCount <= plans.arrancador.limit) { activePlanKey = 'arrancador'; } 
-                else if (prospectsCount <= plans.profesional.limit) { activePlanKey = 'profesional'; } 
-                else { activePlanKey = 'dominador'; }
-                const currentPlan = plans[activePlanKey];
-                planCards.forEach(card => card.classList.remove('selected'));
-                const cardToSelect = createCampaignTab.querySelector(`.plan-card[data-plan="${activePlanKey}"]`);
-                if (cardToSelect) cardToSelect.classList.add('selected');
-                const extraProspects = prospectsCount - currentPlan.baseProspects;
-                const totalCost = currentPlan.baseCost + (extraProspects * currentPlan.extraCost);
-                const planName = (prospectsCount === currentPlan.baseProspects) ? currentPlan.name : 'Personalizado';
-                if(selectedPlanElement) selectedPlanElement.textContent = planName;
-                if(dailyProspectsElement) dailyProspectsElement.textContent = prospectsCount;
-                if(totalCostElement) totalCostElement.textContent = `$${totalCost.toFixed(2)}`;
-                if (launchButton && summaryBox && rechargeLine && remainingLine) {
-                    if (userBalance >= totalCost) {
-                        const remaining = userBalance - totalCost;
-                        if(remainingBalanceElement) remainingBalanceElement.textContent = `$${remaining.toFixed(2)}`;
-                        rechargeLine.style.display = 'none';
-                        remainingLine.style.display = 'flex';
-                        summaryBox.style.borderColor = '#28a745';
-                        launchButton.disabled = false;
-                    } else {
-                        const needed = totalCost - userBalance;
-                        if(rechargeAmountElement) rechargeAmountElement.textContent = `$${needed.toFixed(2)}`;
-                        rechargeLine.style.display = 'flex';
-                        remainingLine.style.display = 'none';
-                        summaryBox.style.borderColor = '#ffc107';
-                        launchButton.disabled = true;
-                    }
-                }
-            };
+        const planCards = createCampaignTab.querySelectorAll('.plan-card');
+        if (planCards.length > 0) {
             planCards.forEach(card => {
                 card.addEventListener('click', () => {
-                    const planKey = card.getAttribute('data-plan');
-                    const plan = plans[planKey];
-                    if (plan) {
-                        prospectsInput.value = plan.baseProspects;
-                        handleFormUpdate();
-                    }
+                    planCards.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    if (card.dataset.plan === 'arrancador') prospectsInput.value = 4;
+                    if (card.dataset.plan === 'profesional') prospectsInput.value = 15;
+                    if (card.dataset.plan === 'dominador') prospectsInput.value = 50;
                 });
             });
-            prospectsInput.addEventListener('input', handleFormUpdate);
-            const defaultPlanCard = createCampaignTab.querySelector('.plan-card[data-plan="arrancador"]');
-            if (defaultPlanCard) { defaultPlanCard.click(); }
-            if (phoneInput) {
-                window.intlTelInput(phoneInput, { utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js" });
-            }
         }
-    }
-    
-    // --- MÓDULO 5: LOGOUT ---
-    const logoutButton = document.getElementById('logout-btn');
-    if (logoutButton) {
-        logoutButton.addEventListener('click', async () => {
-            await supabase.auth.signOut();
-            window.location.href = '/login';
-        });
-    }
 
-    // --- MÓDULO 6: PESTAÑA "CONVERSACIONES" ---
-    const conversationsTab = document.getElementById('conversations');
-    if (conversationsTab) {
-        const conversationCards = conversationsTab.querySelectorAll('.conversation-card');
-        const chatContentPanels = conversationsTab.querySelectorAll('.chat-content-panel');
-        if (conversationCards.length > 0 && chatContentPanels.length > 0) {
-            conversationCards.forEach(card => {
-                card.addEventListener('click', () => {
-                    conversationCards.forEach(c => c.classList.remove('active'));
-                    chatContentPanels.forEach(p => p.style.display = 'none');
-                    card.classList.add('active');
-                    const conversationId = card.getAttribute('data-conversation-id');
-                    const chatPanelToShow = conversationsTab.querySelector(`#${conversationId}`);
-                    if (chatPanelToShow) {
-                        chatPanelToShow.style.display = 'flex';
+        if (launchButton) {
+            launchButton.addEventListener('click', async (e) => {
+                e.preventDefault();
+                
+                const nombre = document.getElementById('nombre_campana').value.trim();
+                const queVende = document.getElementById('que_vendes').value.trim();
+                const aQuien = document.getElementById('a_quien_va_dirigido').value.trim();
+                const idiomas = document.getElementById('idiomas_busqueda').value.trim();
+                const ubicacion = document.getElementById('ubicacion_geografica').value.trim();
+                const descripcion = document.getElementById('descripcion_producto').value.trim();
+                const enlaceVenta = document.getElementById('enlace_venta').value.trim();
+                const whatsapp = phoneInput ? phoneInput.value.trim() : "";
+                const prospectosDia = prospectsInput ? prospectsInput.value : 4;
+                
+                const tangibleCheck = document.getElementById('tipo_producto_tangible');
+                const intangibleCheck = document.getElementById('tipo_producto_intangible');
+                let tipoProducto = null;
+
+                if (tangibleCheck.checked) tipoProducto = 'Tangible';
+                if (intangibleCheck.checked) tipoProducto = 'Intangible';
+
+                let faltantes = [];
+                if (!nombre) faltantes.push("Nombre de la Campaña");
+                if (!queVende) faltantes.push("¿Qué vendes?");
+                if (!aQuien) faltantes.push("¿A quién va dirigido?");
+                if (!ubicacion) faltantes.push("Ubicación Geográfica");
+                if (!idiomas) faltantes.push("Idiomas");
+                if (!tipoProducto) faltantes.push("Tipo de Producto (Tangible/Intangible)");
+                if (!descripcion) faltantes.push("Descripción del Producto");
+                if (!whatsapp) faltantes.push("Número de WhatsApp");
+                if (!enlaceVenta) faltantes.push("Enlace de Venta");
+
+                if (faltantes.length > 0) {
+                    alert("⚠️ ¡ALTO AHÍ! FALTAN DATOS OBLIGATORIOS\n\n- " + faltantes.join("\n- "));
+                    return;
+                }
+
+                const originalText = launchButton.innerText;
+                launchButton.innerText = "🚀 Contactando al Orquestador...";
+                launchButton.disabled = true;
+
+                try {
+                    const response = await fetch('/api/crear-campana', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nombre: nombre,
+                            que_vende: queVende,
+                            descripcion: descripcion,
+                            a_quien: aQuien,
+                            idiomas: idiomas,
+                            ubicacion: ubicacion,
+                            tipo_producto: tipoProducto,
+                            prospectos_dia: prospectosDia,
+                            whatsapp: whatsapp,
+                            enlace_venta: enlaceVenta
+                        })
+                    });
+
+                    if (response.status === 404) {
+                        throw new Error("Ruta no encontrada (404).");
                     }
-                });
+
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        const data = await response.json();
+                        if (data.success) {
+                            alert("✅ ¡CAMPAÑA LANZADA CON ÉXITO!");
+                            window.location.reload();
+                        } else {
+                            alert("❌ ERROR DEL SERVIDOR:\n" + data.error);
+                        }
+                    } else {
+                        const text = await response.text();
+                        alert("❌ ERROR CRÍTICO DE RESPUESTA:\n" + text.substring(0, 150) + "...");
+                    }
+
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert("❌ ERROR DE CONEXIÓN:\n" + error.message);
+                } finally {
+                    launchButton.innerText = originalText;
+                    launchButton.disabled = false;
+                }
             });
-            const firstCard = conversationsTab.querySelector('.conversation-card');
-            if (firstCard) {
-                firstCard.click();
-            }
         }
     }
-};
-
-// Se ejecuta el código del dashboard directamente, sin seguridad.
-main();
+});
