@@ -29,14 +29,12 @@ class TrabajadorNutridor:
         return psycopg2.connect(self.db_url)
 
     # ==============================================================================
-    # 🧠 MODO CHAT (INTERACTIVO) - Llamado por main.py cuando el usuario escribe
+    # 🧠 MODO CHAT (INTERACTIVO)
     # ==============================================================================
     
     def responder_chat_nido(self, token_acceso, mensaje_usuario):
         """
-        Esta función recibe el mensaje del chat del Nido, piensa la respuesta 
-        basada en la campaña del cliente y devuelve el texto.
-        También cuenta las interacciones para tu facturación.
+        Responde al chat del Nido y cuenta interacciones.
         """
         logging.info(f"💬 Chat recibido en Nido (Token: {token_acceso})")
         conn = self.conectar_db()
@@ -44,19 +42,19 @@ class TrabajadorNutridor:
         respuesta_final = "Lo siento, estoy teniendo problemas de conexión. Intenta de nuevo."
 
         try:
-            # 1. Identificar Prospecto y Campaña usando el TOKEN
+            # CORRECCIÓN: Tablas y Columnas en Inglés
             query = """
                 SELECT 
                     p.id, 
                     p.business_name, 
-                    p.puntos_de_dolor, 
-                    p.interacciones_nutridor,
-                    c.nombre_negocio, 
-                    c.descripcion_producto,
-                    c.nombre_campana
+                    p.pain_points, 
+                    p.nurture_interactions_count,
+                    c.campaign_name, 
+                    c.product_description,
+                    c.campaign_name
                 FROM prospects p
-                JOIN campanas c ON p.campana_id = c.id
-                WHERE p.token_acceso = %s
+                JOIN campaigns c ON p.campaign_id = c.id
+                WHERE p.access_token = %s
             """
             cur.execute(query, (token_acceso,))
             data = cur.fetchone()
@@ -66,44 +64,39 @@ class TrabajadorNutridor:
 
             pid, p_nombre, p_dolores, interacciones, c_cliente, c_producto, c_campana = data
 
-            # Parsear dolores para contexto
+            # Parsear dolores
             texto_dolores = ""
-            if isinstance(p_dolores, dict):
-                texto_dolores = ", ".join(p_dolores.get("dolores_detectados", []))
+            if p_dolores:
+                if isinstance(p_dolores, dict):
+                    texto_dolores = ", ".join(p_dolores.get("dolores_detectados", []))
+                elif isinstance(p_dolores, str):
+                    try: texto_dolores = ", ".join(json.loads(p_dolores).get("dolores_detectados", []))
+                    except: pass
 
-            # 2. Análisis de Intención (Psicología de Ventas)
+            # Prompt IA
             prompt_analisis = f"""
             Eres el Asistente de Ventas IA de '{c_cliente}'.
             Estás hablando con '{p_nombre}'.
             Producto que vendes: {c_producto}
             Dolores del prospecto: {texto_dolores}
-            
             Mensaje del usuario: "{mensaje_usuario}"
-            
-            Instrucciones:
-            Responde como un experto consultor. 
-            1. Si pregunta precio y no lo tienes, vende el valor.
-            2. Si pone una objeción, usa la técnica "Sentir, Comprendido, Encontrado" (Feel, Felt, Found).
-            3. Si muestra interés de compra, invítalo a agendar o comprar.
-            4. Sé breve (máximo 2 párrafos).
-            5. Mantén un tono profesional pero cercano.
+            Instrucciones: Responde como experto consultor, sé breve y profesional.
             """
 
             respuesta_ia = modelo_ia.generate_content(prompt_analisis)
             respuesta_final = respuesta_ia.text.strip()
 
-            # 3. Registrar la Interacción (CRÍTICO PARA TU NEGOCIO)
-            # Incrementamos el contador. Cuando llegue a 3, es un "Prospecto Válido".
+            # CORRECCIÓN: Actualizar contador 'nurture_interactions_count'
             nuevo_conteo = (interacciones or 0) + 1
             cur.execute("""
                 UPDATE prospects 
-                SET interacciones_nutridor = %s,
+                SET nurture_interactions_count = %s,
                     updated_at = NOW()
                 WHERE id = %s
             """, (nuevo_conteo, pid))
             
             conn.commit()
-            logging.info(f"✅ Respuesta generada. Interacciones acumuladas: {nuevo_conteo}")
+            logging.info(f"✅ Respuesta generada. Interacciones: {nuevo_conteo}")
 
         except Exception as e:
             logging.error(f"Error en Chat Nutridor: {e}")
@@ -115,49 +108,44 @@ class TrabajadorNutridor:
         return respuesta_final
 
     # ==============================================================================
-    # ♟️ MODO AJEDREZ (SEGUIMIENTO) - Llamado por el Orquestador cada 24h
+    # ♟️ MODO AJEDREZ (SEGUIMIENTO)
     # ==============================================================================
 
     def ejecutar_ciclo_seguimiento(self):
-        """
-        Revisa prospectos inactivos y genera correos de seguimiento (Valor -> Prueba Social -> Despedida).
-        """
         logging.info("♟️ Iniciando ronda de Seguimiento (Ajedrez)...")
         conn = self.conectar_db()
         cur = conn.cursor()
 
         try:
-            # --- JUGADA 1: APORTE DE VALOR (Si lleva 3 días en 'persuadido') ---
+            # CORRECCIÓN: Tablas y Columnas en Inglés
+            # JUGADA 1: APORTE DE VALOR
             cur.execute("""
-                SELECT p.id, p.business_name, p.puntos_de_dolor, c.descripcion_producto 
-                FROM prospects p JOIN campanas c ON p.campana_id = c.id
-                WHERE p.estado_prospecto = 'persuadido' 
+                SELECT p.id, p.business_name, p.pain_points, c.product_description 
+                FROM prospects p JOIN campaigns c ON p.campaign_id = c.id
+                WHERE p.status = 'persuadido' 
                 AND p.updated_at < NOW() - INTERVAL '3 DAYS'
             """)
-            lote_1 = cur.fetchall()
-            for row in lote_1:
+            for row in cur.fetchall():
                 self._generar_y_guardar_email(cur, row, "VALOR", "en_nutricion_1")
 
-            # --- JUGADA 2: PRUEBA SOCIAL (Si lleva 4 días en 'en_nutricion_1') ---
+            # JUGADA 2: PRUEBA SOCIAL
             cur.execute("""
-                SELECT p.id, p.business_name, p.puntos_de_dolor, c.descripcion_producto 
-                FROM prospects p JOIN campanas c ON p.campana_id = c.id
-                WHERE p.estado_prospecto = 'en_nutricion_1' 
+                SELECT p.id, p.business_name, p.pain_points, c.product_description 
+                FROM prospects p JOIN campaigns c ON p.campaign_id = c.id
+                WHERE p.status = 'en_nutricion_1' 
                 AND p.updated_at < NOW() - INTERVAL '4 DAYS'
             """)
-            lote_2 = cur.fetchall()
-            for row in lote_2:
+            for row in cur.fetchall():
                 self._generar_y_guardar_email(cur, row, "PRUEBA_SOCIAL", "en_nutricion_2")
 
-            # --- JUGADA 3: DESPEDIDA (Si lleva 5 días en 'en_nutricion_2') ---
+            # JUGADA 3: DESPEDIDA
             cur.execute("""
-                SELECT p.id, p.business_name, p.puntos_de_dolor, c.descripcion_producto 
-                FROM prospects p JOIN campanas c ON p.campana_id = c.id
-                WHERE p.estado_prospecto = 'en_nutricion_2' 
+                SELECT p.id, p.business_name, p.pain_points, c.product_description 
+                FROM prospects p JOIN campaigns c ON p.campaign_id = c.id
+                WHERE p.status = 'en_nutricion_2' 
                 AND p.updated_at < NOW() - INTERVAL '5 DAYS'
             """)
-            lote_3 = cur.fetchall()
-            for row in lote_3:
+            for row in cur.fetchall():
                 self._generar_y_guardar_email(cur, row, "DESPEDIDA", "lead_frio")
 
             conn.commit()
@@ -165,51 +153,42 @@ class TrabajadorNutridor:
 
         except Exception as e:
             logging.error(f"Error en ciclo de seguimiento: {e}")
-            if conn: conn.rollback()
+            conn.rollback()
         finally:
             cur.close()
             conn.close()
 
     def _generar_y_guardar_email(self, cur, datos, tipo_jugada, nuevo_estado):
-        """Función auxiliar privada para generar el email con IA y actualizar DB."""
         pid, nombre, dolores, producto = datos
-        
-        # Seleccionar Prompt según la jugada
         prompt = ""
-        asunto_sugerido = ""
+        asunto = ""
         
         if tipo_jugada == "VALOR":
-            prompt = f"Escribe un email muy corto para {nombre}. Aporta un consejo rápido sobre {producto} sin vender. Tono servicial."
-            asunto_sugerido = "Pensé en esto para tu negocio"
+            prompt = f"Escribe email corto para {nombre}. Consejo sobre {producto}. Tono servicial."
+            asunto = "Pensé en esto para ti"
         elif tipo_jugada == "PRUEBA_SOCIAL":
-            prompt = f"Escribe un email para {nombre}. Menciona que ayudaste a un cliente similar a tener éxito con {producto}. Tono inspirador."
-            asunto_sugerido = "Resultados recientes"
+            prompt = f"Escribe email para {nombre}. Caso de éxito anónimo con {producto}. Tono inspirador."
+            asunto = "Resultados recientes"
         elif tipo_jugada == "DESPEDIDA":
-            prompt = f"Escribe un email de despedida amable para {nombre}. Pregunta si cerrar su archivo. Tono profesional."
-            asunto_sugerido = "¿Cerramos el expediente?"
+            prompt = f"Escribe email despedida amable para {nombre}. Preguntar si cerrar archivo."
+            asunto = "¿Cerramos el expediente?"
 
         try:
-            # Generar contenido
             res = modelo_ia.generate_content(prompt)
-            cuerpo_email = res.text.strip()
-            
-            # Guardar en DB (Simulamos una cola de envíos o guardamos en borrador)
-            # Aquí asumimos que tienes una tabla o columna para 'cola de correos' o actualizamos el ultimo borrador
+            # CORRECCIÓN: 'status' y 'draft_message'
             cur.execute("""
                 UPDATE prospects 
-                SET estado_prospecto = %s,
-                    borrador_mensaje = %s, -- Guardamos el email para que otro sistema lo envíe
+                SET status = %s,
+                    draft_message = %s,
                     updated_at = NOW()
                 WHERE id = %s
-            """, (nuevo_estado, f"ASUNTO: {asunto_sugerido}\n\n{cuerpo_email}", pid))
+            """, (nuevo_estado, f"ASUNTO: {asunto}\n\n{res.text}", pid))
             
             logging.info(f"📧 Email ({tipo_jugada}) generado para ID {pid}")
-            
         except Exception as e:
             logging.error(f"Fallo generando email para {pid}: {e}")
 
-# --- ENTRY POINT (PARA PRUEBAS) ---
+# --- ENTRY POINT ---
 if __name__ == "__main__":
-    # Solo para probar el ciclo de seguimiento manualmente
-    nutridor = TrabajadorNutridor()
-    nutridor.ejecutar_ciclo_seguimiento()
+    n = TrabajadorNutridor()
+    n.ejecutar_ciclo_seguimiento()
