@@ -1,1 +1,1 @@
-web: python trabajador_orquestador.py & python main.py
+web: python trabajador_orquestador.py & gunicorn --timeout 120 main:app
