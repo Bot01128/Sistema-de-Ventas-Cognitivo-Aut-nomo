@@ -1,32 +1,45 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- MÓDULO DE PESTAÑAS (INTACTO) ---
+    // ============================================================================
+    // 1. SISTEMA DE PESTAÑAS (TABS)
+    // ============================================================================
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
+
     if (tabButtons.length > 0 && tabContents.length > 0) {
         const switchTab = (activeButton) => {
             if (!activeButton) return;
             const tabId = activeButton.getAttribute('data-tab');
-            const activeTabContent = document.getElementById(tabId);
+            
+            // Ocultar todo
             tabContents.forEach(content => content.style.display = 'none');
-            if (activeTabContent) activeTabContent.style.display = 'block';
             tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Mostrar seleccionado
+            const activeTabContent = document.getElementById(tabId);
+            if (activeTabContent) activeTabContent.style.display = 'block';
             activeButton.classList.add('active');
         };
+
         tabButtons.forEach(button => {
             button.addEventListener('click', () => switchTab(button));
         });
+
+        // Activar la primera pestaña por defecto
         const initialActiveButton = document.querySelector('.tab-button.active');
         if (initialActiveButton) {
             switchTab(initialActiveButton);
         }
     }
 
-    // === INICIO DE LA RESTAURACIÓN: MÓDULO DEL CHAT DE LA IA ===
+    // ============================================================================
+    // 2. CHATBOT DEL DASHBOARD (SOPORTE AL CLIENTE)
+    // ============================================================================
     const chatForm = document.getElementById('chat-form');
     if (chatForm) {
         const userInput = document.getElementById('user-input');
         const chatMessages = document.getElementById('chat-messages');
+
         const appendMessage = (message, type) => {
             if (!chatMessages) return;
             const messageElement = document.createElement('p');
@@ -35,60 +48,57 @@ document.addEventListener('DOMContentLoaded', () => {
             chatMessages.appendChild(messageElement);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         };
+
         chatForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const userMessage = userInput.value.trim();
             if (!userMessage) return;
+
             appendMessage(userMessage, 'user');
             userInput.value = '';
+
             try {
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: userMessage })
                 });
-                if (!response.ok) throw new Error('Server response not ok');
+
+                if (!response.ok) throw new Error('Error de conexión con el cerebro');
+                
                 const data = await response.json();
                 appendMessage(data.response, 'assistant');
+
             } catch (error) {
-                console.error('Error en el chat:', error);
-                appendMessage('Lo siento, estoy teniendo problemas de conexión.', 'assistant');
+                console.error('Error chat:', error);
+                appendMessage('Lo siento, estoy teniendo problemas de conexión momentáneos.', 'assistant');
             }
         });
     }
-    // === FIN DE LA RESTAURACIÓN ===
 
-    // --- MÓDULO DEL FORMULARIO DE CAMPAÑA (INTACTO) ---
+    // ============================================================================
+    // 3. FORMULARIO DE CREACIÓN DE CAMPAÑA (LÓGICA DE NEGOCIO)
+    // ============================================================================
     const createCampaignTab = document.getElementById('create-campaign');
     if (createCampaignTab) {
-        const launchButton = createCampaignTab.querySelector('#lancam');
-        const prospectsInput = createCampaignTab.querySelector('#prospects-per-day');
-        const phoneInput = createCampaignTab.querySelector("#numero_whatsapp");
-        
-        if (phoneInput) {
+        const launchButton = document.getElementById('lancam');
+        const prospectsInput = document.getElementById('prospects-per-day');
+        const phoneInput = document.getElementById("numero_whatsapp");
+
+        // Inicializar input de teléfono internacional
+        if (phoneInput && window.intlTelInput) {
             window.intlTelInput(phoneInput, { 
                 utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
-                preferredCountries: ['co', 'mx', 'us', 'es']
+                preferredCountries: ['es', 'mx', 'co', 'us']
             });
         }
 
-        const planCards = createCampaignTab.querySelectorAll('.plan-card');
-        if (planCards.length > 0) {
-            planCards.forEach(card => {
-                card.addEventListener('click', () => {
-                    planCards.forEach(c => c.classList.remove('selected'));
-                    card.classList.add('selected');
-                    if (card.dataset.plan === 'arrancador') prospectsInput.value = 4;
-                    if (card.dataset.plan === 'profesional') prospectsInput.value = 15;
-                    if (card.dataset.plan === 'dominador') prospectsInput.value = 50;
-                });
-            });
-        }
-
+        // Lógica del botón "Lanzar Campaña"
         if (launchButton) {
             launchButton.addEventListener('click', async (e) => {
                 e.preventDefault();
                 
+                // Recolección de datos
                 const nombre = document.getElementById('nombre_campana').value.trim();
                 const queVende = document.getElementById('que_vendes').value.trim();
                 const aQuien = document.getElementById('a_quien_va_dirigido').value.trim();
@@ -99,31 +109,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 const whatsapp = phoneInput ? phoneInput.value.trim() : "";
                 const prospectosDia = prospectsInput ? prospectsInput.value : 4;
                 
+                // Checkbox de tipo de producto
                 const tangibleCheck = document.getElementById('tipo_producto_tangible');
                 const intangibleCheck = document.getElementById('tipo_producto_intangible');
                 let tipoProducto = null;
 
-                if (tangibleCheck.checked) tipoProducto = 'Tangible';
-                if (intangibleCheck.checked) tipoProducto = 'Intangible';
+                if (tangibleCheck && tangibleCheck.checked) tipoProducto = 'Tangible';
+                if (intangibleCheck && intangibleCheck.checked) tipoProducto = 'Intangible';
 
+                // Validación
                 let faltantes = [];
                 if (!nombre) faltantes.push("Nombre de la Campaña");
                 if (!queVende) faltantes.push("¿Qué vendes?");
                 if (!aQuien) faltantes.push("¿A quién va dirigido?");
                 if (!ubicacion) faltantes.push("Ubicación Geográfica");
                 if (!idiomas) faltantes.push("Idiomas");
-                if (!tipoProducto) faltantes.push("Tipo de Producto (Tangible/Intangible)");
-                if (!descripcion) faltantes.push("Descripción del Producto");
-                if (!whatsapp) faltantes.push("Número de WhatsApp");
+                if (!tipoProducto) faltantes.push("Tipo de Producto");
+                if (!descripcion) faltantes.push("Descripción Detallada");
+                if (!whatsapp) faltantes.push("WhatsApp");
                 if (!enlaceVenta) faltantes.push("Enlace de Venta");
 
                 if (faltantes.length > 0) {
-                    alert("⚠️ ¡ALTO AHÍ! FALTAN DATOS OBLIGATORIOS\n\n- " + faltantes.join("\n- "));
+                    alert("⚠️ FALTAN DATOS:\n- " + faltantes.join("\n- "));
                     return;
                 }
 
+                // Estado de carga
                 const originalText = launchButton.innerText;
-                launchButton.innerText = "🚀 Contactando al Orquestador...";
+                launchButton.innerText = "🚀 Enviando al Orquestador...";
                 launchButton.disabled = true;
 
                 try {
@@ -144,27 +157,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         })
                     });
 
-                    if (response.status === 404) {
-                        throw new Error("Ruta no encontrada (404).");
-                    }
+                    const data = await response.json();
 
-                    const contentType = response.headers.get("content-type");
-                    if (contentType && contentType.indexOf("application/json") !== -1) {
-                        const data = await response.json();
-                        if (data.success) {
-                            alert("✅ ¡CAMPAÑA LANZADA CON ÉXITO!");
-                            window.location.reload();
-                        } else {
-                            alert("❌ ERROR DEL SERVIDOR:\n" + data.error);
-                        }
+                    if (data.success) {
+                        alert("✅ ¡CAMPAÑA LANZADA CON ÉXITO!\nEl Orquestador ha recibido la orden.");
+                        window.location.reload();
                     } else {
-                        const text = await response.text();
-                        alert("❌ ERROR CRÍTICO DE RESPUESTA:\n" + text.substring(0, 150) + "...");
+                        alert("❌ Error del servidor: " + (data.error || "Desconocido"));
                     }
 
                 } catch (error) {
                     console.error("Error:", error);
-                    alert("❌ ERROR DE CONEXIÓN:\n" + error.message);
+                    alert("❌ Error de conexión. Verifica tu internet.");
                 } finally {
                     launchButton.innerText = originalText;
                     launchButton.disabled = false;
@@ -172,4 +176,26 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+
+    // ============================================================================
+    // 4. CARGA DE DATOS (TABLA DE CAMPAÑAS)
+    // ============================================================================
+    // Esta función se conecta a Supabase (o API propia) para llenar la tabla
+    // Aquí simularemos la carga para que veas que funciona la UI
+    // En producción, esto debería hacer un fetch a /api/get-campaigns
+    
+    /*
+    const loadCampaigns = async () => {
+        try {
+            // Aquí iría el fetch real
+            // const res = await fetch('/api/mis-campanas');
+            // const campaigns = await res.json();
+            // renderCampaignTable(campaigns);
+        } catch (e) {
+            console.error("Error cargando campañas:", e);
+        }
+    };
+    // loadCampaigns(); 
+    */
+
 });
