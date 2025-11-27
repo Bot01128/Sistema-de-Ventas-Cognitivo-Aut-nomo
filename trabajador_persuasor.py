@@ -17,7 +17,8 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 # Configuración IA
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-    modelo_ia = genai.GenerativeModel('gemini-1.5-flash')
+    # CAMBIO AQUI: Usamos un modelo que SÍ está en tu lista oficial
+    modelo_ia = genai.GenerativeModel('gemini-pro-latest')
 else:
     logging.error("❌ SIN CEREBRO: GOOGLE_API_KEY no encontrada.")
     modelo_ia = None
@@ -41,7 +42,7 @@ def generar_contenido_persuasivo(nombre_prospecto, nombre_cliente, que_vende_cli
     - Dolor/Problema detectado: {lista_dolores}
 
     TU MISIÓN:
-    Genera un objeto JSON con 4 textos persuasivos para un embudo de ventas.
+    Genera un objeto JSON con 3 textos persuasivos para un embudo de ventas.
     
     ESTRUCTURA DEL JSON REQUERIDA:
     {{
