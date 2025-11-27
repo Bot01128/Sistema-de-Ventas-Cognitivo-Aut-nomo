@@ -4,6 +4,7 @@ import json
 import logging
 import psycopg2
 import threading
+import random
 from datetime import datetime, timedelta
 from psycopg2.extras import Json
 import google.generativeai as genai
@@ -36,10 +37,10 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 # Configuración del Cerebro Estratégico
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-    # Mantenemos el modelo estable para evitar errores 404
+    # CAMBIO CRÍTICO: Usamos el modelo estable para evitar errores
     modelo_estrategico = genai.GenerativeModel('models/gemini-pro-latest')
 else:
-    logging.warning("⚠️ CEREBRO DESCONECTADO: No hay API Key. El Orquestador será menos inteligente.")
+    logging.warning("⚠️ CEREBRO DESCONECTADO: No hay API Key de Google. El Orquestador será menos inteligente.")
     modelo_estrategico = None
 
 class OrquestadorSupremo:
@@ -115,13 +116,13 @@ class OrquestadorSupremo:
     def planificar_estrategia_caza(self, descripcion_producto, audiencia_objetivo, tipo_producto):
         """Define si buscar en Maps, TikTok o Instagram y qué palabra clave usar."""
         
-        platform_default = "Google Maps"
-        query_default = audiencia_objetivo
-
-        # Lógica de respaldo si la IA falla
+        # Lógica de Rotación Básica
+        opciones = ["Google Maps"]
         if "intangible" in str(tipo_producto).lower() or "software" in str(descripcion_producto).lower():
-            # AQUÍ ES DONDE PODRÍAS ROTAR SI QUISIERAS, PERO MANTENEMOS TU LÓGICA ORIGINAL
-            platform_default = "TikTok"
+            opciones.extend(["TikTok", "Instagram"])
+        
+        platform_default = random.choice(opciones)
+        query_default = audiencia_objetivo
 
         if not modelo_estrategico:
             return query_default, platform_default
@@ -133,10 +134,10 @@ class OrquestadorSupremo:
         TIPO: {tipo_producto}
         
         TU MISIÓN:
-        1. Elige la mejor plataforma: 'Google Maps' (Locales), 'TikTok' (Emprendedores) o 'Instagram' (Influencers).
+        1. Elige la mejor plataforma para este ciclo: 'Google Maps', 'TikTok' o 'Instagram'.
         2. Define la 'Query' de búsqueda optimizada.
         
-        Output JSON: {{"query": "...", "platform": "..."}}
+        Responde SOLO con un JSON: {{"query": "...", "platform": "..."}}
         """
         try:
             res = modelo_estrategico.generate_content(prompt)
@@ -205,9 +206,8 @@ class OrquestadorSupremo:
                     )
                     t.start()
                     
-                    # === MODIFICACIÓN VITAL: FRENO DE MANO PARA EL ORQUESTADOR ===
-                    # Esperamos 10 segundos entre cada campaña para no saturar la cuota de Google Gemini
-                    logging.info("⏳ Pausando 10 segundos antes de la siguiente campaña para respetar límites de IA...")
+                    # === FRENO DE MANO (MODIFICACIÓN VITAL) ===
+                    logging.info("⏳ Pausando 10 segundos entre campañas para no saturar a Google...")
                     time.sleep(10)
                     
                 else:
@@ -249,7 +249,7 @@ class OrquestadorSupremo:
             for c in clientes:
                 cid, email, nombre = c
                 
-                # Corrección para evitar ambigüedad de 'status'
+                # CORRECCIÓN CRÍTICA: Usamos 'p.status'
                 cur.execute("""
                     SELECT 
                         COUNT(*) FILTER (WHERE p.status='cazado') as nuevos,
@@ -274,7 +274,7 @@ class OrquestadorSupremo:
     # ==============================================================================
 
     def iniciar_turno(self):
-        logging.info(">>> 🤖 ORQUESTADOR SUPREMO (VERSIÓN SEGURA CON FRENO) 🤖 <<<")
+        logging.info(">>> 🤖 ORQUESTADOR SUPREMO (CON FRENO ANTI-429) 🤖 <<<")
         
         ultima_revision_reportes = datetime.now() - timedelta(days=1)
         
@@ -293,7 +293,7 @@ class OrquestadorSupremo:
                     self.generar_reporte_diario()
                     ultima_revision_reportes = datetime.now()
 
-                # 4. DESCANSO INTELIGENTE (10 Minutos para no quemar Apify)
+                # 4. DESCANSO INTELIGENTE (10 Minutos)
                 tiempo_ciclo = time.time() - inicio_ciclo
                 logging.info(f"💤 Ciclo finalizado en {tiempo_ciclo:.2f}s. Durmiendo 10 minutos...")
                 time.sleep(600) 
