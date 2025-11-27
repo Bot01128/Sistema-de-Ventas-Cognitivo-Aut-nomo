@@ -16,7 +16,7 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-    # CAMBIO CRÍTICO: Usamos el modelo estable que sí tienes disponible
+    # CORRECCIÓN CRÍTICA: Usar modelo estable
     modelo_ia = genai.GenerativeModel('models/gemini-pro-latest')
 else:
     logging.error("❌ SIN CEREBRO: GOOGLE_API_KEY no encontrada.")
