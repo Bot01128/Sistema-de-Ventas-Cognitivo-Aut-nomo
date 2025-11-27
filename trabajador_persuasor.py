@@ -18,7 +18,7 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 # Configuración IA
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-    # CAMBIO 1: Usamos el modelo estable que sí tienes disponible para evitar error 404
+    # CAMBIO: Usamos el modelo estable que aparece en tu lista para evitar errores 404
     modelo_ia = genai.GenerativeModel('models/gemini-pro-latest')
 else:
     logging.error("❌ SIN CEREBRO: GOOGLE_API_KEY no encontrada.")
@@ -136,8 +136,9 @@ def trabajar_persuasor(limite_lote=5):
                 logging.info(f"✅ Prospecto {p_nombre} persuadido. Token: {token_unico}")
             else:
                 logging.warning(f"⚠️ Fallo al generar IA para {p_nombre}")
-            
-            # CAMBIO 2: Pausa obligatoria para evitar error 429 (Cuota Excedida)
+
+            # --- FRENO DE MANO PARA GOOGLE ---
+            # Esperamos 5 segundos entre cada petición para no saturar la API gratuita
             logging.info("⏳ Pausando 5 segundos para respetar la cuota de Google...")
             time.sleep(5)
 
