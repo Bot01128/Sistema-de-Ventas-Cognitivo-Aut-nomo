@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import secrets
+import time
 import psycopg2
 from psycopg2.extras import Json
 import google.generativeai as genai
@@ -17,7 +18,8 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 # Configuración IA
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-    modelo_ia = genai.GenerativeModel('gemini-1.5-flash')
+    # CAMBIO 1: Usamos el modelo estable que sí tienes disponible para evitar error 404
+    modelo_ia = genai.GenerativeModel('models/gemini-pro-latest')
 else:
     logging.error("❌ SIN CEREBRO: GOOGLE_API_KEY no encontrada.")
     modelo_ia = None
@@ -41,7 +43,7 @@ def generar_contenido_persuasivo(nombre_prospecto, nombre_cliente, que_vende_cli
     - Dolor/Problema detectado: {lista_dolores}
 
     TU MISIÓN:
-    Genera un objeto JSON con 4 textos persuasivos para un embudo de ventas.
+    Genera un objeto JSON con 3 textos persuasivos para un embudo de ventas.
     
     ESTRUCTURA DEL JSON REQUERIDA:
     {{
@@ -134,6 +136,10 @@ def trabajar_persuasor(limite_lote=5):
                 logging.info(f"✅ Prospecto {p_nombre} persuadido. Token: {token_unico}")
             else:
                 logging.warning(f"⚠️ Fallo al generar IA para {p_nombre}")
+            
+            # CAMBIO 2: Pausa obligatoria para evitar error 429 (Cuota Excedida)
+            logging.info("⏳ Pausando 5 segundos para respetar la cuota de Google...")
+            time.sleep(5)
 
     except Exception as e:
         logging.critical(f"❌ Error catastrófico en Persuasor: {e}")
