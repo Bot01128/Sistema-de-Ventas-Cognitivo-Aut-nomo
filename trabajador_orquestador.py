@@ -36,7 +36,8 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 # Configuración del Cerebro Estratégico
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-    modelo_estrategico = genai.GenerativeModel('gemini-1.5-flash')
+    # Mantenemos el modelo estable para evitar errores 404
+    modelo_estrategico = genai.GenerativeModel('models/gemini-pro-latest')
 else:
     logging.warning("⚠️ CEREBRO DESCONECTADO: No hay API Key. El Orquestador será menos inteligente.")
     modelo_estrategico = None
@@ -119,6 +120,7 @@ class OrquestadorSupremo:
 
         # Lógica de respaldo si la IA falla
         if "intangible" in str(tipo_producto).lower() or "software" in str(descripcion_producto).lower():
+            # AQUÍ ES DONDE PODRÍAS ROTAR SI QUISIERAS, PERO MANTENEMOS TU LÓGICA ORIGINAL
             platform_default = "TikTok"
 
         if not modelo_estrategico:
@@ -202,6 +204,12 @@ class OrquestadorSupremo:
                         args=(camp_id, query_optimizada, ubicacion, plataforma, faltantes)
                     )
                     t.start()
+                    
+                    # === MODIFICACIÓN VITAL: FRENO DE MANO PARA EL ORQUESTADOR ===
+                    # Esperamos 10 segundos entre cada campaña para no saturar la cuota de Google Gemini
+                    logging.info("⏳ Pausando 10 segundos antes de la siguiente campaña para respetar límites de IA...")
+                    time.sleep(10)
+                    
                 else:
                     logging.info(f"✅ Campaña '{nombre}' completa por hoy ({cazados_hoy}/{meta_caza}).")
 
@@ -241,7 +249,7 @@ class OrquestadorSupremo:
             for c in clientes:
                 cid, email, nombre = c
                 
-                # CORRECCIÓN CRÍTICA: Usamos 'p.status' para evitar ambigüedad con 'campaigns.status'
+                # Corrección para evitar ambigüedad de 'status'
                 cur.execute("""
                     SELECT 
                         COUNT(*) FILTER (WHERE p.status='cazado') as nuevos,
@@ -266,7 +274,7 @@ class OrquestadorSupremo:
     # ==============================================================================
 
     def iniciar_turno(self):
-        logging.info(">>> 🤖 ORQUESTADOR SUPREMO (VERSIÓN CORREGIDA Y ROBUSTA) 🤖 <<<")
+        logging.info(">>> 🤖 ORQUESTADOR SUPREMO (VERSIÓN SEGURA CON FRENO) 🤖 <<<")
         
         ultima_revision_reportes = datetime.now() - timedelta(days=1)
         
