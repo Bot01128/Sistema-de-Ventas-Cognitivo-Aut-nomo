@@ -15,7 +15,7 @@ APIFY_TOKEN = os.environ.get("APIFY_API_TOKEN")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 # --- CONSTANTES FINANCIERAS (EL BOZAL) ---
-PRESUPUESTO_POR_PROSPECTO_CONTRATADO = 3.0  # Dólares USD
+PRESUPUESTO_POR_PROSPECTO_CONTRATADO = 4.0  # Dólares USD
 COSTO_ESTIMADO_APIFY_POR_1000 = 5.0         # Costo promedio x 1000 leads crudos
 MULTIPLICADOR_RAW_LEADS = 200               # Cuántos leads crudos caben en 1 dólar (aprox)
 
