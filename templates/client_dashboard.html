@@ -7,6 +7,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='client_style.css') }}">
+    <style>
+        /* Estilos añadidos para que los SELECT se vean igual que los INPUTS */
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc; /* Asume el borde estándar */
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px; /* Ajustado al tamaño probable de tus inputs */
+        }
+    </style>
 </head>
 <body>
     <div class="top-bar">
@@ -106,7 +118,36 @@
 
                     <label for="ubicacion_geografica" style="margin-top: 15px;">{{ _('¿Ubicación geográfica? (País, Ciudad)') }}</label>
                     <input type="text" id="ubicacion_geografica" placeholder="{{ _('Ej: Estados Unidos, Miami') }}">
-                    <!-- Fin de nuevos campos -->
+                    
+                    <!-- INICIO: PREGUNTAS DE ESTRATEGIA INYECTADAS -->
+                    <label for="ticket_producto" style="margin-top: 15px;">{{ _('1. ¿Cuál es el "Ticket" o precio aproximado del producto?') }}</label>
+                    <input type="text" id="ticket_producto" placeholder="{{ _('Ej: $500, High Ticket, $50/mes') }}">
+
+                    <label for="competidores_principales" style="margin-top: 15px;">{{ _('2. ¿Quiénes son tus 3 principales competidores?') }}</label>
+                    <input type="text" id="competidores_principales" placeholder="{{ _('Ej: Empresa A, @cuenta_competencia, Marca B') }}">
+
+                    <label for="objetivo_cta" style="margin-top: 15px;">{{ _('3. ¿Cuál es el objetivo del primer mensaje (CTA)?') }}</label>
+                    <select id="objetivo_cta">
+                        <option value="vender_directo">{{ _('Vender directo') }}</option>
+                        <option value="agendar_llamada">{{ _('Agendar una llamada') }}</option>
+                        <option value="descargar_pdf">{{ _('Que descarguen un PDF') }}</option>
+                        <option value="solo_saludar">{{ _('Solo saludar') }}</option>
+                    </select>
+
+                    <label for="dolores_pain_points" style="margin-top: 15px;">{{ _('4. ¿Cuáles son los "Dolores" (Pain Points) principales que resuelve tu producto?') }}</label>
+                    <textarea id="dolores_pain_points" rows="3" placeholder="{{ _('Ej: Cansado de procesos lentos, Pagando de más, Sin tiempo...') }}"></textarea>
+
+                    <label for="tono_marca" style="margin-top: 15px;">{{ _('5. ¿Qué tono de voz debe tener la marca?') }}</label>
+                    <select id="tono_marca">
+                        <option value="corporativo">{{ _('Corporativo') }}</option>
+                        <option value="amigable_casual">{{ _('Amigable/Casual') }}</option>
+                        <option value="agresivo_disruptivo">{{ _('Agresivo/Disruptivo') }}</option>
+                        <option value="lujoso">{{ _('Lujoso') }}</option>
+                    </select>
+
+                    <label for="red_flags" style="margin-top: 15px;">{{ _('6. ¿Existen "Red Flags" (Criterios de Exclusión)?') }}</label>
+                    <textarea id="red_flags" rows="3" placeholder="{{ _('Ej: Cuentas sin foto, Perfiles privados, Estética descuidada...') }}"></textarea>
+                    <!-- FIN: PREGUNTAS DE ESTRATEGIA INYECTADAS -->
 
                 </div>
                 <div class="form-section">
