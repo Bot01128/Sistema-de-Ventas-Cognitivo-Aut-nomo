@@ -1,205 +1,214 @@
 import os
+import time
 import json
 import logging
-import time
 import requests
 import psycopg2
-from psycopg2.extras import Json
-from datetime import datetime
 from bs4 import BeautifulSoup
-from apify_client import ApifyClient
 import google.generativeai as genai
+from psycopg2.extras import Json
 from dotenv import load_dotenv
 
-# --- CONFIGURACIÓN DE ENTORNO ---
+# --- CONFIGURACIÓN ---
 load_dotenv()
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - ANALISTA - %(levelname)s - %(message)s')
 
-# Configuración de Logs
-logging.basicConfig(
-    level=logging.INFO, 
-    format='%(asctime)s - ANALISTA - %(levelname)s - %(message)s'
-)
-
-# Credenciales
-APIFY_TOKEN = os.environ.get("APIFY_API_TOKEN")
 DATABASE_URL = os.environ.get("DATABASE_URL")
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# Configuración de IA (Cerebro del Analista)
-if GOOGLE_API_KEY:
-    genai.configure(api_key=GOOGLE_API_KEY)
-    modelo_ia = genai.GenerativeModel('gemini-1.5-flash') # Modelo rápido y eficiente
-else:
-    logging.warning("⚠️ GOOGLE_API_KEY no encontrada. El cerebro del analista estará limitado.")
-    modelo_ia = None
+# Configurar IA
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-pro')
 
-class TrabajadorAnalista:
-    def __init__(self):
-        self.apify = ApifyClient(APIFY_TOKEN)
+# --- 1. LECTURA DE WEB (OJOS DEL ANALISTA) ---
 
-    def conectar_db(self):
-        return psycopg2.connect(DATABASE_URL)
-
-    # --- MÓDULO 1: ANÁLISIS SITIO WEB (BAJO COSTO) ---
-    def analizar_web(self, url):
-        """
-        Escanea el HTML de la web buscando:
-        1. Si la web existe.
-        2. Enlaces de WhatsApp o Email.
-        """
-        dolores = []
-        datos_contacto = {"whatsapp": None, "email": None}
+def escanear_web_simple(url):
+    """
+    Entra a la web del prospecto (si tiene) y extrae texto clave para análisis.
+    Usa timeout corto para no perder tiempo.
+    """
+    if not url: return ""
+    
+    # Limpieza básica de URL
+    if not url.startswith("http"): url = "http://" + url
+    
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+    
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code != 200: return ""
         
-        if not url:
-            return ["SIN_SITIO_WEB"], datos_contacto
-
-        logging.info(f"🔍 Analizando Sitio Web: {url}")
-        try:
-            headers = {'User-Agent': 'Mozilla/5.0 (Compatible; AutoNeuraBot/1.0)'}
-            response = requests.get(url, headers=headers, timeout=10)
-            
-            if response.status_code >= 400:
-                return ["SITIO_WEB_ROTO_ERROR_404"], datos_contacto
-
-            soup = BeautifulSoup(response.content, 'html.parser')
-
-            # A. Búsqueda de WhatsApp
-            wa_link = soup.find("a", href=lambda h: h and ("wa.me" in h or "api.whatsapp.com" in h))
-            if wa_link:
-                datos_contacto["whatsapp"] = wa_link['href']
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Extraemos títulos y párrafos (lo más relevante)
+        textos = []
+        for tag in soup.find_all(['h1', 'h2', 'h3', 'p', 'meta']):
+            if tag.name == 'meta' and tag.get('name') == 'description':
+                textos.append(tag.get('content', ''))
             else:
-                dolores.append("SIN_ENLACE_WHATSAPP_DIRECTO")
-
-            # B. Búsqueda de Email
-            mail_link = soup.find("a", href=lambda h: h and "mailto:" in h)
-            if mail_link:
-                datos_contacto["email"] = mail_link['href'].replace("mailto:", "")
-            
-            # C. Análisis Semántico Simple
-            texto_web = soup.get_text().lower()
-            if "solicitar cotización" in texto_web or "llame para consultar precio" in texto_web:
-                dolores.append("PRECIO_OCULTO_COMPRA_COMPLEJA")
-
-        except Exception as e:
-            logging.warning(f"⚠️ Web caída o inaccesible ({url}): {e}")
-            return ["SITIO_WEB_INACCESIBLE"], datos_contacto
-
-        return dolores, datos_contacto
-
-    # --- MÓDULO 2: ANÁLISIS REDES SOCIALES ---
-    def analizar_redes(self, perfiles_sociales):
-        dolores = []
-        if not perfiles_sociales:
-            return ["PRESENCIA_DIGITAL_NULA"]
-        return dolores
-
-    # --- MÓDULO 3: ANÁLISIS REPUTACIÓN CON IA ---
-    def analizar_reputacion_ia(self, nombre_negocio, reseñas_texto):
-        if not modelo_ia or not reseñas_texto:
-            return []
-
-        dolores = []
-        try:
-            prompt = f"""
-            Analiza estas reseñas negativas de '{nombre_negocio}': "{reseñas_texto}"
-            Identifica la causa raíz: [ATENCION_LENTA, PRECIOS_ALTOS, MALA_CALIDAD].
-            Responde SOLO con la categoría.
-            """
-            respuesta = modelo_ia.generate_content(prompt)
-            categoria = respuesta.text.strip().upper().replace(" ", "_")
-            dolores.append(f"PAIN_POINT_{categoria}")
-            
-        except Exception as e:
-            logging.error(f"Error consultando a Gemini: {e}")
+                textos.append(tag.get_text(strip=True))
         
-        return dolores
+        # Unimos y cortamos para no saturar a Gemini (máx 2000 caracteres)
+        contenido_limpio = " ".join(textos)[:2000]
+        return contenido_limpio
 
-    # --- ORQUESTACIÓN PRINCIPAL ---
-    def procesar_lote_prospectos(self, limite=5):
-        """
-        Toma prospectos 'cazados', analiza y guarda resultados.
-        """
-        conn = self.conectar_db()
-        cur = conn.cursor()
+    except Exception as e:
+        logging.warning(f"No se pudo leer la web {url}: {e}")
+        return ""
 
+# --- 2. EL PSICÓLOGO (GEMINI) ---
+
+def realizar_psicoanalisis(prospecto, campana, texto_web):
+    """
+    Envía los datos a Gemini para que juzgue y cree el plan de ataque.
+    """
+    
+    # Preparamos el contexto para la IA
+    prompt = f"""
+    ERES UN ANALISTA DE VENTAS DE ÉLITE (PSICÓLOGO DE VENTAS).
+    Tu misión es filtrar prospectos y crear estrategias de persuasión.
+    
+    --- DATOS DE LA CAMPAÑA (LO QUE VENDEMOS) ---
+    Producto: {campana['product_description']}
+    Precio (Ticket): {campana.get('ticket_price', 'No especificado')}
+    Red Flags (A QUIÉN DESCARTAR): {campana.get('red_flags', 'Ninguna')}
+    Dolores Definidos: {campana.get('pain_points_defined', 'General')}
+    Competencia: {campana.get('competitors', 'Desconocida')}
+    
+    --- DATOS DEL PROSPECTO (A QUIÉN ANALIZAS) ---
+    Nombre: {prospecto['business_name']}
+    Web/Bio Info: {texto_web}
+    Datos Crudos (JSON): {str(prospecto.get('raw_data', {}))[:1000]}
+    
+    --- TUS ÓRDENES ---
+    1. FILTRO DE RED FLAGS: Si encuentras palabras prohibidas o el perfil no encaja (ej: estudiante para producto high-ticket), DESCÁRTALO.
+    2. FILTRO DE PODER ADQUISITIVO: Analiza si pueden pagar el Ticket. (Web rota/inexistente + correo gratuito = Probable descarte si el ticket es alto).
+    3. DETECCIÓN DE DOLORES: Busca evidencia de los dolores de la campaña en su info.
+    4. PERFILADO: Infiere género, edad aprox y tono recomendado.
+
+    --- SALIDA OBLIGATORIA (JSON PURO) ---
+    Responde SOLO con este JSON:
+    {{
+        "veredicto": "APROBADO" o "DESCARTADO",
+        "razon_descarte": "Texto explicativo si se descarta (o null)",
+        "perfil_demografico": {{
+            "genero_inferido": "Masculino/Femenino/Empresa",
+            "edad_aprox": "20-30 / 40-50 / N/A",
+            "tono_recomendado": "{campana.get('tone_voice', 'Profesional')}"
+        }},
+        "analisis_dolores": [
+            {{
+                "dolor_detectado": "Ej: Falta de tiempo",
+                "evidencia": "Ej: Su web dice que tardan en responder",
+                "plan_ataque": "Ej: Ofrecer automatización 24/7"
+            }}
+        ],
+        "puntuacion_calidad": 0-100
+    }}
+    """
+
+    try:
+        respuesta = model.generate_content(prompt)
+        # Limpieza de formato por si la IA pone ```json
+        texto_limpio = respuesta.text.replace("```json", "").replace("```", "").strip()
+        return json.loads(texto_limpio)
+    except Exception as e:
+        logging.error(f"Error interpretando a Gemini: {e}")
+        return None
+
+# --- 3. FUNCIÓN PRINCIPAL DEL TRABAJADOR ---
+
+def trabajar_analista():
+    """
+    Ciclo infinito que busca prospectos 'espiado', los analiza y los clasifica.
+    """
+    logging.info("🧠 Analista Iniciado. Esperando pacientes...")
+    
+    while True:
+        conn = None
         try:
-            # CORRECCIÓN: Usamos 'status' y 'raw_data' (Inglés)
-            cur.execute("""
-                SELECT id, business_name, website_url, social_profiles, raw_data
-                FROM prospects 
-                WHERE status = 'cazado' 
-                LIMIT %s 
-                FOR UPDATE SKIP LOCKED
-            """, (limite,))
-            
+            conn = psycopg2.connect(DATABASE_URL)
+            cur = conn.cursor()
+
+            # 1. Obtener Lote de Trabajo (JOIN con Campaña para tener contexto)
+            # Buscamos prospectos 'espiado' (ya tienen contacto)
+            query = """
+                SELECT 
+                    p.id, p.business_name, p.website_url, p.raw_data, p.captured_email,
+                    c.id as campaign_id, c.product_description, c.ticket_price, 
+                    c.red_flags, c.pain_points_defined, c.competitors, c.tone_voice
+                FROM prospects p
+                JOIN campaigns c ON p.campaign_id = c.id
+                WHERE p.status = 'espiado'
+                LIMIT 5;
+            """
+            cur.execute(query)
             lote = cur.fetchall()
 
             if not lote:
-                logging.info("💤 Nada que analizar.")
-                return
+                logging.info("💤 Nada que analizar. Durmiendo 60s...")
+                time.sleep(60) # Espera pasiva
+                continue
 
-            logging.info(f"🚀 Analizando {len(lote)} prospectos...")
+            logging.info(f"🧠 Procesando lote de {len(lote)} prospectos...")
 
-            for prospecto in lote:
-                pid, nombre, web, sociales, datos_extra = prospecto
-                
-                # CORRECCIÓN: 'status'
-                cur.execute("UPDATE prospects SET status = 'en_analisis' WHERE id = %s", (pid,))
-                conn.commit()
-
-                puntos_dolor = []
-                inteligencia_extra = {}
-
-                # A. Análisis Web
-                dolores_web, contactos_web = self.analizar_web(web)
-                puntos_dolor.extend(dolores_web)
-                
-                if contactos_web["whatsapp"]:
-                    cur.execute("UPDATE prospects SET phone_number = COALESCE(phone_number, %s) WHERE id = %s", (contactos_web["whatsapp"], pid))
-
-                # B. Análisis Redes
-                if isinstance(sociales, str): sociales = json.loads(sociales)
-                dolores_redes = self.analizar_redes(sociales)
-                puntos_dolor.extend(dolores_redes)
-
-                # C. Análisis IA (Usando raw_data del cazador)
-                # El campo 'datos_extra' aquí es el 'raw_data' de la DB
-                if datos_extra and 'reviews' in datos_extra:
-                    dolores_ia = self.analizar_reputacion_ia(nombre, datos_extra['reviews'])
-                    puntos_dolor.extend(dolores_ia)
-
-                nuevo_estado = 'analizado_exitoso'
-                if not web and not sociales:
-                    nuevo_estado = 'analizado_baja_calidad'
-
-                informe_analisis = {
-                    "fecha": datetime.now().isoformat(),
-                    "dolores_detectados": puntos_dolor,
-                    "inteligencia_extra": inteligencia_extra,
-                    "score_calidad": 100 - (len(puntos_dolor) * 10)
+            for fila in lote:
+                # Estructurar datos
+                prospecto = {
+                    "id": fila[0], "business_name": fila[1], "website_url": fila[2], 
+                    "raw_data": fila[3], "email": fila[4]
+                }
+                campana = {
+                    "product_description": fila[6], "ticket_price": fila[7],
+                    "red_flags": fila[8], "pain_points_defined": fila[9],
+                    "competitors": fila[10], "tone_voice": fila[11]
                 }
 
-                logging.info(f"💾 Guardando análisis para ID {pid}. Estado: {nuevo_estado}")
+                # A. Escaneo (Ojos)
+                texto_web = ""
+                if prospecto["website_url"]:
+                    texto_web = escanear_web_simple(prospecto["website_url"])
                 
-                # CORRECCIÓN: 'status' y 'pain_points'
-                cur.execute("""
+                # B. Psicoanálisis (Cerebro)
+                analisis_ia = realizar_psicoanalisis(prospecto, campana, texto_web)
+
+                # C. Sentencia (Juez)
+                nuevo_estado = "analizado_exitoso"
+                pain_points_json = None
+
+                if not analisis_ia:
+                    # Si falla Gemini, lo dejamos para después o lo marcamos error
+                    logging.warning(f"⚠️ Fallo análisis IA ID {prospecto['id']}")
+                    continue 
+
+                if analisis_ia.get("veredicto") == "DESCARTADO":
+                    nuevo_estado = "descartado"
+                    logging.info(f"🚫 DESCARTADO ID {prospecto['id']}: {analisis_ia.get('razon_descarte')}")
+                else:
+                    logging.info(f"✅ APROBADO ID {prospecto['id']}. Calidad: {analisis_ia.get('puntuacion_calidad')}")
+                    pain_points_json = Json(analisis_ia)
+
+                # D. Guardado en DB
+                update_query = """
                     UPDATE prospects 
-                    SET status = %s, 
-                        pain_points = %s 
+                    SET status = %s,
+                        pain_points = %s,
+                        updated_at = NOW()
                     WHERE id = %s
-                """, (nuevo_estado, Json(informe_analisis), pid))
-                
+                """
+                cur.execute(update_query, (nuevo_estado, pain_points_json, prospecto['id']))
                 conn.commit()
-                time.sleep(1)
+                
+                # Pausa anti-bloqueo Gemini (Plan Free)
+                time.sleep(5) 
+
+            cur.close()
 
         except Exception as e:
-            logging.critical(f"❌ Error catastrófico en el proceso de análisis: {e}")
-            if conn: conn.rollback()
+            logging.error(f"🔥 Error Crítico Analista: {e}")
+            time.sleep(30)
         finally:
-            cur.close()
-            conn.close()
+            if conn: conn.close()
 
-# --- ENTRY POINT ---
 if __name__ == "__main__":
-    analista = TrabajadorAnalista()
-    analista.procesar_lote_prospectos()
+    trabajar_analista()
