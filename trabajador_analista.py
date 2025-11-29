@@ -17,10 +17,10 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 # --- CORRECCIÓN CRÍTICA DE MODELO ---
-# Cambiamos 'gemini-pro' (que da error 404) por 'gemini-1.5-flash'
+# Usamos el modelo de tu lista que permite ALTO VOLUMEN (Más de 50 al día)
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('models/gemini-1.5-flash')
+    model = genai.GenerativeModel('models/gemini-2.0-flash')
 else:
     logging.warning("⚠️ Sin API Key de Gemini en Analista")
     model = None
@@ -109,7 +109,7 @@ def realizar_psicoanalisis(prospecto, campana, texto_web):
 # --- 3. FUNCIÓN PRINCIPAL DEL TRABAJADOR ---
 
 def trabajar_analista():
-    logging.info("🧠 Analista Iniciado (Modelo Gemini-1.5-Flash).")
+    logging.info("🧠 Analista Iniciado (Modelo Gemini-2.0-Flash).")
     
     while True:
         conn = None
@@ -117,11 +117,10 @@ def trabajar_analista():
             conn = psycopg2.connect(DATABASE_URL)
             cur = conn.cursor()
 
-            # --- CORRECCIÓN SQL: SELECCIÓN OPORTUNISTA ---
-            # Buscamos:
-            # 1. Los que el Espía revisó ('espiado')
-            # 2. O los que el Cazador trajo YA con datos ('cazado' + email/telefono)
-            # Así no se traba el sistema si el Espía se queda sin saldo.
+            # --- SELECCIÓN OPORTUNISTA ---
+            # Busca:
+            # 1. 'espiado' (El Espía trajo datos)
+            # 2. 'cazado' CON EMAIL (El Cazador trajo datos directos)
             query = """
                 SELECT 
                     p.id, p.business_name, p.website_url, p.raw_data, p.captured_email,
@@ -189,8 +188,8 @@ def trabajar_analista():
                 """, (nuevo_estado, pain_points_json, prospecto['id']))
                 conn.commit()
                 
-                # Pausa anti-spam para Google
-                time.sleep(4) 
+                # Pausa breve para no saturar
+                time.sleep(2) 
 
             cur.close()
 
