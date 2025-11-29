@@ -261,7 +261,80 @@ def chat_admin():
     if not dashboard_brain and create_chatbot: dashboard_brain = create_chatbot()
     if dashboard_brain: return jsonify({"response": dashboard_brain.invoke({"question": request.json.get('message')})})
     return jsonify({"response": "Mantenimiento"})
+# --- NUEVA API: OBTENER DETALLES COMPLETOS DE UNA CAMPAÑA ---
+@app.route('/api/campana/<string:id>', methods=['GET'])
+def obtener_detalle_campana(id):
+    conn = get_db_connection()
+    if not conn: return jsonify({"error": "No DB"}), 500
+    try:
+        cur = conn.cursor()
+        # Traemos ABSOLUTAMENTE TODO de la campaña
+        cur.execute("""
+            SELECT 
+                id, campaign_name, product_description, target_audience, 
+                product_type, search_languages, geo_location,
+                ticket_price, competitors, cta_goal, pain_points_defined, 
+                tone_voice, red_flags, ai_constitution, ai_blackboard,
+                daily_prospects_limit
+            FROM campaigns 
+            WHERE id = %s
+        """, (id,))
+        row = cur.fetchone()
+        
+        if row:
+            # Convertimos la fila en un diccionario limpio
+            campana = {
+                "id": row[0],
+                "nombre": row[1],
+                "descripcion": row[2], # Esto incluye "Que vendes" mezclado, lo pondremos en descripción
+                "audiencia": row[3],
+                "tipo": row[4],
+                "idiomas": row[5],
+                "ubicacion": row[6],
+                "ticket": row[7],
+                "competidores": row[8],
+                "cta": row[9],
+                "dolores": row[10],
+                "tono": row[11],
+                "red_flags": row[12],
+                "adn": row[13],
+                "pizarron": row[14],
+                "limite_diario": row[15]
+            }
+            return jsonify(campana)
+        return jsonify({"error": "No encontrada"}), 404
+    except Exception as e:
+        print(f"Error fetching campaign: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
 
+# --- API: ACTUALIZAR CAMPAÑA (PARA EL BOTÓN DE GUARDAR) ---
+@app.route('/api/actualizar-campana', methods=['POST'])
+def actualizar_campana():
+    conn = get_db_connection()
+    try:
+        d = request.json
+        cur = conn.cursor()
+        
+        cur.execute("""
+            UPDATE campaigns 
+            SET ai_constitution = %s, ai_blackboard = %s,
+                cta_goal = %s, tone_voice = %s, red_flags = %s,
+                competitors = %s, ticket_price = %s, pain_points_defined = %s
+            WHERE id = %s
+        """, (
+            d.get('adn'), d.get('pizarron'), 
+            d.get('cta'), d.get('tono'), d.get('red_flags'),
+            d.get('competidores'), d.get('ticket'), d.get('dolores'),
+            d.get('id')
+        ))
+        conn.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     app.run(host='0.0.0.0', port=port, debug=False)
