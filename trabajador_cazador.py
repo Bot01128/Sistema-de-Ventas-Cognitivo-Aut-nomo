@@ -24,17 +24,22 @@ MULTIPLICADOR_RAW_LEADS = 200               # Cuántos leads crudos caben en 1 d
 def verificar_presupuesto_mensual(campana_id, limite_diario_contratado):
     """
     Calcula si tenemos saldo para cazar hoy.
-    Regla: No gastar más de $3 x (Prospectos Diarios Contratados) al mes.
+    Regla: No gastar más de $4 x (Prospectos Diarios Contratados) al mes.
     """
-    if not limite_diario_contratado or limite_diario_contratado < 1:
-        limite_diario_contratado = 4  # Valor por defecto seguro
+    # Corrección: Asegurar que sea entero
+    if not limite_diario_contratado:
+        limite_diario_contratado = 4
+    
+    try:
+        limite_diario_int = int(limite_diario_contratado)
+        if limite_diario_int < 1: limite_diario_int = 4
+    except:
+        limite_diario_int = 4
 
     # 1. Calcular Techo Financiero
-    # Ej: 4 diarios * $3 = $12 USD tope mensual
-    presupuesto_total_mes = limite_diario_contratado * PRESUPUESTO_POR_PROSPECTO_CONTRATADO
+    presupuesto_total_mes = limite_diario_int * PRESUPUESTO_POR_PROSPECTO_CONTRATADO
     
     # 2. Traducir Dinero a "Cabezas" (Raw Leads)
-    # Ej: $12 * 200 = 2,400 leads crudos permitidos al mes
     tope_leads_mensual = presupuesto_total_mes * MULTIPLICADOR_RAW_LEADS
 
     conn = None
@@ -63,14 +68,10 @@ def verificar_presupuesto_mensual(campana_id, limite_diario_contratado):
             logging.warning(f"🛑 FRENO FINANCIERO: Se alcanzó el tope mensual de {int(tope_leads_mensual)} leads crudos. Cazador duerme.")
             return 0
         
-        # Calculamos la cuota diaria segura: (Tope / 30 días)
-        # Para mantener un ritmo constante y no gastarlo todo hoy
+        # Calculamos la cuota diaria segura
         cuota_diaria_sugerida = int(tope_leads_mensual / 30)
-        
-        # Si la cuota diaria es mayor que el saldo restante (fin de mes), usamos el saldo
         cantidad_a_cazar = min(cuota_diaria_sugerida, saldo_restante)
         
-        # Mínimo técnico para que Apify arranque (no vale la pena prenderlo por 1 lead)
         if cantidad_a_cazar < 5: cantidad_a_cazar = 5
 
         logging.info(f"💰 PRESUPUESTO: Llevamos {cazados_mes_actual}/{int(tope_leads_mensual)}. Autorizado cazar hoy: {cantidad_a_cazar}")
@@ -78,7 +79,7 @@ def verificar_presupuesto_mensual(campana_id, limite_diario_contratado):
 
     except Exception as e:
         logging.error(f"❌ Error verificando presupuesto: {e}")
-        return 0 # Ante el error, no gastar
+        return 0 
     finally:
         if conn: conn.close()
 
@@ -92,6 +93,7 @@ def consultar_arsenal(plataforma_objetivo, tipo_producto):
         cur = conn.cursor()
         
         # Busca el mejor bot activo para la plataforma
+        # NOTA: Requiere que hayas ejecutado el SQL de corrección en Supabase
         query = """
             SELECT actor_id, input_config 
             FROM bot_arsenal 
@@ -107,10 +109,9 @@ def consultar_arsenal(plataforma_objetivo, tipo_producto):
         if resultado:
             return {"actor_id": resultado[0], "config_extra": resultado[1]}
         else:
-            # Fallback seguro
             return {"actor_id": "compass/crawler-google-places", "config_extra": {}}
     except Exception as e:
-        logging.error(f"❌ Error Arsenal: {e}")
+        logging.error(f"❌ Error Arsenal (Usando Default): {e}")
         return {"actor_id": "compass/crawler-google-places", "config_extra": {}}
     finally:
         if conn: conn.close()
@@ -121,16 +122,18 @@ def preparar_input_blindado(actor_id, busqueda, ubicacion, max_items, config_ext
     """
     Configura Apify para gastar lo MÍNIMO posible.
     """
+    # CORRECCIÓN DE ERROR: Validar que ubicación sea string y no esté vacía
+    if not ubicacion or str(ubicacion).lower() == "none" or ubicacion == "":
+        ubicacion = "United States"
+    
     base_input = {
         "maxItems": int(max_items),
         "proxy": {"useApifyProxy": True}
     }
 
-    # Fusión con la config de la base de datos (bot_arsenal)
     if config_extra:
         base_input.update(config_extra)
 
-    # REGLAS DURAS DE AHORRO (Sobreescriben todo)
     reglas_ahorro = {
         "downloadImages": False,
         "downloadVideos": False,
@@ -141,17 +144,15 @@ def preparar_input_blindado(actor_id, busqueda, ubicacion, max_items, config_ext
         "reviewsDistribution": False
     }
 
-    # Específico Google Maps
     if "google" in actor_id:
         base_input.update({
             "searchStringsArray": [busqueda],
-            "locationQuery": ubicacion,
+            "locationQuery": str(ubicacion), # Forzamos string para evitar error
             "maxCrawledPlacesPerSearch": int(max_items),
             "maxImages": 0,
-            "website": True # Necesario para buscar email
+            # "website": True <-- ELIMINADO: Causaba error 'must be string' en algunos actores
         })
     
-    # Específico Redes Sociales
     elif "tiktok" in actor_id or "instagram" in actor_id:
         base_input.update({
             "searchQueries": [busqueda],
@@ -172,31 +173,28 @@ def validar_y_normalizar(item, plataforma, bot_id):
         "business_name": None,
         "website_url": None,
         "phone_number": None,
-        "email": None, # Agregado explícitamente
+        "email": None, 
         "social_profiles": {},
         "raw_data": item,
         "source_bot_id": bot_id
     }
 
-    # Extracción Básica
     if "google" in bot_id or plataforma == "Google Maps":
         datos["business_name"] = item.get("title", item.get("name"))
         datos["website_url"] = item.get("website")
         datos["phone_number"] = item.get("phone")
-        datos["email"] = item.get("email") # Algunos scrapers lo traen
+        datos["email"] = item.get("email") 
         
-        # --- FILTRO MAESTRO PARA EMPRESAS ---
-        # Si es empresa y no tiene NADA de contacto, es basura.
+        # FILTRO MAESTRO: Si es empresa y no tiene NADA de contacto, es basura.
         tiene_contacto = datos["phone_number"] or datos["website_url"] or datos["email"]
         if not tiene_contacto:
-            return None # DESCARTAR
+            return None 
 
     elif "tiktok" in bot_id:
         author = item.get("authorMeta", {})
         datos["business_name"] = author.get("nickName") or author.get("name")
         datos["website_url"] = author.get("signatureLink")
         datos["social_profiles"] = {"tiktok": f"https://www.tiktok.com/@{author.get('name')}"}
-        # TikTok se guarda siempre, el Espía buscará el contacto después.
 
     elif "instagram" in bot_id:
         datos["business_name"] = item.get("fullName") or item.get("username")
@@ -211,7 +209,7 @@ def validar_y_normalizar(item, plataforma, bot_id):
 
 def ejecutar_caza(campana_id, prompt_busqueda, ubicacion, plataforma="Google Maps", tipo_producto="Tangible", limite_diario_contratado=4):
     
-    # 1. VERIFICACIÓN FINANCIERA (BOZAL)
+    # 1. VERIFICACIÓN FINANCIERA
     cantidad_a_cazar = verificar_presupuesto_mensual(campana_id, limite_diario_contratado)
     
     if cantidad_a_cazar <= 0:
@@ -247,14 +245,12 @@ def ejecutar_caza(campana_id, prompt_busqueda, ubicacion, plataforma="Google Map
         dataset_items = client.dataset(dataset_id).iterate_items()
         
         for item in dataset_items:
-            # NORMALIZAR Y FILTRAR (Aquí se tira la basura)
             datos_limpios = validar_y_normalizar(item, plataforma, actor_id)
             
             if not datos_limpios: 
-                continue # Fue descartado por el filtro
+                continue 
 
             try:
-                # Insertar solo Nombre, Web, Telefono, Email (Lo esencial)
                 cur.execute(
                     """
                     INSERT INTO prospects 
@@ -268,7 +264,7 @@ def ejecutar_caza(campana_id, prompt_busqueda, ubicacion, plataforma="Google Map
                         datos_limpios["business_name"],
                         datos_limpios["website_url"],
                         datos_limpios["phone_number"],
-                        datos_limpios["email"], # Guardamos email si Apify lo trajo de una
+                        datos_limpios["email"],
                         Json(datos_limpios["social_profiles"]),
                         actor_id,
                         Json(datos_limpios["raw_data"])
