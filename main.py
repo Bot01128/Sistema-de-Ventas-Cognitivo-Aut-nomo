@@ -80,18 +80,14 @@ def admin_dashboard(): return render_template('admin_dashboard.html')
 @app.route('/admin/taller')
 def admin_taller(): return render_template('admin_taller.html')
 
-# --- API: DATOS DEL DASHBOARD (LO NUEVO) ---
+# --- API: DATOS DEL DASHBOARD ---
 @app.route('/api/dashboard-data', methods=['GET'])
 def obtener_datos_dashboard():
-    """Devuelve los KPIs y la lista de campañas para el frontend."""
     conn = get_db_connection()
     if not conn: return jsonify({"error": "No DB"}), 500
     
     try:
         cur = conn.cursor()
-        
-        # 1. Obtener KPIs Globales (Del cliente Admin por ahora)
-        # Ajusta el email si usas otro usuario
         client_email = 'admin@autoneura.com' 
         
         cur.execute("""
@@ -108,7 +104,6 @@ def obtener_datos_dashboard():
         total_calificados = kpis[1] or 0
         tasa_conversion = round((total_calificados / total_prospectos * 100), 1) if total_prospectos > 0 else 0
 
-        # 2. Obtener Lista de Campañas
         cur.execute("""
             SELECT 
                 c.campaign_name, 
@@ -150,7 +145,7 @@ def obtener_datos_dashboard():
         cur.close()
         conn.close()
 
-# --- API: CREAR CAMPAÑA ---
+# --- API: CREAR CAMPAÑA (CORREGIDO: AHORA GUARDA LOS DATOS NUEVOS) ---
 @app.route('/api/crear-campana', methods=['POST'])
 def crear_campana():
     conn = get_db_connection()
@@ -159,30 +154,50 @@ def crear_campana():
         d = request.json
         cur = conn.cursor()
         
-        # Obtener ID del Admin
+        # 1. Obtener o Crear Cliente Admin
         cur.execute("SELECT id FROM clients WHERE email = 'admin@autoneura.com'")
         res = cur.fetchone()
         if not res:
-            # Crear si no existe
             cur.execute("INSERT INTO clients (email, full_name, plan_type, plan_cost) VALUES ('admin@autoneura.com', 'Admin', 'starter', 149.00) RETURNING id")
             cid = cur.fetchone()[0]
             conn.commit()
         else:
             cid = res[0]
 
+        # 2. Preparar Datos (Incluyendo los nuevos campos estratégicos)
         desc = f"{d.get('que_vende')}. {d.get('descripcion')}"
         
+        # Recogemos los campos nuevos del formulario HTML
+        ticket = d.get('ticket_producto')
+        competidores = d.get('competidores_principales')
+        cta = d.get('objetivo_cta')
+        dolores = d.get('dolores_pain_points')
+        tono = d.get('tono_marca')
+        red_flags = d.get('red_flags')
+        
+        # Guardamos en la base de datos (INSERT actualizado)
         cur.execute("""
-            INSERT INTO campaigns (client_id, campaign_name, product_description, target_audience, product_type, search_languages, geo_location, status, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, 'active', NOW())
+            INSERT INTO campaigns (
+                client_id, campaign_name, product_description, target_audience, 
+                product_type, search_languages, geo_location,
+                ticket_price, competitors, cta_goal, pain_points_defined, tone_voice, red_flags,
+                status, created_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'active', NOW())
             RETURNING id
-        """, (cid, d.get('nombre'), desc, d.get('a_quien'), d.get('tipo_producto'), d.get('idiomas'), d.get('ubicacion')))
+        """, (
+            cid, d.get('nombre'), desc, d.get('a_quien'), 
+            d.get('tipo_producto'), d.get('idiomas'), d.get('ubicacion'),
+            ticket, competidores, cta, dolores, tono, red_flags
+        ))
         
         nid = cur.fetchone()[0]
         conn.commit()
         return jsonify({"success": True})
     except Exception as e:
         if conn: conn.rollback()
+        # Logueamos el error para verlo en Railway si falla
+        print(f"ERROR CREANDO CAMPAÑA: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
     finally:
         conn.close()

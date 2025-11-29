@@ -139,7 +139,7 @@ def trabajar_persuasor(limite_lote=5):
 
             # --- FRENO DE MANO PARA GOOGLE ---
             # Esperamos 5 segundos entre cada petición para no saturar la API gratuita
-            logging.info("⏳ Pausando 5 segundos para respetar la cuota de Google...")
+            logging.info("⏳ Pausando 20 segundos para respetar la cuota de Google...")
             time.sleep(5)
 
     except Exception as e:

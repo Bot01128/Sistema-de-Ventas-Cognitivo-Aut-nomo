@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import datetime
 from apify_client import ApifyClient
 import psycopg2
 from psycopg2.extras import Json
@@ -13,200 +14,218 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - ESPIA - %(levelnam
 APIFY_TOKEN = os.environ.get("APIFY_API_TOKEN")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-# Definimos el Actor específico para espiar en Instagram (Triangulación)
-ACTOR_ESPIA_ID = "apify/instagram-scraper" # Cambiado a scraper más genérico y robusto
+# --- PRESUPUESTO FINANCIERO ESTRICTO ---
+# $1.50 USD por cada lead contratado (Ej: Plan 5 leads = $7.50 al mes para espiar)
+PRESUPUESTO_ESPIA_POR_PROSPECTO = 1.50  
+COSTO_APIFY_INSTAGRAM_PERFIL = 0.005    # Costo aprox por consulta
 
-def obtener_prospectos_incompletos(campana_id):
+# Actor Apify Oficial (Instagram Scraper)
+ACTOR_ESPIA_ID = "apify/instagram-scraper" 
+
+# --- 1. AUDITORÍA GRATUITA (COSTO $0) ---
+
+def procesar_gratuitos(campana_id):
     """
-    Busca prospectos que necesitan datos de contacto.
-    TABLAS EN INGLÉS: 'campaigns', 'prospects'
+    Revisa la base de datos y promueve a 'espiado' a todos los que 
+    YA tienen datos de contacto (traídos por el Cazador), sin gastar dinero en Apify.
     """
     conn = None
-    prospectos = []
     try:
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
-        
-        # SQL CORREGIDO (INGLÉS)
-        # Buscamos prospectos activos de la campaña que no tengan email/teléfono
-        # y que no hayan excedido los intentos de espionaje.
-        # Usamos 'raw_data' para chequear intentos si no hay columna dedicada
-        query = """
-            SELECT id, business_name, social_profiles, source_bot_id
-            FROM prospects
-            WHERE campaign_id = %s
-            AND captured_email IS NULL 
-            AND phone_number IS NULL
-            AND status != 'abandonado_por_espia'
-            LIMIT 5; 
-        """
-        
-        cur.execute(query, (campana_id,))
-        rows = cur.fetchall()
-        
-        for row in rows:
-            prospectos.append({
-                "id": row[0],
-                "nombre": row[1],
-                "socials": row[2] if row[2] else {},
-                "source": row[3]
-            })
-            
-        cur.close()
-        return prospectos
 
+        # Actualización Masiva:
+        # Si está 'cazado' Y tiene (Email O Teléfono/Wasap) -> Pasa directo a 'espiado'
+        # Esto permite que el Analista los tome sin que el Espía gaste saldo.
+        query = """
+            UPDATE prospects
+            SET status = 'espiado',
+                updated_at = NOW()
+            WHERE campaign_id = %s
+            AND status = 'cazado'
+            AND (captured_email IS NOT NULL OR phone_number IS NOT NULL);
+        """
+        cur.execute(query, (campana_id,))
+        cantidad = cur.rowcount
+        conn.commit()
+        
+        if cantidad > 0:
+            logging.info(f"✨ AUDITORÍA GRATUITA: {cantidad} prospectos ya tenían datos. Promovidos a 'espiado' sin costo.")
+        
+        cur.close()
     except Exception as e:
-        logging.error(f"Error buscando objetivos para espiar: {e}")
-        return []
+        logging.error(f"Error en auditoría gratuita: {e}")
+        if conn: conn.rollback()
     finally:
         if conn: conn.close()
 
-def triangulacion_identidad(prospecto):
-    """
-    Intenta adivinar el usuario de Instagram basado en TikTok o el Nombre.
-    """
-    socials = prospecto["socials"]
-    nombre_objetivo = prospecto["nombre"]
-    username_busqueda = ""
+# --- 2. CEREBRO FINANCIERO (BOZAL) ---
 
-    # ESTRATEGIA A: Si ya tenemos TikTok, usamos ese username
-    if "tiktok" in socials:
-        url_tiktok = socials["tiktok"]
-        try:
-            if "@" in url_tiktok:
-                username_busqueda = url_tiktok.split("@")[1].split("?")[0].split("/")[0]
-                logging.info(f"🎯 Objetivo (TikTok -> Instagram): @{username_busqueda}")
-                return username_busqueda
-        except: pass
+def calcular_cupo_diario_espia(campana_id, limite_diario_contratado):
+    """
+    Calcula el límite de perfiles a espiar hoy basado en el presupuesto de $1.50.
+    """
+    if not limite_diario_contratado or limite_diario_contratado < 1:
+        limite_diario_contratado = 4
+
+    # Ej: 5 leads * $1.50 = $7.50 USD mes
+    presupuesto_mensual = limite_diario_contratado * PRESUPUESTO_ESPIA_POR_PROSPECTO
     
-    # ESTRATEGIA B: Usar el nombre del negocio sin espacios
-    if not username_busqueda and nombre_objetivo:
-        username_busqueda = nombre_objetivo.replace(" ", "").lower()
-        logging.info(f"🎯 Objetivo (Nombre Directo): @{username_busqueda}")
-        return username_busqueda
+    # $7.50 / 30 días = $0.25 USD diario
+    presupuesto_diario = presupuesto_mensual / 30.0
+    
+    # $0.25 / $0.005 costo apify = ~50 consultas permitidas hoy
+    consultas_permitidas_hoy = int(presupuesto_diario / COSTO_APIFY_INSTAGRAM_PERFIL)
+    
+    # Mínimo técnico para encender motores
+    if consultas_permitidas_hoy < 3: consultas_permitidas_hoy = 3
+    
+    return consultas_permitidas_hoy
+
+# --- 3. TRIANGULACIÓN Y APIFY ---
+
+def triangular_username(prospecto):
+    """
+    Intenta adivinar el usuario de Instagram.
+    """
+    socials = prospecto.get("social_profiles", {}) or {}
+    nombre_negocio = prospecto.get("business_name")
+    
+    # Intento 1: Usar el mismo usuario de TikTok
+    if "tiktok" in socials:
+        url = socials["tiktok"]
+        try:
+            parts = url.split('@')
+            if len(parts) > 1:
+                return parts[1].split('/')[0].split('?')[0].strip()
+        except: pass
+
+    # Intento 2: Usar el nombre del negocio limpio (sin espacios)
+    if nombre_negocio:
+        return "".join(e for e in nombre_negocio if e.isalnum()).lower()
 
     return None
 
-def ejecutar_espionaje_apify(username_objetivo):
+def espiar_en_instagram(username):
     """
-    Ejecuta el scraper de Instagram con AHORRO DE COSTOS.
+    Llama a Apify con configuración de AHORRO EXTREMO.
     """
-    if not username_objetivo: return None
-
     client = ApifyClient(APIFY_TOKEN)
     
-    # --- CONFIGURACIÓN DE AHORRO ---
     run_input = {
-        "search": username_objetivo,
-        "searchType": "user",
+        "usernames": [username],
         "resultsLimit": 1,
-        "resultsType": "details", # Solo detalles, no posts
-        # "searchLimit": 1 
+        "resultsType": "details",
+        # --- AHORRO: NO BAJAR MEDIA ---
+        "downloadImages": False,
+        "downloadVideos": False,
+        "scrapePosts": False,       
+        "scrapeStories": False,
+        "proxy": {"useApifyProxy": True}
     }
 
     try:
-        logging.info(f"🕵️ Espiando en Instagram: {username_objetivo}")
+        logging.info(f"🕵️ Gastando saldo en Instagram: @{username}")
         run = client.actor(ACTOR_ESPIA_ID).call(run_input=run_input)
         
-        if not run or run.get('status') != 'SUCCEEDED':
-            logging.warning("El Espía falló en Apify.")
-            return None
+        if not run or run.get('status') != 'SUCCEEDED': return None
 
         dataset_id = run["defaultDatasetId"]
         items = client.dataset(dataset_id).list_items().items
-        
-        if items:
-            return items[0] 
-        else:
-            return None
+        return items[0] if items else None
 
     except Exception as e:
-        logging.error(f"Error técnico Apify: {e}")
+        logging.error(f"❌ Fallo Apify: {e}")
         return None
 
-def guardar_hallazgos(prospecto_id, datos_encontrados):
-    """
-    Guarda los datos encontrados en la DB (INGLÉS).
-    """
+# --- 4. FUNCIÓN PRINCIPAL ---
+
+def ejecutar_espia(campana_id, limite_diario_contratado=4):
+    logging.info(f"🕵️ INICIANDO TURNO DE ESPÍA | Campaña: {campana_id}")
+
+    # PASO 1: Auditoría Gratuita (Costo $0)
+    # Pasa los que ya tienen datos directamente a 'espiado'
+    procesar_gratuitos(campana_id)
+
+    # PASO 2: Chequeo Financiero para los difíciles
+    cupo_hoy = calcular_cupo_diario_espia(campana_id, limite_diario_contratado)
+    logging.info(f"💰 Cupo Apify Restante Hoy: {cupo_hoy} perfiles.")
+
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
-    
-    nuevo_email = None
-    nuevo_telefono = None
-    exito = False
 
-    if datos_encontrados:
-        # Intentamos sacar email de la bio o campos públicos
-        nuevo_email = datos_encontrados.get("publicEmail")
-        if not nuevo_email:
-            # Buscar @ en la bio manualmente
-            bio = datos_encontrados.get("biography", "")
-            if "@" in bio:
-                for p in bio.split():
-                    if "@" in p and "." in p:
-                        nuevo_email = p.strip()
-                        break
-        
-        # Telefono (si es cuenta business)
-        nuevo_telefono = datos_encontrados.get("contactPhoneNumber")
+    # PASO 3: Seleccionar objetivos
+    # Solo buscamos los que están 'cazado', NO tienen email NI teléfono.
+    query = """
+        SELECT id, business_name, social_profiles, source_bot_id
+        FROM prospects
+        WHERE campaign_id = %s
+        AND status = 'cazado' 
+        AND captured_email IS NULL 
+        AND phone_number IS NULL
+        LIMIT %s;
+    """
+    cur.execute(query, (campana_id, cupo_hoy))
+    objetivos = cur.fetchall()
 
-    try:
-        if nuevo_email or nuevo_telefono:
-            logging.info(f"✅ ¡ÉXITO! Datos recuperados ID {prospecto_id}: {nuevo_email} | {nuevo_telefono}")
-            # Actualizamos captured_email si no había, o phone_number
-            cur.execute("""
-                UPDATE prospects
-                SET captured_email = COALESCE(captured_email, %s),
-                    phone_number = COALESCE(phone_number, %s),
-                    updated_at = NOW()
-                WHERE id = %s
-            """, (nuevo_email, nuevo_telefono, prospecto_id))
-            exito = True
-        else:
-            logging.info(f"❌ Misión fallida para ID {prospecto_id}. No hay datos públicos.")
-            # Marcamos para no insistir
-            cur.execute("UPDATE prospects SET status = 'abandonado_por_espia' WHERE id = %s", (prospecto_id,))
-
-        conn.commit()
-    except Exception as e:
-        logging.error(f"Error guardando hallazgos: {e}")
-        conn.rollback()
-    finally:
+    if not objetivos:
+        logging.info("💤 Todo limpio. No hay prospectos sin contacto pendientes de gasto.")
         cur.close()
         conn.close()
-    
-    return exito
-
-# --- FUNCIÓN PRINCIPAL ---
-
-def trabajar_espia(campana_id, limite_diario=4):
-    logging.info(f"🕵️ INICIANDO TURNO DE ESPÍA | Campaña: {campana_id}")
-    
-    objetivos = obtener_prospectos_incompletos(campana_id)
-    
-    if not objetivos:
-        logging.info("💤 Nada que espiar.")
         return
 
-    # Límite de seguridad para no gastar todo el dinero
-    max_intentos = limite_diario * 2 
-    intentos = 0
+    count_exitos = 0
+    count_fallos = 0
+    
+    for row in objetivos:
+        pid, bname, socials, source = row
+        prospecto_dict = {"business_name": bname, "social_profiles": socials}
+        
+        # Intentamos adivinar el usuario de Instagram
+        target_user = triangular_username(prospecto_dict)
+        datos_nuevos = None
+        
+        if target_user:
+            datos_nuevos = espiar_en_instagram(target_user)
+        
+        # Procesamos lo que encontró Apify
+        nuevo_email = None
+        nuevo_phone = None
+        
+        if datos_nuevos:
+            # Buscamos en campos directos
+            nuevo_email = datos_nuevos.get("businessEmail") or datos_nuevos.get("email")
+            nuevo_phone = datos_nuevos.get("businessPhoneNumber") or datos_nuevos.get("phone")
+            
+            # Buscamos en la biografía si no hay campo directo
+            if not nuevo_email and datos_nuevos.get("biography"):
+                bio = datos_nuevos["biography"]
+                for w in bio.split():
+                    if "@" in w and "." in w:
+                        nuevo_email = w
+                        break
 
-    for prospecto in objetivos:
-        if intentos >= max_intentos: break
-
-        target = triangulacion_identidad(prospecto)
-        if target:
-            datos = ejecutar_espionaje_apify(target)
-            guardar_hallazgos(prospecto["id"], datos)
-            intentos += 1
+        # PASO 4: Guardar Resultados
+        if nuevo_email or nuevo_phone:
+            logging.info(f"✅ PAGADO Y ENCONTRADO ID {pid}: {nuevo_email}")
+            cur.execute("""
+                UPDATE prospects 
+                SET captured_email = COALESCE(captured_email, %s),
+                    phone_number = COALESCE(phone_number, %s),
+                    status = 'espiado',
+                    updated_at = NOW()
+                WHERE id = %s
+            """, (nuevo_email, nuevo_phone, pid))
+            count_exitos += 1
         else:
-            # Si no podemos adivinar el usuario, lo marcamos como abandonado
-            # Para no quedarnos pegados en el mismo
-            conn = psycopg2.connect(DATABASE_URL)
-            cur = conn.cursor()
-            cur.execute("UPDATE prospects SET status = 'abandonado_por_espia' WHERE id = %s", (prospecto["id"],))
-            conn.commit()
-            conn.close()
+            # Si pagamos y no encontramos nada, marcamos 'descartado_espia'
+            # para no volver a gastar dinero en este prospecto mañana.
+            logging.info(f"❌ Pagado sin éxito ID {pid}. Descartado.")
+            cur.execute("UPDATE prospects SET status = 'descartado_espia', updated_at = NOW() WHERE id = %s", (pid,))
+            count_fallos += 1
+            
+        conn.commit()
 
-    logging.info("🏁 Turno Espía finalizado.")
+    cur.close()
+    conn.close()
+    logging.info(f"🏁 Turno Espía finalizado. Invertidos en Apify: {count_exitos + count_fallos}")
