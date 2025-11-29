@@ -22,7 +22,7 @@
         
         <!-- === INICIO DE LA CORRECCIÓN === -->
         <!-- Corregido: El 'action' ahora usa url_for para ser más robusto. -->
-        <form method="POST" action="{{ url_for('generar_nido_y_enviar_enlace') }}">
+        <form method="POST" action="{{ url_for('generar_nido_y_entrar') }}">
             
             <!-- Corregido: El 'name' ahora es 'prospecto_id' y el 'value' es dinámico con la variable de Flask. -->
             <input type="hidden" name="prospecto_id" value="{{ prospecto_id }}">
