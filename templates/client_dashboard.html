@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='client_style.css') }}">
     <style>
+        /* ESTILOS GENERALES */
         select, textarea, input[type="text"], input[type="number"], input[type="tel"] {
             width: 100%;
             padding: 10px;
@@ -18,7 +19,8 @@
             font-size: 14px;
             font-family: inherit;
         }
-        /* Estilo para la caja de cerebro */
+        
+        /* ESTILOS DE LA CAJA CEREBRO (AZUL) */
         .brain-box {
             background-color: #f8f9fa;
             padding: 20px;
@@ -29,10 +31,67 @@
         .brain-box h3 { color: #0056b3; margin-top: 0; }
         .help-text { font-size: 0.85em; color: #666; margin-bottom: 8px; font-style: italic; }
         
-        /* Estilo para el Pizarrón (Blackboard) */
+        /* PIZARRÓN (VERDE) */
         .blackboard-field {
             border: 2px solid #28a745 !important;
             background-color: #f0fff4 !important;
+        }
+
+        /* --- CORRECCIÓN A: ESTILOS DEL RESUMEN FINAL (AMARILLO) --- */
+        .summary-box {
+            background-color: #fff9db; /* Amarillo claro */
+            border: 1px solid #ffeeba;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .summary-box h4 {
+            margin-top: 0;
+            color: #856404;
+            border-bottom: 1px solid #ffeeba;
+            padding-bottom: 10px;
+        }
+        .summary-box p {
+            margin: 8px 0;
+            font-size: 0.95em;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* --- CORRECCIÓN BOTÓN VERDE GRANDE --- */
+        #action-buttons-container .cta-button {
+            width: 100%;
+            background-color: #28a745; /* Verde éxito */
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #action-buttons-container .cta-button:hover {
+            background-color: #218838;
+        }
+
+        /* CORRECCIÓN B: CHECKBOXES/RADIOS */
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 5px;
+        }
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        input[type="radio"] {
+            transform: scale(1.2);
+            cursor: pointer;
         }
     </style>
 </head>
@@ -53,7 +112,7 @@
             </div>
             <div class="chat-window">
                 <div class="chat-messages" id="chat-messages">
-                    <p class="msg-assistant">{{ _("¡Hola! Soy tu Asistente de Control AutoNeura. A diferencia de tu vendedor, yo no estoy aquí para venderte, sino para reportarte. Tengo acceso total a tus bases de datos. Pregúntame: '¿Cuánto he gastado?', '¿Cuántos leads tengo hoy?' o '¿Cómo va la campaña de Miami?'. Estoy lista.") }}</p>
+                    <p class="msg-assistant">{{ _("¡Hola! Soy tu Asistente de Control AutoNeura. Estoy aquí para reportarte tus métricas y finanzas. No te venderé nada, solo te diré la verdad de tus números. ¿Qué quieres saber hoy?") }}</p>
                 </div>
                 <form id="chat-form" class="chat-input">
                     <input type="text" id="user-input" placeholder="{{ _('Pregúntame sobre tus datos...') }}">
@@ -66,8 +125,11 @@
         <div class="right-panel">
             <div class="tab-nav">
                 <button class="tab-button active" data-tab="my-campaigns">{{ _('Mis Campañas') }}</button>
-                <!-- PESTAÑA GEMELA OCULTA -->
-                <button class="tab-button" data-tab="manage-campaign" id="btn-manage-campaign" style="display: none;">⚙️ {{ _('Gestionar Campaña') }}</button>
+                
+                <!-- CORRECCIÓN C y F: AQUÍ ESTÁ LA PESTAÑA GEMELA -->
+                <!-- Nota: Le quité el 'display:none' temporalmente para que veas que existe -->
+                <button class="tab-button" data-tab="manage-campaign" id="btn-manage-campaign" style="background-color: #e2e6ea; border-left: 3px solid #007bff;">⚙️ {{ _('Campaña (Editar)') }}</button>
+                
                 <button class="tab-button" data-tab="create-campaign">{{ _('Crear Campaña') }}</button>
                 <button class="tab-button" data-tab="prospect-flow">{{ _('Flujo de Prospectos') }}</button>
                 <button class="tab-button" data-tab="conversations">{{ _('Conversaciones') }}</button>
@@ -83,12 +145,12 @@
                     <div class="kpi-card"><span class="kpi-title">Tasa de Conversión</span><span class="kpi-value rate-success" id="kpi-rate">0%</span></div>
                 </div>
                 <h2>{{ _('Mis Campañas Activas y Pasadas') }}</h2>
-                <p class="help-text">💡 Haz clic en el nombre de cualquier campaña para abrir su Centro de Comando y editar su cerebro.</p>
+                <p class="help-text">💡 Haz clic en el nombre de cualquier campaña para abrir su pestaña de Edición.</p>
                 <table class="campaign-table">
                     <thead>
                         <tr>
                             <th>{{ _('Nombre de la Campaña') }}</th><th>{{ _('Fecha') }}</th><th>{{ _('Estado') }}</th>
-                            <th>{{ _('Encontrados') }}</th><th>{{ _('Leads') }}</th><th>{{ _('Acción') }}</th>
+                            <th>{{ _('Encontrados') }}</th><th>{{ _('Leads') }}</th>
                         </tr>
                     </thead>
                     <tbody id="campaigns-table-body">
@@ -132,6 +194,7 @@
                     <label style="margin-top: 15px;">{{ _('Ubicación Geográfica') }}</label>
                     <input type="text" id="ubicacion_geografica" placeholder="{{ _('Ej: Estados Unidos, Miami') }}">
                     
+                    <!-- PREGUNTAS ESTRATÉGICAS (Restauradas) -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
                         <div>
                             <label>{{ _('Ticket Promedio ($)') }}</label>
@@ -155,9 +218,16 @@
 
                     <label style="margin-top: 15px;">{{ _('Red Flags (A quién NO vender)') }}</label>
                     <textarea id="red_flags" rows="2" placeholder="{{ _('Ej: Estudiantes, Cuentas sin foto...') }}"></textarea>
+                    
+                    <label style="margin-top: 15px;">{{ _('Tono de Voz') }}</label>
+                    <select id="tono_marca">
+                        <option value="corporativo">Corporativo</option>
+                        <option value="amigable">Amigable</option>
+                        <option value="agresivo">Agresivo</option>
+                    </select>
                 </div>
 
-                <!-- 4. CEREBRO DEL AGENTE (CAMBIO SOLICITADO) -->
+                <!-- 4. CEREBRO DEL AGENTE -->
                 <div class="form-section brain-box">
                     <h3>🧠 {{ _('Entrena a tu Vendedor IA') }}</h3>
                     
@@ -172,30 +242,46 @@
 
                 <div class="form-section">
                     <label>{{ _('5. Datos de Contacto') }}</label>
-                    <div style="margin-top:10px;">
-                        <input type="checkbox" id="tipo_producto_tangible" name="tipo_producto"><label for="tipo_producto_tangible"> {{ _('Tangible') }}</label>
-                        <input type="checkbox" id="tipo_producto_intangible" name="tipo_producto"><label for="tipo_producto_intangible"> {{ _('Intangible') }}</label>
+                    
+                    <!-- CORRECCIÓN B: RADIO BUTTONS -->
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" id="tipo_producto_tangible" name="tipo_producto" value="tangible">
+                            {{ _('Tangible') }}
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" id="tipo_producto_intangible" name="tipo_producto" value="intangible">
+                            {{ _('Intangible') }}
+                        </label>
                     </div>
-                    <label style="margin-top:10px;">{{ _('WhatsApp de Contacto') }}</label>
+
+                    <label style="margin-top:15px;">{{ _('WhatsApp de Contacto') }}</label>
                     <input type="tel" id="numero_whatsapp">
                     <label style="margin-top:10px;">{{ _('Enlace de Venta') }}</label>
                     <input type="text" id="enlace_venta">
                 </div>
 
-                <div id="summary-box" class="form-section summary-box">
+                <!-- CORRECCIÓN A: RESUMEN AMARILLO Y BOTÓN VERDE -->
+                <div id="summary-box" class="summary-box">
                     <h4>{{ _('Resumen Final') }}</h4>
-                    <p>Costo Estimado: <strong id="total-cost">$0.00</strong></p>
+                    <p>{{ _('Plan Seleccionado:') }} <strong id="selected-plan">-</strong></p>
+                    <p>{{ _('Prospectos por día:') }} <strong id="daily-prospects">4</strong></p>
+                    <hr style="border: 0; border-top: 1px solid #ffeeba;">
+                    <p>{{ _('Costo Mensual Final:') }} <strong id="total-cost">$0.00</strong></p>
+                    <p>{{ _('Saldo en tu Cuenta:') }} <strong id="current-balance">$0.00</strong></p>
+                    <p id="recharge-line" style="color: #dc3545;">{{ _('Mínimo a Recargar:') }} <strong id="recharge-amount">$0.00</strong></p>
                 </div>
+                
                 <div id="action-buttons-container">
                     <button id="lancam" class="cta-button">{{ _('Lanzar Campaña al Orquestador') }}</button>
                 </div>
             </div>
 
-            <!-- 3. GESTIONAR CAMPAÑA (PESTAÑA GEMELA OCULTA) -->
+            <!-- 3. PESTAÑA GEMELA: GESTIONAR CAMPAÑA (AHORA VISIBLE EN LA BARRA) -->
             <div class="tab-content" id="manage-campaign" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 20px;">
                     <h2 style="margin:0;">⚙️ Centro de Comando: <span id="manage-campaign-title" style="color: #007bff;">Cargando...</span></h2>
-                    <button class="cta-button" style="background-color: #6c757d; padding: 5px 15px; font-size: 0.9em;" onclick="document.querySelector('[data-tab=my-campaigns]').click()">✖ {{ _('Cerrar') }}</button>
+                    <button class="cta-button" style="background-color: #6c757d; padding: 5px 15px; font-size: 0.9em; width: auto;" onclick="document.querySelector('[data-tab=my-campaigns]').click()">✖ {{ _('Cerrar') }}</button>
                 </div>
 
                 <input type="hidden" id="edit_campaign_id">
@@ -212,7 +298,7 @@
                     <textarea id="edit_ai_blackboard" class="blackboard-field" rows="4"></textarea>
                 </div>
 
-                <!-- ÁREA DE EDICIÓN DE ESTRATEGIA (Resumida) -->
+                <!-- ÁREA DE EDICIÓN DE ESTRATEGIA -->
                 <div class="form-section">
                     <h3>🛠️ {{ _('Ajustes de Estrategia') }}</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
@@ -238,7 +324,7 @@
                 </div>
 
                 <div id="action-buttons-container" style="margin-top: 30px;">
-                    <button id="btn-update-brain" class="cta-button" style="width: 100%; background: linear-gradient(135deg, #28a745 0%, #218838 100%); box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);">
+                    <button id="btn-update-brain" class="cta-button">
                         💾 {{ _('Actualizar Cerebro y Estrategia') }}
                     </button>
                 </div>
