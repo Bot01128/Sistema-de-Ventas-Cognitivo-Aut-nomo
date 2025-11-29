@@ -12,9 +12,15 @@ from dotenv import load_dotenv
 
 # --- IMPORTACIÓN DE TUS EMPLEADOS (LOS TRABAJADORES) ---
 try:
+    # Trabajadores tipo "Función Única" (Cazador y Espía)
     from trabajador_cazador import ejecutar_caza
-    from trabajador_analista import TrabajadorAnalista
+    from trabajador_espia import ejecutar_espia
+    
+    # Trabajadores tipo "Bucle Infinito" (Analista y Persuasor)
+    from trabajador_analista import trabajar_analista
     from trabajador_persuasor import trabajar_persuasor
+    
+    # Trabajador tipo "Clase" (Nutridor - Aún no modificado)
     from trabajador_nutridor import TrabajadorNutridor
 except ImportError as e:
     print(f"!!! ERROR CRÍTICO DE INICIO: Faltan archivos de trabajadores. Detalle: {e}")
@@ -37,16 +43,17 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 # Configuración del Cerebro Estratégico
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-    # CAMBIO CRÍTICO: Usamos el modelo estable para evitar errores
-    modelo_estrategico = genai.GenerativeModel('models/gemini-pro-latest')
+    # SELECCIÓN DE MODELO: Usamos el más rápido y eficiente de la lista actual
+    MODELO_ESTRATEGICO_ID = 'models/gemini-2.0-flash'
+    modelo_estrategico = genai.GenerativeModel(MODELO_ESTRATEGICO_ID)
+    logging.info(f"🧠 Cerebro conectado usando: {MODELO_ESTRATEGICO_ID}")
 else:
     logging.warning("⚠️ CEREBRO DESCONECTADO: No hay API Key de Google. El Orquestador será menos inteligente.")
     modelo_estrategico = None
 
 class OrquestadorSupremo:
     def __init__(self):
-        # Inicializamos a los jefes de departamento
-        self.analista = TrabajadorAnalista()
+        # Inicializamos solo al Nutridor aquí, los demás son funciones autónomas
         self.nutridor = TrabajadorNutridor()
         
     def conectar_db(self):
@@ -150,13 +157,22 @@ class OrquestadorSupremo:
     # ⚙️ MÓDULO 3: COORDINACIÓN DE TRABAJADORES (Operaciones)
     # ==============================================================================
 
-    def ejecutar_trabajador_cazador_thread(self, cid, query, ubic, plat, cant):
-        """Lanza el Cazador en un hilo paralelo para no detener el sistema."""
+    def ejecutar_trabajador_cazador_thread(self, cid, query, ubic, plat, limite_diario):
+        """Lanza el Cazador en un hilo paralelo."""
         try:
             logging.info(f"🧵 Hilo de Caza iniciado para Campaña {cid} en {plat}")
-            ejecutar_caza(cid, query, ubic, plat, tipo_producto="Variable", max_resultados=cant)
+            # CORRECCIÓN DE LOG: Usamos 'limite_diario_contratado' que es lo que espera el nuevo cazador
+            ejecutar_caza(cid, query, ubic, plat, tipo_producto="Variable", limite_diario_contratado=limite_diario)
         except Exception as e:
             logging.error(f"Error en hilo de caza {cid}: {e}")
+
+    def ejecutar_trabajador_espia_thread(self, cid, limite_diario):
+        """Lanza el Espía en un hilo paralelo."""
+        try:
+            logging.info(f"🧵 Hilo de Espionaje iniciado para Campaña {cid}")
+            ejecutar_espia(cid, limite_diario_contratado=limite_diario)
+        except Exception as e:
+            logging.error(f"Error en hilo de espía {cid}: {e}")
 
     def coordinar_operaciones_diarias(self):
         """Verifica metas diarias y activa a los trabajadores si faltan prospectos."""
@@ -164,10 +180,11 @@ class OrquestadorSupremo:
         cur = conn.cursor()
         
         try:
-            # A. OBTENER CAMPAÑAS ACTIVAS (Tabla 'campaigns')
+            # A. OBTENER CAMPAÑAS ACTIVAS
+            # CORRECCIÓN BD: Ahora leemos 'daily_prospects_limit' de campaigns
             cur.execute("""
                 SELECT c.id, c.campaign_name, c.product_description, c.target_audience, 
-                       c.product_type, cl.daily_prospects_quota, c.geo_location
+                       c.product_type, c.daily_prospects_limit, c.geo_location
                 FROM campaigns c
                 JOIN clients cl ON c.client_id = cl.id
                 WHERE c.status = 'active' AND cl.is_active = TRUE
@@ -177,50 +194,49 @@ class OrquestadorSupremo:
             logging.info(f"⚙️ Coordinando {len(campanas_activas)} campañas activas...")
 
             for camp in campanas_activas:
-                camp_id, nombre, prod, audiencia, tipo_prod, cuota_diaria, ubicacion = camp
+                camp_id, nombre, prod, audiencia, tipo_prod, limite_diario, ubicacion = camp
                 
-                # B. VERIFICAR PROGRESO (Tabla 'prospects')
+                # Valor por defecto si es NULL
+                if not limite_diario: limite_diario = 4
+
+                # B. VERIFICAR PROGRESO
+                # Solo despertamos al Cazador si no ha cumplido su cuota técnica básica
                 cur.execute("""
                     SELECT COUNT(*) FROM prospects 
                     WHERE campaign_id = %s 
                     AND created_at::date = CURRENT_DATE
+                    AND status = 'cazado'
                 """, (camp_id,))
                 
                 cazados_hoy = cur.fetchone()[0]
                 
-                # Regla de Sobrecaza (Factor 3x para asegurar calidad)
-                meta_caza = (cuota_diaria or 4) * 3
+                # Regla de Activación:
+                # Si hoy hay menos cazados de los que el presupuesto permite (aproximado), intentamos cazar.
+                # El Cazador tiene su propio freno interno, así que es seguro llamarlo.
                 
-                if cazados_hoy < meta_caza:
-                    faltantes = meta_caza - cazados_hoy
-                    
-                    # 1. PENSAR (IA)
-                    query_optimizada, plataforma = self.planificar_estrategia_caza(prod, audiencia, tipo_prod)
-                    
-                    logging.info(f"🚀 Ordenando Caza para '{nombre}'. Faltan {faltantes}. Query: '{query_optimizada}' en {plataforma}")
-                    
-                    # 2. CAZAR (Thread)
-                    t = threading.Thread(
-                        target=self.ejecutar_trabajador_cazador_thread,
-                        args=(camp_id, query_optimizada, ubicacion, plataforma, faltantes)
-                    )
-                    t.start()
-                    
-                    # === FRENO DE MANO (MODIFICACIÓN VITAL) ===
-                    logging.info("⏳ Pausando 10 segundos entre campañas para no saturar a Google...")
-                    time.sleep(10)
-                    
-                else:
-                    logging.info(f"✅ Campaña '{nombre}' completa por hoy ({cazados_hoy}/{meta_caza}).")
+                logging.info(f"📊 Estado '{nombre}': {cazados_hoy} cazados hoy. Activando trabajadores...")
 
-            # C. PROCESAMIENTO EN CASCADA (Analizar, Persuadir, Nutrir)
-            
-            logging.info("🕵️ Despertando al Analista...")
-            self.analista.procesar_lote_prospectos(limite=10)
+                # 1. PENSAR ESTRATEGIA (IA)
+                query_optimizada, plataforma = self.planificar_estrategia_caza(prod, audiencia, tipo_prod)
+                
+                # 2. LANZAR CAZADOR (Thread)
+                t_caza = threading.Thread(
+                    target=self.ejecutar_trabajador_cazador_thread,
+                    args=(camp_id, query_optimizada, ubicacion, plataforma, limite_diario)
+                )
+                t_caza.start()
 
-            logging.info("✍️ Despertando al Persuasor...")
-            trabajar_persuasor(limite_lote=10)
+                # 3. LANZAR ESPÍA (Thread) - Ahora trabaja en paralelo
+                t_espia = threading.Thread(
+                    target=self.ejecutar_trabajador_espia_thread,
+                    args=(camp_id, limite_diario)
+                )
+                t_espia.start()
+                
+                # Pausa breve para escalonar peticiones
+                time.sleep(2)
 
+            # C. EL NUTRIDOR (Sigue siendo un proceso finito, lo llamamos aquí)
             logging.info("♟️ Despertando al Nutridor...")
             self.nutridor.ejecutar_ciclo_seguimiento()
 
@@ -249,11 +265,10 @@ class OrquestadorSupremo:
             for c in clientes:
                 cid, email, nombre = c
                 
-                # CORRECCIÓN CRÍTICA: Usamos 'p.status'
                 cur.execute("""
                     SELECT 
-                        COUNT(*) FILTER (WHERE p.status='cazado') as nuevos,
-                        COUNT(*) FILTER (WHERE p.nurture_interactions_count >= 3) as calificados
+                        COUNT(*) FILTER (WHERE status='cazado') as nuevos,
+                        COUNT(*) FILTER (WHERE status='persuadido') as listos_nutrir
                     FROM prospects p
                     JOIN campaigns cam ON p.campaign_id = cam.id
                     WHERE cam.client_id = %s 
@@ -262,7 +277,7 @@ class OrquestadorSupremo:
                 stats = cur.fetchone()
                 
                 if stats:
-                    cuerpo = f"Hola {nombre}, resumen de hoy: {stats[0]} nuevos, {stats[1]} calificados."
+                    cuerpo = f"Hola {nombre}, resumen de hoy: {stats[0]} nuevos encontrados, {stats[1]} listos para contactar."
                     self.enviar_notificacion(email, "Reporte Diario AutoNeura", cuerpo)
                     
         finally:
@@ -274,8 +289,21 @@ class OrquestadorSupremo:
     # ==============================================================================
 
     def iniciar_turno(self):
-        logging.info(">>> 🤖 ORQUESTADOR SUPREMO (CON FRENO ANTI-429) 🤖 <<<")
+        logging.info(">>> 🤖 ORQUESTADOR SUPREMO (CON FRENO ANTI-429 Y PRESUPUESTO) 🤖 <<<")
         
+        # --- LANZAMIENTO DE PROCESOS CONTINUOS (DAEMONS) ---
+        # Como el Analista y el Persuasor tienen bucles 'while True' infinitos,
+        # los iniciamos en hilos separados AL PRINCIPIO y los dejamos correr solos.
+        # Así no bloquean al Orquestador.
+        
+        logging.info("🚀 Iniciando Hilo Permanente: TRABAJADOR ANALISTA")
+        t_analista = threading.Thread(target=trabajar_analista, daemon=True)
+        t_analista.start()
+
+        logging.info("🚀 Iniciando Hilo Permanente: TRABAJADOR PERSUASOR")
+        t_persuasor = threading.Thread(target=trabajar_persuasor, daemon=True)
+        t_persuasor.start()
+
         ultima_revision_reportes = datetime.now() - timedelta(days=1)
         
         while True:
@@ -285,7 +313,8 @@ class OrquestadorSupremo:
                 # 1. Gestión Financiera
                 self.gestionar_finanzas_clientes()
                 
-                # 2. Operaciones Tácticas (Caza -> Venta)
+                # 2. Operaciones Tácticas (Caza y Espionaje)
+                # Analista y Persuasor ya están corriendo en background
                 self.coordinar_operaciones_diarias()
                 
                 # 3. Reportes Diarios
@@ -294,8 +323,9 @@ class OrquestadorSupremo:
                     ultima_revision_reportes = datetime.now()
 
                 # 4. DESCANSO INTELIGENTE (10 Minutos)
+                # El Orquestador descansa, pero Analista y Persuasor siguen trabajando en sus hilos.
                 tiempo_ciclo = time.time() - inicio_ciclo
-                logging.info(f"💤 Ciclo finalizado en {tiempo_ciclo:.2f}s. Durmiendo 10 minutos...")
+                logging.info(f"💤 Ciclo de coordinación finalizado en {tiempo_ciclo:.2f}s. Durmiendo 10 minutos...")
                 time.sleep(600) 
 
             except KeyboardInterrupt:
