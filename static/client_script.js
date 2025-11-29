@@ -83,20 +83,95 @@ const main = () => {
     }
 
     // --- MÓDULO 3: LÓGICA DE LA PESTAÑA GEMELA (GESTIÓN) ---
-    window.abrirGestionCampana = (campana) => {
-        // 1. Hacer visible el botón de la pestaña
+// --- MÓDULO 3: LÓGICA DE LA PESTAÑA GEMELA (GESTIÓN) ---
+    window.abrirGestionCampana = async (campanaResumen) => {
+        // 1. Mostrar pestaña y poner estado de carga
         const manageBtn = document.getElementById('btn-manage-campaign');
+        manageBtn.textContent = '⚙️ Gestionar Campaña'; // Nombre corregido
         manageBtn.style.display = 'inline-block';
-        manageBtn.click(); // Cambiar a esa pestaña
-
-        // 2. Llenar los datos (Simulación por ahora, idealmente traer detalles full de API)
-        document.getElementById('manage-campaign-title').textContent = campana.nombre;
-        document.getElementById('edit_campaign_id').value = campana.id || 'N/A'; // Necesitarías el ID real de la API
+        manageBtn.click();
         
-        // Aquí deberías hacer un fetch('/api/campana/' + campana.id) para traer la constitución real
-        // Por ahora lo dejamos listo para recibir datos
+        document.getElementById('manage-campaign-title').textContent = 'Cargando datos...';
+
+        try {
+            // 2. Pedir expediente completo a la API
+            const response = await fetch(`/api/campana/${campanaResumen.id}`); // Asumiendo que el resumen trae el ID
+            
+            // Si el resumen no traía ID (caso borde), necesitamos corregir el Módulo 2 para que lo traiga
+            // Pero asumiendo que sí:
+            
+            const data = await response.json();
+
+            if (data.error) {
+                alert('Error cargando campaña');
+                return;
+            }
+
+            // 3. LLENAR TODOS LOS CAMPOS (AUTO-POBLADO)
+            document.getElementById('manage-campaign-title').textContent = data.nombre;
+            document.getElementById('edit_campaign_id').value = data.id;
+            
+            // Cerebro
+            document.getElementById('edit_ai_constitution').value = data.adn || '';
+            document.getElementById('edit_ai_blackboard').value = data.pizarron || '';
+            
+            // Estrategia
+            document.getElementById('edit_ubicacion').value = data.ubicacion || '';
+            document.getElementById('edit_ticket').value = data.ticket || '';
+            document.getElementById('edit_competidores').value = data.competidores || '';
+            document.getElementById('edit_dolores').value = data.dolores || '';
+            document.getElementById('edit_red_flags').value = data.red_flags || '';
+            
+            // Selects (asegurar que se seleccione la opción correcta)
+            if(data.cta) document.getElementById('edit_cta').value = data.cta;
+            if(data.tono) document.getElementById('edit_tono').value = data.tono;
+
+        } catch (error) {
+            console.error(error);
+            document.getElementById('manage-campaign-title').textContent = 'Error de Conexión';
+        }
     };
 
+    // --- ACCIÓN DEL BOTÓN GUARDAR (EN PESTAÑA GESTIÓN) ---
+    const btnUpdate = document.getElementById('btn-update-brain');
+    if (btnUpdate) {
+        btnUpdate.addEventListener('click', async () => {
+            btnUpdate.textContent = 'Guardando...';
+            btnUpdate.disabled = true;
+
+            const payload = {
+                id: document.getElementById('edit_campaign_id').value,
+                adn: document.getElementById('edit_ai_constitution').value,
+                pizarron: document.getElementById('edit_ai_blackboard').value,
+                ticket: document.getElementById('edit_ticket').value,
+                competidores: document.getElementById('edit_competidores').value,
+                cta: document.getElementById('edit_cta').value,
+                dolores: document.getElementById('edit_dolores').value,
+                red_flags: document.getElementById('edit_red_flags').value,
+                tono: document.getElementById('edit_tono').value
+            };
+
+            try {
+                const res = await fetch('/api/actualizar-campana', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                
+                if (result.success) {
+                    alert('✅ Cerebro Actualizado Exitosamente');
+                    btnUpdate.textContent = '💾 Guardar Cambios y Actualizar Cerebro';
+                } else {
+                    alert('Error guardando');
+                }
+            } catch (e) {
+                alert('Error de conexión');
+            } finally {
+                btnUpdate.disabled = false;
+            }
+        });
+    }
     // --- MÓDULO 4: MANEJO DEL CHAT DE LA IA (CONTADOR) ---
     const chatForm = document.getElementById('chat-form');
     if (chatForm) {
