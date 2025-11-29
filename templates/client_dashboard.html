@@ -151,23 +151,70 @@
             </div>
 
             <!-- 3. PESTAÑA GEMELA (GESTIÓN) -->
+<!-- 3. PESTAÑA GEMELA: GESTIONAR CAMPAÑA -->
             <div class="tab-content" id="manage-campaign" style="display: none;">
-                <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 20px;">
-                    <h2 style="margin:0;">⚙️ <span id="manage-campaign-title">Cargando...</span></h2>
-                    <button class="cta-button" style="background-color: #6c757d; padding: 5px 15px; width: auto;" onclick="document.querySelector('[data-tab=my-campaigns]').click()">✖ {{ _('Cerrar') }}</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 15px; margin-bottom: 25px;">
+                    <h2 style="margin:0; color: #007bff;">⚙️ Gestionar Campaña: <span id="manage-campaign-title" style="color: #333;">Cargando...</span></h2>
+                    <button class="cta-button" style="background-color: #6c757d; padding: 8px 20px; width: auto; font-size: 14px;" onclick="document.querySelector('[data-tab=my-campaigns]').click()">✖ {{ _('Cerrar Panel') }}</button>
                 </div>
+
                 <input type="hidden" id="edit_campaign_id">
-                
+
+                <!-- 1. CEREBRO (LO MÁS IMPORTANTE PRIMERO) -->
                 <div class="form-section brain-box">
-                    <h3>🧠 {{ _('Modificar Cerebro') }}</h3>
-                    <label>🧬 {{ _('ADN') }}</label>
+                    <h3>🧠 {{ _('Cerebro del Agente (ADN y Pizarrón)') }}</h3>
+                    
+                    <label>🧬 {{ _('ADN Corporativo (La Constitución)') }}</label>
                     <textarea id="edit_ai_constitution" rows="6"></textarea>
-                    <label style="margin-top:15px;">⚡ {{ _('Pizarrón') }}</label>
+
+                    <label style="margin-top: 15px;">⚡ {{ _('Pizarrón Táctico (Avisos del Día)') }}</label>
+                    <p class="help-text">{{ _('Edita esto en tiempo real. La IA leerá este campo antes de enviar el próximo mensaje.') }}</p>
                     <textarea id="edit_ai_blackboard" class="blackboard-field" rows="4"></textarea>
                 </div>
-                
+
+                <!-- 2. ESTRATEGIA DE MERCADO (COMPLETA) -->
+                <div class="form-section">
+                    <h3>📊 {{ _('Estrategia de Mercado') }}</h3>
+                    
+                    <label>{{ _('Ubicación Geográfica') }}</label>
+                    <input type="text" id="edit_ubicacion" disabled style="background-color: #e9ecef; cursor: not-allowed;" title="Para cambiar ubicación crea una nueva campaña">
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                        <div>
+                            <label>{{ _('Ticket Promedio ($)') }}</label>
+                            <input type="text" id="edit_ticket">
+                        </div>
+                        <div>
+                            <label>{{ _('Objetivo CTA') }}</label>
+                            <select id="edit_cta">
+                                <option value="agendar_llamada">Agendar Llamada</option>
+                                <option value="vender_directo">Venta Directa</option>
+                                <option value="whatsapp">Chat WhatsApp</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label style="margin-top: 15px;">{{ _('Competidores Principales') }}</label>
+                    <input type="text" id="edit_competidores">
+
+                    <label style="margin-top: 15px;">{{ _('Dolores del Cliente') }}</label>
+                    <textarea id="edit_dolores" rows="2"></textarea>
+
+                    <label style="margin-top: 15px;">{{ _('Red Flags (Exclusión)') }}</label>
+                    <textarea id="edit_red_flags" rows="2"></textarea>
+                    
+                    <label style="margin-top: 15px;">{{ _('Tono de Voz') }}</label>
+                    <select id="edit_tono">
+                        <option value="corporativo">Corporativo</option>
+                        <option value="amigable">Amigable</option>
+                        <option value="agresivo">Agresivo</option>
+                    </select>
+                </div>
+
                 <div id="action-buttons-container" style="margin-top: 30px;">
-                    <button id="btn-update-brain" class="cta-button">💾 {{ _('Actualizar Cerebro') }}</button>
+                    <button id="btn-update-brain" class="cta-button" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);">
+                        💾 {{ _('Guardar Cambios y Actualizar Cerebro') }}
+                    </button>
                 </div>
             </div>
 
