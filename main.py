@@ -312,21 +312,26 @@ def obtener_detalle_campana(id):
 # --- API: ACTUALIZAR CAMPAÑA (PARA EL BOTÓN DE GUARDAR) ---
 @app.route('/api/actualizar-campana', methods=['POST'])
 def actualizar_campana():
+  @app.route('/api/actualizar-campana', methods=['POST'])
+def actualizar_campana():
     conn = get_db_connection()
     try:
         d = request.json
         cur = conn.cursor()
         
+        # ACTUALIZACIÓN MASIVA
         cur.execute("""
             UPDATE campaigns 
-            SET ai_constitution = %s, ai_blackboard = %s,
-                cta_goal = %s, tone_voice = %s, red_flags = %s,
-                competitors = %s, ticket_price = %s, pain_points_defined = %s
+            SET campaign_name = %s, product_description = %s, target_audience = %s,
+                search_languages = %s, ticket_price = %s, competitors = %s,
+                cta_goal = %s, pain_points_defined = %s, red_flags = %s,
+                tone_voice = %s, ai_constitution = %s, ai_blackboard = %s
             WHERE id = %s
         """, (
-            d.get('adn'), d.get('pizarron'), 
-            d.get('cta'), d.get('tono'), d.get('red_flags'),
-            d.get('competidores'), d.get('ticket'), d.get('dolores'),
+            d.get('nombre'), d.get('descripcion'), d.get('audiencia'),
+            d.get('idiomas'), d.get('ticket'), d.get('competidores'),
+            d.get('cta'), d.get('dolores'), d.get('red_flags'),
+            d.get('tono'), d.get('adn'), d.get('pizarron'),
             d.get('id')
         ))
         conn.commit()
