@@ -7,64 +7,133 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // --- FUNCIÓN PRINCIPAL DE ARRANQUE ---
 const main = () => {
 
-    // --- MÓDULO 2: MANEJO DE PESTAÑAS ---
+    // --- MÓDULO 1: MANEJO DE PESTAÑAS (INCLUYENDO LA GEMELA) ---
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
+    
     if (tabButtons.length > 0 && tabContents.length > 0) {
         const switchTab = (activeButton) => {
             if (!activeButton) return;
             const tabId = activeButton.getAttribute('data-tab');
-            const activeTabContent = document.getElementById(tabId);
+            
+            // Ocultar todas
             tabContents.forEach(content => content.style.display = 'none');
-            if (activeTabContent) activeTabContent.style.display = 'block';
             tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Mostrar la seleccionada
+            const activeTabContent = document.getElementById(tabId);
+            if (activeTabContent) activeTabContent.style.display = 'block';
             activeButton.classList.add('active');
+
+            // Si cambiamos a otra pestaña que no sea "Gestionar", ocultamos el botón gemelo
+            if (tabId !== 'manage-campaign') {
+                const manageBtn = document.getElementById('btn-manage-campaign');
+                if (manageBtn) manageBtn.style.display = 'none'; // Se vuelve a ocultar
+            }
         };
+
         tabButtons.forEach(button => {
             button.addEventListener('click', () => switchTab(button));
         });
+        
+        // Iniciar en la primera activa
         const initialActiveButton = document.querySelector('.tab-button.active');
-        if (initialActiveButton) {
-            switchTab(initialActiveButton);
-        }
+        if (initialActiveButton) switchTab(initialActiveButton);
     }
 
-    // --- MÓDULO 3: MANEJO DEL CHAT DE LA IA ---
+    // --- MÓDULO 2: CARGAR DATOS DEL DASHBOARD (API REAL) ---
+    const cargarDatosDashboard = async () => {
+        try {
+            const response = await fetch('/api/dashboard-data');
+            const data = await response.json();
+
+            // 1. Llenar KPIs
+            if (data.kpis) {
+                document.getElementById('kpi-total').textContent = data.kpis.total;
+                document.getElementById('kpi-leads').textContent = data.kpis.calificados;
+                document.getElementById('kpi-rate').textContent = data.kpis.tasa;
+            }
+
+            // 2. Llenar Tabla de Campañas
+            const tbody = document.getElementById('campaigns-table-body');
+            if (tbody && data.campanas) {
+                tbody.innerHTML = ''; // Limpiar tabla
+                data.campanas.forEach(camp => {
+                    const tr = document.createElement('tr');
+                    // Al hacer clic, abrimos la PESTAÑA GEMELA DE GESTIÓN
+                    tr.onclick = () => abrirGestionCampana(camp);
+                    tr.innerHTML = `
+                        <td><strong>${camp.nombre}</strong></td>
+                        <td>${camp.fecha}</td>
+                        <td>${camp.estado === 'active' ? '🟢 Activa' : '🔴 Inactiva'}</td>
+                        <td>${camp.encontrados}</td>
+                        <td>${camp.calificados}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        } catch (error) {
+            console.error("Error cargando dashboard:", error);
+        }
+    };
+
+    // Llamamos a la carga inicial
+    if (document.getElementById('my-campaigns')) {
+        cargarDatosDashboard();
+    }
+
+    // --- MÓDULO 3: LÓGICA DE LA PESTAÑA GEMELA (GESTIÓN) ---
+    window.abrirGestionCampana = (campana) => {
+        // 1. Hacer visible el botón de la pestaña
+        const manageBtn = document.getElementById('btn-manage-campaign');
+        manageBtn.style.display = 'inline-block';
+        manageBtn.click(); // Cambiar a esa pestaña
+
+        // 2. Llenar los datos (Simulación por ahora, idealmente traer detalles full de API)
+        document.getElementById('manage-campaign-title').textContent = campana.nombre;
+        document.getElementById('edit_campaign_id').value = campana.id || 'N/A'; // Necesitarías el ID real de la API
+        
+        // Aquí deberías hacer un fetch('/api/campana/' + campana.id) para traer la constitución real
+        // Por ahora lo dejamos listo para recibir datos
+    };
+
+    // --- MÓDULO 4: MANEJO DEL CHAT DE LA IA (CONTADOR) ---
     const chatForm = document.getElementById('chat-form');
     if (chatForm) {
         const userInput = document.getElementById('user-input');
         const chatMessages = document.getElementById('chat-messages');
+        
         const appendMessage = (message, type) => {
-            if (!chatMessages) return;
             const messageElement = document.createElement('p');
             messageElement.classList.add(type === 'user' ? 'msg-user' : 'msg-assistant');
             messageElement.innerText = message;
             chatMessages.appendChild(messageElement);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         };
+
         chatForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const userMessage = userInput.value.trim();
             if (!userMessage) return;
+            
             appendMessage(userMessage, 'user');
             userInput.value = '';
+            
             try {
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: userMessage })
                 });
-                if (!response.ok) throw new Error('Server response not ok');
                 const data = await response.json();
                 appendMessage(data.response, 'assistant');
             } catch (error) {
-                console.error('Error en el chat:', error);
-                appendMessage('Lo siento, estoy teniendo problemas de conexión.', 'assistant');
+                appendMessage('Error de conexión con el cerebro central.', 'assistant');
             }
         });
     }
     
-    // --- MÓDULO 4: FORMULARIO DE CAMPAÑA ---
+    // --- MÓDULO 5: FORMULARIO DE CREAR CAMPAÑA (LÓGICA PRECIOS) ---
     const createCampaignTab = document.getElementById('create-campaign');
     if (createCampaignTab) {
         const planCards = createCampaignTab.querySelectorAll('.plan-card');
@@ -75,75 +144,141 @@ const main = () => {
         const summaryBox = createCampaignTab.querySelector('#summary-box');
         const launchButton = createCampaignTab.querySelector('#lancam');
         const phoneInput = createCampaignTab.querySelector("#numero_whatsapp");
+        
+        // Elementos de saldo
         const currentBalanceElement = createCampaignTab.querySelector('#current-balance');
         const rechargeLine = createCampaignTab.querySelector('#recharge-line');
         const rechargeAmountElement = createCampaignTab.querySelector('#recharge-amount');
-        const remainingLine = createCampaignTab.querySelector('#remaining-line');
-        const remainingBalanceElement = createCampaignTab.querySelector('#remaining-balance');
 
         if (planCards.length > 0 && prospectsInput) {
-            const userBalance = 0.00;
+            const userBalance = 0.00; // Esto debería venir del backend
             if(currentBalanceElement) currentBalanceElement.textContent = `$${userBalance.toFixed(2)}`;
+            
             const plans = {
                 arrancador: { name: 'El Arrancador', baseProspects: 4, baseCost: 149, extraCost: 37.25, limit: 14 },
                 profesional: { name: 'El Profesional', baseProspects: 15, baseCost: 399, extraCost: 26.60, limit: 49 },
                 dominador: { name: 'El Dominador', baseProspects: 50, baseCost: 999, extraCost: 20.00, limit: Infinity }
             };
+
             const handleFormUpdate = () => {
                 const prospectsCount = parseInt(prospectsInput.value, 10);
                 if (isNaN(prospectsCount) || prospectsCount < 4) return;
+                
                 let activePlanKey;
                 if (prospectsCount <= plans.arrancador.limit) { activePlanKey = 'arrancador'; } 
                 else if (prospectsCount <= plans.profesional.limit) { activePlanKey = 'profesional'; } 
                 else { activePlanKey = 'dominador'; }
+                
+                // Actualizar tarjetas visualmente
                 const currentPlan = plans[activePlanKey];
                 planCards.forEach(card => card.classList.remove('selected'));
                 const cardToSelect = createCampaignTab.querySelector(`.plan-card[data-plan="${activePlanKey}"]`);
                 if (cardToSelect) cardToSelect.classList.add('selected');
+                
+                // Calcular costos
                 const extraProspects = prospectsCount - currentPlan.baseProspects;
-                const totalCost = currentPlan.baseCost + (extraProspects * currentPlan.extraCost);
+                const totalCost = currentPlan.baseCost + (Math.max(0, extraProspects) * currentPlan.extraCost);
                 const planName = (prospectsCount === currentPlan.baseProspects) ? currentPlan.name : 'Personalizado';
+                
+                // Actualizar resumen amarillo
                 if(selectedPlanElement) selectedPlanElement.textContent = planName;
                 if(dailyProspectsElement) dailyProspectsElement.textContent = prospectsCount;
                 if(totalCostElement) totalCostElement.textContent = `$${totalCost.toFixed(2)}`;
-                if (launchButton && summaryBox && rechargeLine && remainingLine) {
+                
+                // Verificar saldo
+                if (launchButton && summaryBox) {
                     if (userBalance >= totalCost) {
-                        const remaining = userBalance - totalCost;
-                        if(remainingBalanceElement) remainingBalanceElement.textContent = `$${remaining.toFixed(2)}`;
-                        rechargeLine.style.display = 'none';
-                        remainingLine.style.display = 'flex';
+                        if(rechargeLine) rechargeLine.style.display = 'none';
                         summaryBox.style.borderColor = '#28a745';
                         launchButton.disabled = false;
+                        launchButton.style.backgroundColor = '#28a745';
+                        launchButton.textContent = 'Lanzar Campaña al Orquestador';
                     } else {
                         const needed = totalCost - userBalance;
                         if(rechargeAmountElement) rechargeAmountElement.textContent = `$${needed.toFixed(2)}`;
-                        rechargeLine.style.display = 'flex';
-                        remainingLine.style.display = 'none';
-                        summaryBox.style.borderColor = '#ffc107';
+                        if(rechargeLine) rechargeLine.style.display = 'flex'; // Mostrar línea roja
+                        summaryBox.style.borderColor = '#dc3545';
                         launchButton.disabled = true;
+                        launchButton.style.backgroundColor = '#adb5bd';
+                        launchButton.textContent = 'Saldo Insuficiente';
                     }
                 }
             };
+
+            // Eventos
             planCards.forEach(card => {
                 card.addEventListener('click', () => {
                     const planKey = card.getAttribute('data-plan');
-                    const plan = plans[planKey];
-                    if (plan) {
-                        prospectsInput.value = plan.baseProspects;
-                        handleFormUpdate();
-                    }
+                    prospectsInput.value = plans[planKey].baseProspects;
+                    handleFormUpdate();
                 });
             });
+            
             prospectsInput.addEventListener('input', handleFormUpdate);
+            
+            // Iniciar
             const defaultPlanCard = createCampaignTab.querySelector('.plan-card[data-plan="arrancador"]');
-            if (defaultPlanCard) { defaultPlanCard.click(); }
+            if (defaultPlanCard) defaultPlanCard.click();
+            
             if (phoneInput) {
                 window.intlTelInput(phoneInput, { utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js" });
+            }
+
+            // --- LANZAMIENTO DE CAMPAÑA (FETCH) ---
+            if (launchButton) {
+                launchButton.addEventListener('click', async () => {
+                    if (launchButton.disabled) return;
+                    
+                    launchButton.textContent = 'Enviando al Orquestador...';
+                    
+                    // Recopilar datos del formulario nuevo
+                    const payload = {
+                        nombre: document.getElementById('nombre_campana').value,
+                        que_vende: document.getElementById('que_vendes').value,
+                        a_quien: document.getElementById('a_quien_va_dirigido').value,
+                        idiomas: document.getElementById('idiomas_busqueda').value,
+                        ubicacion: document.getElementById('ubicacion_geografica').value,
+                        // Datos Estratégicos Nuevos
+                        ticket_producto: document.getElementById('ticket_producto').value,
+                        competidores_principales: document.getElementById('competidores_principales').value,
+                        objetivo_cta: document.getElementById('objetivo_cta').value,
+                        dolores_pain_points: document.getElementById('dolores_pain_points').value,
+                        red_flags: document.getElementById('red_flags').value,
+                        tono_marca: document.getElementById('tono_marca').value,
+                        // Cerebro IA
+                        ai_constitution: document.getElementById('ai_constitution').value,
+                        ai_blackboard: document.getElementById('ai_blackboard').value,
+                        // Contacto
+                        tipo_producto: document.querySelector('input[name="tipo_producto"]:checked')?.value || 'tangible',
+                        whatsapp: document.getElementById('numero_whatsapp').value,
+                        enlace: document.getElementById('enlace_venta').value
+                    };
+
+                    try {
+                        const res = await fetch('/api/crear-campana', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            alert('¡Campaña Lanzada! El Orquestador ha recibido las órdenes.');
+                            location.reload(); // Recargar para verla en la lista
+                        } else {
+                            alert('Error: ' + (data.error || 'Desconocido'));
+                            launchButton.textContent = 'Intentar de nuevo';
+                        }
+                    } catch (e) {
+                        alert('Error de conexión');
+                        launchButton.textContent = 'Intentar de nuevo';
+                    }
+                });
             }
         }
     }
     
-    // --- MÓDULO 5: LOGOUT ---
+    // --- MÓDULO 6: LOGOUT ---
     const logoutButton = document.getElementById('logout-btn');
     if (logoutButton) {
         logoutButton.addEventListener('click', async () => {
@@ -151,32 +286,7 @@ const main = () => {
             window.location.href = '/login';
         });
     }
-
-    // --- MÓDULO 6: PESTAÑA "CONVERSACIONES" ---
-    const conversationsTab = document.getElementById('conversations');
-    if (conversationsTab) {
-        const conversationCards = conversationsTab.querySelectorAll('.conversation-card');
-        const chatContentPanels = conversationsTab.querySelectorAll('.chat-content-panel');
-        if (conversationCards.length > 0 && chatContentPanels.length > 0) {
-            conversationCards.forEach(card => {
-                card.addEventListener('click', () => {
-                    conversationCards.forEach(c => c.classList.remove('active'));
-                    chatContentPanels.forEach(p => p.style.display = 'none');
-                    card.classList.add('active');
-                    const conversationId = card.getAttribute('data-conversation-id');
-                    const chatPanelToShow = conversationsTab.querySelector(`#${conversationId}`);
-                    if (chatPanelToShow) {
-                        chatPanelToShow.style.display = 'flex';
-                    }
-                });
-            });
-            const firstCard = conversationsTab.querySelector('.conversation-card');
-            if (firstCard) {
-                firstCard.click();
-            }
-        }
-    }
 };
 
-// Se ejecuta el código del dashboard directamente, sin seguridad.
+// Arrancar script
 main();
